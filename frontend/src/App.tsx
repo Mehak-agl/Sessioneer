@@ -1,20 +1,38 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Login from "./pages/Login";
-import Signup from "./pages/Signup";
-import CoordinatorDashboard from "./pages/CoordinatorDashboard";
-import CalendarPage from "./pages/CalendarPage";
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import type { ReactElement } from 'react'
+import LoginPage from './pages/LoginPage'
+import CoordinatorDashboard from './pages/CoordinatorDashboard'
+import StaffDashboard from './pages/StaffDashboard'
 
-function App() {
+function ProtectedRoute({ children, role }: { children: ReactElement; role: string }) {
+  const savedRole = localStorage.getItem('sessioneer_role')
+  if (savedRole !== role) return <Navigate to="/" replace />
+  return children
+}
+
+export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/dashboard" element={<CoordinatorDashboard />} />
-        <Route path="/calendar" element={<CalendarPage />} />
+        <Route path="/" element={<LoginPage />} />
+        <Route
+          path="/coordinator"
+          element={
+            <ProtectedRoute role="coordinator">
+              <CoordinatorDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/staff"
+          element={
+            <ProtectedRoute role="staff">
+              <StaffDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
-  );
+  )
 }
-
-export default App;

@@ -1,31 +1,42 @@
 # Sessioneer
 
-Sessioneer is a system for negotiating and scheduling sessional staff projects.
+A system for negotiating and scheduling sessional teaching staff at QUT.
 
 ## Tech Stack
 
-- **Frontend:** React + TypeScript (Vite)
-- **Backend:** Java Spring Boot 3 (Maven)
+- **Frontend:** React + TypeScript (Vite) — runs on http://localhost:5173
+- **Backend:** Java Spring Boot 3 (Maven) — runs on http://localhost:8080
 
 ## Project Structure
 
 ```
 Sessioneer/
-├── frontend/   # React + TypeScript app (Vite)
-└── backend/    # Spring Boot REST API
+├── frontend/       # React + TypeScript app (Vite)
+├── backend/        # Spring Boot REST API
+└── docs/           # Project documentation
 ```
+
+---
+
+## Prerequisites
+
+| Tool | Version | Notes |
+|------|---------|-------|
+| Node.js | 18+ | [nodejs.org](https://nodejs.org) |
+| Java JDK | 17+ | [Corretto](https://aws.amazon.com/corretto/) or any JDK |
+| Maven | 3.8+ | [Download](https://maven.apache.org/download.cgi) — extract and add `bin/` to PATH |
+
+### Installing Maven on Windows
+1. Download the zip from the link above
+2. Extract to somewhere like `C:\Users\<you>\AppData\Local\Programs\apache-maven-x.x.x`
+3. Add the `bin\` folder to your user PATH (System → Environment Variables)
+4. **Close and reopen VSCode** after updating PATH — existing terminals won't see it
+
+---
 
 ## Getting Started
 
-### Prerequisites
-
-- Node.js 18+
-- Java 17+
-- Maven 3.8+ — [Download here](https://maven.apache.org/download.cgi), extract it, and add the `bin/` folder to your system PATH
-
-> **Tip:** In VSCode, use the integrated terminal (PowerShell on Windows, bash on Mac/Linux). You can open multiple terminal tabs with the **+** button to run frontend and backend at the same time.
-
----
+> **Tip:** Open two terminal tabs in VSCode (click **+** in the terminal panel) to run frontend and backend simultaneously.
 
 ### Frontend
 
@@ -37,11 +48,7 @@ npm run dev
 
 Runs on http://localhost:5173
 
----
-
 ### Backend
-
-Make sure `mvn` is on your PATH first (see Prerequisites above), then:
 
 ```bash
 cd backend
@@ -54,9 +61,19 @@ Health check: http://localhost:8080/api/health
 
 ---
 
-### Running Both at Once
+## Login (Mock Auth)
 
-Open two terminal tabs in VSCode:
+The login page has two roles. Use these demo credentials:
 
-- **Tab 1** — `cd frontend && npm run dev`
-- **Tab 2** — `cd backend && mvn spring-boot:run`
+| Role | Email | Password |
+|------|-------|----------|
+| Unit Coordinator | coordinator@qut.edu.au | admin123 |
+| Sessional Staff | staff@qut.edu.au | staff123 |
+
+---
+
+## Branching
+
+- `main` — stable, reviewed code only
+- Feature branches — name as `<your-name>-<feature>` (e.g. `anantha-login-page`)
+- Open a pull request to merge into `main`

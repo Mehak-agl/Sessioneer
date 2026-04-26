@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import './LoginPage.css'
 
 type Role = 'coordinator' | 'staff'
@@ -39,7 +39,7 @@ export default function LoginPage() {
             SESSION<span className="brand-title-accent">EER</span>
           </h1>
           <p className="brand-tagline">
-            Smarter scheduling for sessional teaching staff.
+            Sessioneer - where tutors breathe easy and coordinators finally sleep
           </p>
           <ul className="brand-features">
             <li>Coordinate tutorial sessions effortlessly</li>
@@ -111,6 +111,10 @@ export default function LoginPage() {
             <p>Staff: staff@qut.edu.au / staff123</p>
             <p className="login-hint-note">Any personal email works once real auth is set up.</p>
           </div>
+
+          <p className="login-signup-link">
+            Don't have an account? <Link to="/signup">Sign up</Link>
+          </p>
         </div>
       </div>
 

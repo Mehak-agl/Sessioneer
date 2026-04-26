@@ -35,7 +35,9 @@ export default function LoginPage() {
       <div className="login-brand">
         <div className="brand-content">
           <img src="/sessioneer-logo.png" alt="Sessioneer" className="brand-logo" />
-          <h1 className="brand-title">Sessioneer</h1>
+          <h1 className="brand-title">
+            SESSION<span className="brand-title-accent">EER</span>
+          </h1>
           <p className="brand-tagline">
             Smarter scheduling for sessional teaching staff.
           </p>
@@ -82,7 +84,7 @@ export default function LoginPage() {
               <input
                 id="email"
                 type="email"
-                placeholder={MOCK_USERS[role].email}
+                placeholder="Enter your email address"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 required
@@ -93,7 +95,7 @@ export default function LoginPage() {
               <input
                 id="password"
                 type="password"
-                placeholder="••••••••"
+                placeholder="Enter your password"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 required
@@ -107,6 +109,7 @@ export default function LoginPage() {
             <strong>Demo credentials</strong>
             <p>Coordinator: coordinator@qut.edu.au / admin123</p>
             <p>Staff: staff@qut.edu.au / staff123</p>
+            <p className="login-hint-note">Any personal email works once real auth is set up.</p>
           </div>
         </div>
       </div>

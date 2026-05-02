@@ -379,3 +379,33 @@ body {
     gap: 16px;
   }
 }
+.dashboard-section {
+  margin-top: 28px;
+}
+
+.section-title {
+  margin: 0 0 14px;
+  color: #1f3550;
+  font-family: "Montserrat", sans-serif;
+  font-size: 21px;
+}
+
+.allocated-unit {
+  border-left: 7px solid #22c55e;
+}
+
+.pending-unit {
+  border-left: 7px solid #fbbf24;
+}
+
+.create-unit {
+  border-left: 7px solid #0097b2;
+}
+
+.lecture-unit {
+  border-left: 7px solid #1f3550;
+}
+
+.unit-actions a {
+  text-decoration: none;
+}

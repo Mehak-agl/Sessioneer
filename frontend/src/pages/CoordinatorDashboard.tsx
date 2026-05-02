@@ -4,7 +4,6 @@ import "./CoordinatorDashboard.css";
 function CoordinatorDashboard() {
   return (
     <div className="dashboard-page">
-      
       <aside className="sidebar">
         <div className="sidebar-logo">
           <img src="/logo.png" alt="Sessioneer logo" />
@@ -35,17 +34,14 @@ function CoordinatorDashboard() {
       </aside>
 
       <main className="main-content">
-        
         <header className="topbar">
           <div className="page-title">
-            <img src="/icons.svg" alt="Page logo" />
+            <img src="/logo.png" alt="Page logo" />
             <div>
               <h1>Coordinator Dashboard</h1>
               <p>Manage tutors, units, schedules and allocations</p>
             </div>
           </div>
-
-          <button className="new-unit-btn">+ New Unit</button>
         </header>
 
         <section className="stats-grid">
@@ -82,41 +78,120 @@ function CoordinatorDashboard() {
           <div className="panel-heading">
             <div>
               <h2>My Units</h2>
-              <p>Semester 2, 2026</p>
+              <p>Semester 2, 2026 allocation overview</p>
             </div>
-            <span>3 units</span>
+            <span>Coordinator View</span>
           </div>
 
-          <div className="unit-card">
-            <div>
-              <h3>CAB302 Software Development</h3>
-              <p>18 sessions · 6 tutors invited · 4/6 responded</p>
+          <div className="dashboard-section">
+            <h3 className="section-title">Allocated Units / Classes</h3>
+
+            <div className="unit-card allocated-unit">
+              <div>
+                <h3>CAB302 Software Development</h3>
+                <p>Workshop · Monday 9:00 AM - 11:00 AM · Gardens Point</p>
+                <p>Allocated tutor: Alex K.</p>
+              </div>
+              <div className="unit-actions">
+                <button>View Schedule</button>
+                <button>View Allocation</button>
+              </div>
             </div>
-            <div className="unit-actions">
-              <button>Schedule</button>
-              <button>Allocations</button>
-              <button>Export</button>
+
+            <div className="unit-card allocated-unit">
+              <div>
+                <h3>IFN660 Advanced Topics</h3>
+                <p>Lab · Wednesday 2:00 PM - 4:00 PM · Online</p>
+                <p>Allocated tutor: Mehak A.</p>
+              </div>
+              <div className="unit-actions">
+                <button>View Schedule</button>
+                <button>View Allocation</button>
+              </div>
             </div>
           </div>
 
-          <div className="unit-card">
-            <div>
-              <h3>IFN660 Advanced Topics</h3>
-              <p>12 sessions · 4 tutors · awaiting 2 responses</p>
+          <div className="dashboard-section">
+            <h3 className="section-title">Pending Class Allocations</h3>
+
+            <div className="unit-card pending-unit">
+              <div>
+                <h3>CAB302 Software Development</h3>
+                <p>Lab B · Friday 9:00 AM - 11:00 AM · Gardens Point</p>
+                <p>Status: Waiting for tutor confirmation</p>
+              </div>
+              <div className="unit-actions">
+                <button>Send Request</button>
+                <button>Find Tutor</button>
+              </div>
             </div>
-            <div className="unit-actions">
-              <button>Schedule</button>
-              <button>Allocations</button>
+
+            <div className="unit-card pending-unit">
+              <div>
+                <h3>CAB301 Algorithms</h3>
+                <p>Tutorial · Tuesday 1:00 PM - 3:00 PM · Kelvin Grove</p>
+                <p>Status: No tutor allocated yet</p>
+              </div>
+              <div className="unit-actions">
+                <button>Send Request</button>
+                <button>Find Tutor</button>
+              </div>
             </div>
           </div>
 
-          <div className="unit-card">
-            <div>
-              <h3>CAB301 Algorithms</h3>
-              <p>No sessions defined yet · 0 tutors invited</p>
+          <div className="dashboard-section">
+            <h3 className="section-title">Classes Still To Create</h3>
+
+            <div className="unit-card create-unit">
+              <div>
+                <h3>CAB301 Algorithms</h3>
+                <p>Required: 2 tutorials and 1 lab need to be created</p>
+                <p>Suggested campuses: Gardens Point and Online</p>
+              </div>
+              <div className="unit-actions">
+                <Link to="/calendar">
+                  <button className="setup-btn">Create Class</button>
+                </Link>
+              </div>
             </div>
-            <div className="unit-actions">
-              <button className="setup-btn">Set up sessions</button>
+
+            <div className="unit-card create-unit">
+              <div>
+                <h3>IFN555 Database Systems</h3>
+                <p>Required: Weekly workshop schedule not created yet</p>
+                <p>Suggested mode: Online</p>
+              </div>
+              <div className="unit-actions">
+                <Link to="/calendar">
+                  <button className="setup-btn">Create Class</button>
+                </Link>
+              </div>
+            </div>
+          </div>
+
+          <div className="dashboard-section">
+            <h3 className="section-title">Coordinator Lecture Classes</h3>
+
+            <div className="unit-card lecture-unit">
+              <div>
+                <h3>CAB302 Lecture</h3>
+                <p>Thursday 10:00 AM - 12:00 PM · Gardens Point</p>
+                <p>Lecturer / Coordinator: Sarah Chen</p>
+              </div>
+              <div className="unit-actions">
+                <button>View Details</button>
+              </div>
+            </div>
+
+            <div className="unit-card lecture-unit">
+              <div>
+                <h3>IFN660 Lecture</h3>
+                <p>Monday 4:00 PM - 6:00 PM · Online</p>
+                <p>Lecturer / Coordinator: Sarah Chen</p>
+              </div>
+              <div className="unit-actions">
+                <button>View Details</button>
+              </div>
             </div>
           </div>
         </section>
@@ -124,7 +199,6 @@ function CoordinatorDashboard() {
         <Link to="/calendar">
           <button className="calendar-btn">Open Calendar</button>
         </Link>
-
       </main>
     </div>
   );

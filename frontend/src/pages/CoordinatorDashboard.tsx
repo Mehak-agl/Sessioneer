@@ -51,13 +51,13 @@ function CoordinatorDashboard() {
             <p>Currently running</p>
           </div>
 
-          <div className="stat-card">
+          <div className="stat-card warning">
             <span>Pending Responses</span>
             <h2>8</h2>
             <p>Awaiting tutor replies</p>
           </div>
 
-          <div className="stat-card warning">
+          <div className="stat-card danger">
             <span>Conflicts</span>
             <h2>2</h2>
             <p>Need attention</p>

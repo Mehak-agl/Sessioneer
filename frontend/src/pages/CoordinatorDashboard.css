@@ -217,7 +217,9 @@ body {
   color: #7a8b94;
   font-size: 16px;
 }
-
+.stat-card.danger {
+  border-left: 7px solid #ef4444;
+}
 .stat-card.warning {
   border-left: 7px solid #fbbf24;
 }

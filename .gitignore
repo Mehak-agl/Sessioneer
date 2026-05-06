@@ -22,3 +22,5 @@ application.properties
 # Logs
 *.log
 logs/
+
+node_modules/

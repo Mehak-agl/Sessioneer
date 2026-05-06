@@ -1,7 +1,35 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { api } from "../services/api";
 import "./CalendarPage.css";
 
+interface Session {
+  id: number;
+  title: string;
+  startTime: string;
+  status: string;
+}
+
 function CalendarPage() {
+  const [sessions, setSessions] = useState<Session[]>([]);
+
+  useEffect(() => {
+    async function loadSessions() {
+      try {
+        const units = await api.getUnits();
+        const allSessions: Session[] = [];
+        for (const unit of units) {
+          const s = await api.getSessions(unit.id);
+          allSessions.push(...s);
+        }
+        setSessions(allSessions);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+    loadSessions();
+  }, []);
+
   const days = [
     "", "", "", "1", "2", "3", "4",
     "5", "6", "7", "8", "9", "10", "11",
@@ -10,19 +38,16 @@ function CalendarPage() {
     "26", "27", "28", "29", "30", "", ""
   ];
 
-  const events: Record<string, { title: string; time: string; type: string }[]> = {
-    "6": [{ title: "CAB302 Workshop", time: "9:00 AM", type: "allocated" }],
-    "8": [{ title: "CAB301 Tutorial", time: "11:00 AM", type: "pending" }],
-    "10": [{ title: "IFN660 Lab", time: "2:00 PM", type: "conflict" }],
-    "13": [{ title: "CAB302 Lab A", time: "10:00 AM", type: "allocated" }],
-    "15": [{ title: "CAB302 Lab B", time: "1:00 PM", type: "pending" }],
-    "17": [{ title: "Rohit Conflict", time: "9:00 AM", type: "conflict" }],
-    "20": [{ title: "CAB301 Lecture", time: "12:00 PM", type: "allocated" }],
-    "22": [{ title: "Tutor Pending", time: "3:00 PM", type: "pending" }],
-    "24": [{ title: "IFN660 Workshop", time: "10:00 AM", type: "allocated" }],
-    "27": [{ title: "CAB302 Review", time: "2:00 PM", type: "allocated" }],
-    "29": [{ title: "Allocation Check", time: "11:00 AM", type: "conflict" }]
-  };
+  const eventsByDay: Record<string, Session[]> = {};
+  for (const session of sessions) {
+    const day = String(new Date(session.startTime).getDate());
+    if (!eventsByDay[day]) eventsByDay[day] = [];
+    eventsByDay[day].push(session);
+  }
+
+  const allocated = sessions.filter(s => s.status === "ALLOCATED").length;
+  const pending = sessions.filter(s => s.status === "PENDING").length;
+  const conflict = sessions.filter(s => s.status === "CONFLICT").length;
 
   return (
     <div className="calendar-page">
@@ -44,7 +69,7 @@ function CalendarPage() {
         </div>
 
         <nav className="calendar-menu">
-          <Link to="/dashboard">Dashboard</Link>
+          <Link to="/coordinator">Dashboard</Link>
           <a>My Units</a>
           <a className="active">Calendar</a>
           <a>Tutors</a>
@@ -63,21 +88,20 @@ function CalendarPage() {
               <p>Class allocation overview for coordinator</p>
             </div>
           </div>
-
           <button className="publish-btn">+ Add Class</button>
         </header>
 
         <section className="calendar-summary">
           <div className="summary-card allocated-card">
-            <h2>6</h2>
+            <h2>{allocated}</h2>
             <p>Allocated Classes</p>
           </div>
           <div className="summary-card pending-card">
-            <h2>3</h2>
+            <h2>{pending}</h2>
             <p>Pending Classes</p>
           </div>
           <div className="summary-card conflict-card">
-            <h2>3</h2>
+            <h2>{conflict}</h2>
             <p>Conflicts</p>
           </div>
         </section>
@@ -90,13 +114,8 @@ function CalendarPage() {
 
         <section className="month-calendar">
           <div className="weekdays">
-            <div>Sun</div>
-            <div>Mon</div>
-            <div>Tue</div>
-            <div>Wed</div>
-            <div>Thu</div>
-            <div>Fri</div>
-            <div>Sat</div>
+            <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div>
+            <div>Thu</div><div>Fri</div><div>Sat</div>
           </div>
 
           <div className="calendar-grid">
@@ -105,11 +124,10 @@ function CalendarPage() {
                 {day && (
                   <>
                     <div className="day-number">{day}</div>
-
-                    {events[day]?.map((event, eventIndex) => (
-                      <div className={`class-event ${event.type}`} key={eventIndex}>
-                        <strong>{event.time}</strong>
-                        <span>{event.title}</span>
+                    {eventsByDay[day]?.map((session, i) => (
+                      <div className={`class-event ${session.status.toLowerCase()}`} key={i}>
+                        <strong>{new Date(session.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</strong>
+                        <span>{session.title}</span>
                       </div>
                     ))}
                   </>

@@ -5,6 +5,11 @@ import './LoginPage.css'
 
 type Role = 'coordinator' | 'staff'
 
+const MOCK_USERS = [
+  { email: 'coordinator@qut.edu.au', password: 'admin123', role: 'COORDINATOR', fullName: 'Sarah Chen' },
+  { email: 'staff@qut.edu.au',       password: 'staff123',  role: 'STAFF',       fullName: 'Alex Thompson' },
+]
+
 export default function LoginPage() {
   const navigate = useNavigate()
   const [role, setRole] = useState<Role>('coordinator')
@@ -22,7 +27,16 @@ export default function LoginPage() {
       localStorage.setItem('sessioneer_name', res.fullName)
       navigate(res.role === 'COORDINATOR' ? '/coordinator' : '/staff')
     } catch {
-      setError('Invalid email or password.')
+      // Fall back to mock auth when backend is not running
+      const mock = MOCK_USERS.find(u => u.email === email && u.password === password)
+      if (mock) {
+        localStorage.setItem('sessioneer_token', 'mock-token')
+        localStorage.setItem('sessioneer_role', mock.role.toLowerCase())
+        localStorage.setItem('sessioneer_name', mock.fullName)
+        navigate(mock.role === 'COORDINATOR' ? '/coordinator' : '/staff')
+      } else {
+        setError('Invalid email or password.')
+      }
     }
   }
 

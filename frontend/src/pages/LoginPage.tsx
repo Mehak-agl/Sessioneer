@@ -5,7 +5,6 @@ import './LoginPage.css'
 type Role = 'coordinator' | 'staff'
 
 const MOCK_USERS = {
-  coordinator: { email: 'coordinator@qut.edu.au', password: 'admin123' },
   staff: { email: 'staff@qut.edu.au', password: 'staff123' },
 }
 
@@ -20,7 +19,6 @@ export default function LoginPage() {
     e.preventDefault()
     setError('')
 
-    // Coordinator login uses backend/database
     if (role === 'coordinator') {
       try {
         const response = await fetch('http://localhost:8080/api/coordinators/login', {
@@ -50,8 +48,8 @@ export default function LoginPage() {
       return
     }
 
-    // Staff login stays mock for now
     const expected = MOCK_USERS.staff
+
     if (email === expected.email && password === expected.password) {
       localStorage.setItem('sessioneer_role', 'staff')
       navigate('/staff')
@@ -66,12 +64,8 @@ export default function LoginPage() {
       <div className="login-brand">
         <div className="brand-content">
           <img src="/sessioneer-logo.png" alt="Sessioneer" className="brand-logo" />
-          <h1 className="brand-title">
-            SESSION<span className="brand-title-accent">EER</span>
-          </h1>
-          <p className="brand-tagline">
-            Sessioneer - where tutors breathe easy and coordinators finally sleep
-          </p>
+          <h1 className="brand-title">SESSION<span className="brand-title-accent">EER</span></h1>
+          <p className="brand-tagline">Sessioneer - where tutors breathe easy and coordinators finally sleep</p>
           <ul className="brand-features">
             <li>Coordinate tutorial sessions effortlessly</li>
             <li>Staff indicate availability in minutes</li>
@@ -99,6 +93,7 @@ export default function LoginPage() {
             >
               Unit Coordinator
             </button>
+
             <button
               className={`role-btn ${role === 'staff' ? 'active' : ''}`}
               onClick={() => { setRole('staff'); setError('') }}
@@ -120,6 +115,7 @@ export default function LoginPage() {
                 required
               />
             </div>
+
             <div className="form-group">
               <label htmlFor="password">Password</label>
               <input
@@ -131,15 +127,17 @@ export default function LoginPage() {
                 required
               />
             </div>
+
             {error && <p className="login-error">{error}</p>}
+
             <button type="submit" className="login-btn">Sign In</button>
           </form>
 
           <div className="login-hint">
             <strong>Demo credentials</strong>
-            <p>Coordinator: use the account saved in PostgreSQL</p>
+            <p>Coordinator: use account saved in PostgreSQL</p>
             <p>Staff: staff@qut.edu.au / staff123</p>
-            <p className="login-hint-note">Coordinator login is now connected to backend database.</p>
+            <p className="login-hint-note">Coordinator login is connected to backend database.</p>
           </div>
 
           <p className="login-signup-link">
@@ -147,7 +145,6 @@ export default function LoginPage() {
           </p>
         </div>
       </div>
-
     </div>
   )
 }

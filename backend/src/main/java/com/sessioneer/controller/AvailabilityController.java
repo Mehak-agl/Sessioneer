@@ -1,48 +1,36 @@
 package com.sessioneer.controller;
 
-import com.sessioneer.entity.Availability;
-import com.sessioneer.entity.Tutor;
-import com.sessioneer.repository.AvailabilityRepository;
-import com.sessioneer.repository.TutorRepository;
+import com.sessioneer.dto.AvailabilityRequest;
+import com.sessioneer.model.Availability;
+import com.sessioneer.service.AvailabilityService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/availability")
 @CrossOrigin(origins = {"http://localhost:5173", "http://localhost:5174"})
 public class AvailabilityController {
 
-    private final AvailabilityRepository availabilityRepository;
-    private final TutorRepository tutorRepository;
+    private final AvailabilityService availabilityService;
 
-    public AvailabilityController(
-            AvailabilityRepository availabilityRepository,
-            TutorRepository tutorRepository
-    ) {
-        this.availabilityRepository = availabilityRepository;
-        this.tutorRepository = tutorRepository;
-    }
-
-    @GetMapping
-    public List<Availability> getAllAvailability() {
-        return availabilityRepository.findAll();
+    public AvailabilityController(AvailabilityService availabilityService) {
+        this.availabilityService = availabilityService;
     }
 
     @PostMapping
-    public Availability createAvailability(@RequestBody Map<String, String> request) {
-        Long tutorId = Long.parseLong(request.get("tutorId"));
+    public ResponseEntity<Availability> submitAvailability(@RequestBody AvailabilityRequest request) {
+        return ResponseEntity.ok(availabilityService.submitAvailability(request));
+    }
 
-        Tutor tutor = tutorRepository.findById(tutorId)
-                .orElseThrow(() -> new RuntimeException("Tutor not found"));
+    @GetMapping("/unit/{unitId}")
+    public ResponseEntity<List<Availability>> getAvailabilityForUnit(@PathVariable Long unitId) {
+        return ResponseEntity.ok(availabilityService.getAvailabilityForUnit(unitId));
+    }
 
-        Availability availability = new Availability();
-        availability.setDayOfWeek(request.get("dayOfWeek"));
-        availability.setStartTime(java.time.LocalTime.parse(request.get("startTime")));
-        availability.setEndTime(java.time.LocalTime.parse(request.get("endTime")));
-        availability.setTutor(tutor);
-
-        return availabilityRepository.save(availability);
+    @GetMapping("/me")
+    public ResponseEntity<List<Availability>> getMyAvailability() {
+        return ResponseEntity.ok(availabilityService.getMyAvailability());
     }
 }

@@ -9,6 +9,9 @@ backend/target/
 backend/.mvn/wrapper/maven-wrapper.jar
 backend/*.war
 *.class
+application.properties
+*.env
+.env
 
 # IDE
 .idea/
@@ -19,3 +22,5 @@ backend/*.war
 # Logs
 *.log
 logs/
+
+node_modules/

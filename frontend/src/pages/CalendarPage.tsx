@@ -1,132 +1,78 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { api } from "../services/api";
 import "./CalendarPage.css";
 
-type Allocation = {
+interface Session {
   id: number;
-  status: string;
-  tutor: {
-    id: number;
-    fullName: string;
-    email: string;
-    staffId: string;
-    maxSessions: number;
-  };
-  session: {
-    id: number;
-    sessionType: string;
-    dayOfWeek: string;
-    startTime: string;
-    endTime: string;
-    campus: string;
-    deliveryMode: string;
-    unit: {
-      id: number;
-      unitCode: string;
-      unitName: string;
-      coordinatorName: string;
-    };
-  };
-};
-
-type CalendarEvent = {
   title: string;
-  time: string;
-  type: "allocated" | "pending" | "conflict";
-};
+  startTime: string;
+  status: string;
+}
 
 function CalendarPage() {
-  const days = [
-    "", "", "", "1", "2", "3", "4",
-    "5", "6", "7", "8", "9", "10", "11",
-    "12", "13", "14", "15", "16", "17", "18",
-    "19", "20", "21", "22", "23", "24", "25",
-    "26", "27", "28", "29", "30", "", ""
-  ];
-
-  const [events, setEvents] = useState<Record<string, CalendarEvent[]>>({});
+  const [sessions, setSessions] = useState<Session[]>([]);
+  const [currentDate, setCurrentDate] = useState(new Date());
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchAllocations();
-  }, []);
+    async function loadSessions() {
+      try {
+        setLoading(true);
 
-  const fetchAllocations = async () => {
-    try {
-      const response = await fetch("http://localhost:8080/api/allocations");
-      const data: Allocation[] = await response.json();
+        const units = await api.getUnits();
+        const allSessions: Session[] = [];
 
-      const mappedEvents: Record<string, CalendarEvent[]> = {};
-
-      data.forEach((allocation) => {
-        const dayNumber = mapDayToAprilDate(allocation.session.dayOfWeek);
-
-        if (!dayNumber) return;
-
-        const eventType =
-          allocation.status?.toLowerCase() === "pending"
-            ? "pending"
-            : allocation.status?.toLowerCase() === "conflict"
-            ? "conflict"
-            : "allocated";
-
-        const event: CalendarEvent = {
-          title: `${allocation.session.unit.unitCode} ${allocation.session.sessionType}`,
-          time: formatTime(allocation.session.startTime),
-          type: eventType,
-        };
-
-        if (!mappedEvents[dayNumber]) {
-          mappedEvents[dayNumber] = [];
+        for (const unit of units) {
+          const unitSessions = await api.getSessions(unit.id);
+          allSessions.push(...unitSessions);
         }
 
-        mappedEvents[dayNumber].push(event);
-      });
-
-      setEvents(mappedEvents);
-    } catch (error) {
-      console.error("Error loading allocations:", error);
-    } finally {
-      setLoading(false);
+        setSessions(allSessions);
+      } catch (err) {
+        console.error("Error loading sessions:", err);
+      } finally {
+        setLoading(false);
+      }
     }
-  };
 
-  const mapDayToAprilDate = (dayOfWeek: string) => {
-    const dayMap: Record<string, string> = {
-      Monday: "6",
-      Tuesday: "7",
-      Wednesday: "8",
-      Thursday: "9",
-      Friday: "10",
-    };
+    loadSessions();
+  }, []);
 
-    return dayMap[dayOfWeek];
-  };
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
+  const monthName = currentDate.toLocaleString("default", { month: "long" });
 
-  const formatTime = (time: string) => {
-    if (!time) return "";
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-    const [hourText, minute] = time.split(":");
-    let hour = Number(hourText);
-    const ampm = hour >= 12 ? "PM" : "AM";
+  const days: string[] = [];
+  for (let i = 0; i < firstDay; i++) days.push("");
+  for (let i = 1; i <= daysInMonth; i++) days.push(String(i));
+  while (days.length % 7 !== 0) days.push("");
 
-    hour = hour % 12;
-    if (hour === 0) hour = 12;
+  const eventsByDay: Record<string, Session[]> = {};
 
-    return `${hour}:${minute} ${ampm}`;
-  };
+  for (const session of sessions) {
+    const date = new Date(session.startTime);
 
-  const allocatedCount = Object.values(events)
-    .flat()
-    .filter((event) => event.type === "allocated").length;
+    if (date.getFullYear() === year && date.getMonth() === month) {
+      const day = String(date.getDate());
 
-  const pendingCount = Object.values(events)
-    .flat()
-    .filter((event) => event.type === "pending").length;
+      if (!eventsByDay[day]) {
+        eventsByDay[day] = [];
+      }
 
-  const conflictCount = Object.values(events)
-    .flat()
-    .filter((event) => event.type === "conflict").length;
+      eventsByDay[day].push(session);
+    }
+  }
+
+  const allocated = sessions.filter((s) => s.status === "ALLOCATED").length;
+  const pending = sessions.filter((s) => s.status === "PENDING").length;
+  const conflict = sessions.filter((s) => s.status === "CONFLICT").length;
+
+  const prevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
+  const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
 
   return (
     <div className="calendar-page">
@@ -149,7 +95,7 @@ function CalendarPage() {
 
         <nav className="calendar-menu">
           <Link to="/coordinator">Dashboard</Link>
-          <a>My Units</a>
+          <Link to="/coordinator?view=units">My Units</Link>
           <a className="active">Calendar</a>
           <a>Tutors</a>
           <a>Allocations</a>
@@ -163,36 +109,53 @@ function CalendarPage() {
           <div className="page-heading">
             <img src="/logo.png" alt="Page logo" />
             <div>
-              <h1>April 2026 Calendar</h1>
-              <p>Class allocation overview from database</p>
+              <h1>
+                {monthName} {year} Calendar
+              </h1>
+              <p>Class allocation overview for coordinator</p>
             </div>
           </div>
 
-          <button className="publish-btn">+ Add Class</button>
+          <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+            <button className="publish-btn" onClick={prevMonth}>
+              ← Prev
+            </button>
+            <button className="publish-btn" onClick={nextMonth}>
+              Next →
+            </button>
+          </div>
         </header>
 
         <section className="calendar-summary">
           <div className="summary-card allocated-card">
-            <h2>{allocatedCount}</h2>
+            <h2>{allocated}</h2>
             <p>Allocated Classes</p>
           </div>
+
           <div className="summary-card pending-card">
-            <h2>{pendingCount}</h2>
+            <h2>{pending}</h2>
             <p>Pending Classes</p>
           </div>
+
           <div className="summary-card conflict-card">
-            <h2>{conflictCount}</h2>
+            <h2>{conflict}</h2>
             <p>Conflicts</p>
           </div>
         </section>
 
         <section className="legend">
-          <span><b className="dot allocated-dot"></b> Allocated</span>
-          <span><b className="dot pending-dot"></b> Pending</span>
-          <span><b className="dot conflict-dot"></b> Conflict</span>
+          <span>
+            <b className="dot allocated-dot"></b> Allocated
+          </span>
+          <span>
+            <b className="dot pending-dot"></b> Pending
+          </span>
+          <span>
+            <b className="dot conflict-dot"></b> Conflict
+          </span>
         </section>
 
-        {loading && <p>Loading allocation data...</p>}
+        {loading && <p>Loading calendar data...</p>}
 
         <section className="month-calendar">
           <div className="weekdays">
@@ -212,10 +175,18 @@ function CalendarPage() {
                   <>
                     <div className="day-number">{day}</div>
 
-                    {events[day]?.map((event, eventIndex) => (
-                      <div className={`class-event ${event.type}`} key={eventIndex}>
-                        <strong>{event.time}</strong>
-                        <span>{event.title}</span>
+                    {eventsByDay[day]?.map((session, i) => (
+                      <div
+                        className={`class-event ${session.status.toLowerCase()}`}
+                        key={i}
+                      >
+                        <strong>
+                          {new Date(session.startTime).toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </strong>
+                        <span>{session.title}</span>
                       </div>
                     ))}
                   </>

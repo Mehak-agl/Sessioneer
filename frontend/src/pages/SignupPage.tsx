@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
+import { api } from '../services/api'
 import './SignupPage.css'
 
 type Role = 'coordinator' | 'staff'
@@ -27,54 +28,31 @@ export default function SignupPage() {
       return
     }
 
-    // Coordinator signup saves to PostgreSQL through backend
-    if (role === 'coordinator') {
-      try {
-        const response = await fetch('http://localhost:8080/api/coordinators/register', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            fullName,
-            email,
-            password,
-          }),
-        })
+    try {
+      const res = await api.signup({
+        fullName,
+        email,
+        password,
+        role,
+      })
 
-        const data = await response.json()
+      localStorage.setItem('sessioneer_token', res.token)
+      localStorage.setItem('sessioneer_role', res.role.toLowerCase())
+      localStorage.setItem('sessioneer_name', res.fullName)
 
-        if (data.success) {
-          localStorage.setItem('sessioneer_role', 'coordinator')
-          localStorage.setItem('sessioneer_user', JSON.stringify(data.coordinator))
-          navigate('/coordinator')
-        } else {
-          setError(data.message || 'Could not create coordinator account.')
-        }
-      } catch (err) {
-        setError('Could not connect to backend. Make sure Spring Boot is running.')
-      }
-
-      return
+      navigate(res.role === 'COORDINATOR' ? '/coordinator' : '/staff')
+    } catch {
+      setError('Signup failed. Email may already be registered.')
     }
-
-    // Staff signup stays mock for now
-    localStorage.setItem('sessioneer_role', 'staff')
-    navigate('/staff')
   }
 
   return (
     <div className="signup-wrapper">
-
       <div className="signup-brand">
         <div className="brand-content">
           <img src="/sessioneer-logo.png" alt="Sessioneer" className="brand-logo" />
-          <h1 className="brand-title">
-            SESSION<span className="brand-title-accent">EER</span>
-          </h1>
-          <p className="brand-tagline">
-            Sessioneer - where tutors breathe easy and coordinators finally sleep
-          </p>
+          <h1 className="brand-title">SESSION<span className="brand-title-accent">EER</span></h1>
+          <p className="brand-tagline">Sessioneer - where tutors breathe easy and coordinators finally sleep</p>
           <ul className="brand-features">
             <li>Set up your unit in minutes</li>
             <li>Invite staff and collect availability</li>
@@ -123,6 +101,7 @@ export default function SignupPage() {
                 required
               />
             </div>
+
             <div className="form-group">
               <label htmlFor="email">Email</label>
               <input
@@ -134,6 +113,7 @@ export default function SignupPage() {
                 required
               />
             </div>
+
             <div className="form-row">
               <div className="form-group">
                 <label htmlFor="password">Password</label>
@@ -146,6 +126,7 @@ export default function SignupPage() {
                   required
                 />
               </div>
+
               <div className="form-group">
                 <label htmlFor="confirmPassword">Confirm Password</label>
                 <input
@@ -158,7 +139,9 @@ export default function SignupPage() {
                 />
               </div>
             </div>
+
             {error && <p className="signup-error">{error}</p>}
+
             <button type="submit" className="signup-btn">Create Account</button>
           </form>
 
@@ -167,7 +150,6 @@ export default function SignupPage() {
           </p>
         </div>
       </div>
-
     </div>
   )
 }

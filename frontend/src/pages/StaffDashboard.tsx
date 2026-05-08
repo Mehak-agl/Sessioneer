@@ -78,7 +78,10 @@ function StaffDashboard() {
               <h2>Availability & Preferences</h2>
               <p>Semester 2, 2026</p>
             </div>
-            <button>Update Preferences</button>
+            <div className="staff-panel-buttons">
+              <button>Set Availability</button>
+              <button>Update Preferences</button>
+            </div>
           </div>
 
           <div className="preference-grid">

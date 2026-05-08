@@ -120,6 +120,10 @@ body {
   align-items: center;
   margin-bottom: 18px;
 }
+.staff-panel-button {
+  display: flex;
+  gap: 100px;
+}
 
 .staff-panel-heading h2 {
   margin: 0;

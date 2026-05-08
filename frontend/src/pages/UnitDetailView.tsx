@@ -1,75 +1,95 @@
-import { useState } from 'react'
-import type { Unit, Session, TutorInvite, SessionMode } from '../types'
-import { DUMMY_TUTORS } from '../data/dummyData'
+import { useEffect, useState } from 'react'
+import { api } from '../services/api'
 import './UnitDetailView.css'
+
+interface Session {
+  id: number;
+  title: string;
+  startTime: string;
+  location: string;
+  status: string;
+}
+
+interface Unit {
+  id: number;
+  code: string;
+  name: string;
+  semester: string;
+}
+
+interface StaffUser {
+  id: number;
+  fullName: string;
+  email: string;
+}
 
 type Props = {
   unit: Unit
   onBack: () => void
-  onUpdateUnit: (updated: Unit) => void
 }
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
 const TIMES = ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00']
 const DURATIONS = ['1hr', '2hr', '3hr']
+const MODES = ['on-campus', 'online']
 
-export default function UnitDetailView({ unit, onBack, onUpdateUnit }: Props) {
+export default function UnitDetailView({ unit, onBack }: Props) {
+  const [sessions, setSessions] = useState<Session[]>([])
+  const [staffList, setStaffList] = useState<StaffUser[]>([])
   const [showSessionForm, setShowSessionForm] = useState(false)
   const [showInviteForm, setShowInviteForm] = useState(false)
+  const [selectedStaffId, setSelectedStaffId] = useState('')
+  const [invitedStaff, setInvitedStaff] = useState<StaffUser[]>([])
 
   const [day, setDay] = useState('Monday')
   const [time, setTime] = useState('09:00')
   const [duration, setDuration] = useState('2hr')
-  const [mode, setMode] = useState<SessionMode>('on-campus')
+  const [mode, setMode] = useState('on-campus')
   const [location, setLocation] = useState('')
 
-  const [selectedTutorId, setSelectedTutorId] = useState('')
+  useEffect(() => {
+    api.getSessions(unit.id).then(setSessions).catch(console.error)
+    api.getAllStaff().then(setStaffList).catch(console.error)
+  }, [unit.id])
 
-  const uninvitedTutors = DUMMY_TUTORS.filter(
-    dt => !unit.invitedTutors.find(t => t.id === dt.id)
-  )
-
-  const handleAddSession = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleAddSession = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    const newSession: Session = {
-      id: `s${Date.now()}`,
-      day, time, duration, mode,
-      location: mode === 'online' ? '' : location,
+    try {
+      const dayIndex = DAYS.indexOf(day) + 1
+      const startTime = `2026-06-0${dayIndex}T${time}:00`
+      await api.createSession(unit.id, {
+        title: `${unit.code} ${duration} ${mode}`,
+        startTime,
+        location: mode === 'online' ? 'Online' : location,
+      })
+      const updated = await api.getSessions(unit.id)
+      setSessions(updated)
+      setShowSessionForm(false)
+      setLocation('')
+    } catch (err) {
+      console.error(err)
     }
-    onUpdateUnit({ ...unit, sessions: [...unit.sessions, newSession] })
-    setDay('Monday'); setTime('09:00'); setDuration('2hr')
-    setMode('on-campus'); setLocation('')
-    setShowSessionForm(false)
   }
 
-  const handleRemoveSession = (sessionId: string) => {
-    onUpdateUnit({ ...unit, sessions: unit.sessions.filter(s => s.id !== sessionId) })
-  }
-
-  const handleInviteTutor = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleInvite = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    const tutor = DUMMY_TUTORS.find(t => t.id === selectedTutorId)
-    if (!tutor) return
-    const invite: TutorInvite = {
-      id: tutor.id,
-      name: tutor.name,
-      email: tutor.email,
-      status: 'pending',
-      availableSessions: [],
+    const staff = staffList.find(s => String(s.id) === selectedStaffId)
+    if (!staff) return
+    if (!invitedStaff.find(s => s.id === staff.id)) {
+      setInvitedStaff([...invitedStaff, staff])
     }
-    onUpdateUnit({ ...unit, invitedTutors: [...unit.invitedTutors, invite] })
-    setSelectedTutorId('')
+    setSelectedStaffId('')
     setShowInviteForm(false)
   }
 
-  const handleRemoveTutor = (tutorId: string) => {
-    onUpdateUnit({ ...unit, invitedTutors: unit.invitedTutors.filter(t => t.id !== tutorId) })
+  const handleRemoveStaff = (id: number) => {
+    setInvitedStaff(invitedStaff.filter(s => s.id !== id))
   }
+
+  const uninvited = staffList.filter(s => !invitedStaff.find(i => i.id === s.id))
 
   return (
     <div className="unit-detail">
-
-      {/* Header */}
       <div className="detail-header">
         <button className="back-btn" onClick={onBack}>← Back to My Units</button>
         <div className="detail-title">
@@ -81,38 +101,38 @@ export default function UnitDetailView({ unit, onBack, onUpdateUnit }: Props) {
         </div>
       </div>
 
-      {/* Sessions section */}
+      {/* Sessions */}
       <div className="detail-section">
         <div className="section-header">
           <div>
             <h2>Sessions</h2>
-            <p>{unit.sessions.length} session{unit.sessions.length !== 1 ? 's' : ''} defined</p>
+            <p>{sessions.length} session{sessions.length !== 1 ? 's' : ''} defined</p>
           </div>
           <button className="add-btn" onClick={() => setShowSessionForm(true)}>+ Add Session</button>
         </div>
 
-        {unit.sessions.length === 0 && (
+        {sessions.length === 0 && (
           <div className="empty-info">No sessions yet. Add sessions so tutors know what to indicate availability for.</div>
         )}
 
         <div className="sessions-grid">
-          {unit.sessions.map(session => (
+          {sessions.map(session => (
             <div key={session.id} className="session-card">
               <div className="session-card-top">
-                <span className={`mode-badge ${session.mode}`}>
-                  {session.mode === 'online' ? '🌐 Online' : '🏫 On-campus'}
+                <span className={`mode-badge ${session.location === 'Online' ? 'online' : 'on-campus'}`}>
+                  {session.location === 'Online' ? '🌐 Online' : '🏫 On-campus'}
                 </span>
-                <button className="remove-btn" onClick={() => handleRemoveSession(session.id)}>✕</button>
               </div>
-              <div className="session-day">{session.day}</div>
-              <div className="session-time">{session.time} · {session.duration}</div>
+              <div className="session-day">{session.title}</div>
+              <div className="session-time">{new Date(session.startTime).toLocaleString()}</div>
               {session.location && <div className="session-location">{session.location}</div>}
+              <div className="session-time">{session.status}</div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Add session modal */}
+      {/* Add Session Modal */}
       {showSessionForm && (
         <div className="modal-overlay" onClick={() => setShowSessionForm(false)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
@@ -141,20 +161,15 @@ export default function UnitDetailView({ unit, onBack, onUpdateUnit }: Props) {
               <div className="form-row-2">
                 <div className="form-field">
                   <label>Mode</label>
-                  <select value={mode} onChange={e => setMode(e.target.value as SessionMode)}>
-                    <option value="on-campus">On-campus</option>
-                    <option value="online">Online</option>
+                  <select value={mode} onChange={e => setMode(e.target.value)}>
+                    {MODES.map(m => <option key={m}>{m}</option>)}
                   </select>
                 </div>
                 {mode === 'on-campus' && (
                   <div className="form-field">
                     <label>Location</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. P Block P404"
-                      value={location}
-                      onChange={e => setLocation(e.target.value)}
-                    />
+                    <input type="text" placeholder="e.g. P Block P404"
+                      value={location} onChange={e => setLocation(e.target.value)} />
                   </div>
                 )}
               </div>
@@ -167,65 +182,50 @@ export default function UnitDetailView({ unit, onBack, onUpdateUnit }: Props) {
         </div>
       )}
 
-      {/* Tutors section */}
+      {/* Tutors */}
       <div className="detail-section">
         <div className="section-header">
           <div>
             <h2>Invited Tutors</h2>
-            <p>
-              {unit.invitedTutors.filter(t => t.status === 'responded').length} responded ·{' '}
-              {unit.invitedTutors.filter(t => t.status === 'pending').length} pending
-            </p>
+            <p>{invitedStaff.length} invited</p>
           </div>
-          {uninvitedTutors.length > 0 && (
+          {uninvited.length > 0 && (
             <button className="add-btn" onClick={() => setShowInviteForm(true)}>+ Invite Tutor</button>
           )}
         </div>
 
-        {unit.invitedTutors.length === 0 && (
+        {invitedStaff.length === 0 && (
           <div className="empty-info">No tutors invited yet. Invite tutors to collect their availability.</div>
         )}
 
         <div className="tutors-list">
-          {unit.invitedTutors.map(tutor => (
-            <div key={tutor.id} className="tutor-row">
-              <div className="tutor-avatar">{tutor.name.split(' ').map(n => n[0]).join('')}</div>
+          {invitedStaff.map(staff => (
+            <div key={staff.id} className="tutor-row">
+              <div className="tutor-avatar">{staff.fullName.split(' ').map(n => n[0]).join('')}</div>
               <div className="tutor-info">
-                <span className="tutor-name">{tutor.name}</span>
-                <span className="tutor-email">{tutor.email}</span>
+                <span className="tutor-name">{staff.fullName}</span>
+                <span className="tutor-email">{staff.email}</span>
               </div>
-              <div className="tutor-availability">
-                {tutor.status === 'responded'
-                  ? <span className="avail-sessions">Available for {tutor.availableSessions.length} session{tutor.availableSessions.length !== 1 ? 's' : ''}</span>
-                  : null
-                }
-              </div>
-              <span className={`status-badge ${tutor.status}`}>
-                {tutor.status === 'responded' ? '✓ Responded' : '⏳ Pending'}
-              </span>
-              <button className="remove-tutor-btn" onClick={() => handleRemoveTutor(tutor.id)}>Remove</button>
+              <span className="status-badge pending">⏳ Pending</span>
+              <button className="remove-tutor-btn" onClick={() => handleRemoveStaff(staff.id)}>Remove</button>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Invite tutor modal */}
+      {/* Invite Modal */}
       {showInviteForm && (
         <div className="modal-overlay" onClick={() => setShowInviteForm(false)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
             <h2>Invite Tutor</h2>
-            <p className="modal-sub">Select a tutor to invite them to submit their availability for this unit.</p>
-            <form onSubmit={handleInviteTutor} className="detail-form">
+            <p className="modal-sub">Select a tutor to invite them to submit their availability.</p>
+            <form onSubmit={handleInvite} className="detail-form">
               <div className="form-field">
                 <label>Select Tutor</label>
-                <select
-                  value={selectedTutorId}
-                  onChange={e => setSelectedTutorId(e.target.value)}
-                  required
-                >
+                <select value={selectedStaffId} onChange={e => setSelectedStaffId(e.target.value)} required>
                   <option value="">-- Choose a tutor --</option>
-                  {uninvitedTutors.map(t => (
-                    <option key={t.id} value={t.id}>{t.name} — {t.email}</option>
+                  {uninvited.map(s => (
+                    <option key={s.id} value={s.id}>{s.fullName} — {s.email}</option>
                   ))}
                 </select>
               </div>
@@ -237,7 +237,6 @@ export default function UnitDetailView({ unit, onBack, onUpdateUnit }: Props) {
           </div>
         </div>
       )}
-
     </div>
   )
 }

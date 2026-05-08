@@ -12,6 +12,7 @@ interface Session {
 
 function CalendarPage() {
   const [sessions, setSessions] = useState<Session[]>([]);
+  const [currentDate, setCurrentDate] = useState(new Date());
 
   useEffect(() => {
     async function loadSessions() {
@@ -30,24 +31,34 @@ function CalendarPage() {
     loadSessions();
   }, []);
 
-  const days = [
-    "", "", "", "1", "2", "3", "4",
-    "5", "6", "7", "8", "9", "10", "11",
-    "12", "13", "14", "15", "16", "17", "18",
-    "19", "20", "21", "22", "23", "24", "25",
-    "26", "27", "28", "29", "30", "", ""
-  ];
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
+  const monthName = currentDate.toLocaleString('default', { month: 'long' });
+
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+  const days: string[] = [];
+  for (let i = 0; i < firstDay; i++) days.push("");
+  for (let i = 1; i <= daysInMonth; i++) days.push(String(i));
+  while (days.length % 7 !== 0) days.push("");
 
   const eventsByDay: Record<string, Session[]> = {};
   for (const session of sessions) {
-    const day = String(new Date(session.startTime).getDate());
-    if (!eventsByDay[day]) eventsByDay[day] = [];
-    eventsByDay[day].push(session);
+    const d = new Date(session.startTime);
+    if (d.getFullYear() === year && d.getMonth() === month) {
+      const day = String(d.getDate());
+      if (!eventsByDay[day]) eventsByDay[day] = [];
+      eventsByDay[day].push(session);
+    }
   }
 
   const allocated = sessions.filter(s => s.status === "ALLOCATED").length;
   const pending = sessions.filter(s => s.status === "PENDING").length;
   const conflict = sessions.filter(s => s.status === "CONFLICT").length;
+
+  const prevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
+  const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
 
   return (
     <div className="calendar-page">
@@ -70,7 +81,7 @@ function CalendarPage() {
 
         <nav className="calendar-menu">
           <Link to="/coordinator">Dashboard</Link>
-          <a>My Units</a>
+          <Link to="/coordinator?view=units">My Units</Link>
           <a className="active">Calendar</a>
           <a>Tutors</a>
           <a>Allocations</a>
@@ -84,11 +95,14 @@ function CalendarPage() {
           <div className="page-heading">
             <img src="/logo.png" alt="Page logo" />
             <div>
-              <h1>April 2026 Calendar</h1>
+              <h1>{monthName} {year} Calendar</h1>
               <p>Class allocation overview for coordinator</p>
             </div>
           </div>
-          <button className="publish-btn">+ Add Class</button>
+          <div style={{display:'flex', gap:'12px', alignItems:'center'}}>
+            <button className="publish-btn" onClick={prevMonth}>← Prev</button>
+            <button className="publish-btn" onClick={nextMonth}>Next →</button>
+          </div>
         </header>
 
         <section className="calendar-summary">

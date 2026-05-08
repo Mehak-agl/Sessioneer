@@ -1,11 +1,12 @@
 import { useState } from 'react'
-import type { Unit } from '../types'
+import { api } from '../services/api'
 import './MyUnitsView.css'
 
-type Props = {
-  units: Unit[]
-  onCreateUnit: (unit: Unit) => void
-  onSelectUnit: (unitId: string) => void
+interface Unit {
+  id: number;
+  code: string;
+  name: string;
+  semester: string;
 }
 
 const SEMESTERS = [
@@ -14,27 +15,30 @@ const SEMESTERS = [
   'Semester 1, 2027',
 ]
 
-export default function MyUnitsView({ units, onCreateUnit, onSelectUnit }: Props) {
+type Props = {
+  units: Unit[]
+  onUnitCreated: () => void
+  onSelectUnit: (unitId: number) => void
+}
+
+export default function MyUnitsView({ units, onUnitCreated, onSelectUnit }: Props) {
   const [showForm, setShowForm] = useState(false)
   const [code, setCode] = useState('')
   const [name, setName] = useState('')
   const [semester, setSemester] = useState(SEMESTERS[1])
 
-  const handleCreate = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleCreate = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    const newUnit: Unit = {
-      id: `u${Date.now()}`,
-      code: code.toUpperCase(),
-      name,
-      semester,
-      sessions: [],
-      invitedTutors: [],
+    try {
+      await api.createUnit({ code: code.toUpperCase(), name, semester })
+      setCode('')
+      setName('')
+      setSemester(SEMESTERS[1])
+      setShowForm(false)
+      onUnitCreated()
+    } catch (err) {
+      console.error(err)
     }
-    onCreateUnit(newUnit)
-    setCode('')
-    setName('')
-    setSemester(SEMESTERS[1])
-    setShowForm(false)
   }
 
   return (
@@ -47,7 +51,6 @@ export default function MyUnitsView({ units, onCreateUnit, onSelectUnit }: Props
         <button className="create-btn" onClick={() => setShowForm(true)}>+ Create Unit</button>
       </div>
 
-      {/* Create unit modal */}
       {showForm && (
         <div className="modal-overlay" onClick={() => setShowForm(false)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
@@ -56,13 +59,8 @@ export default function MyUnitsView({ units, onCreateUnit, onSelectUnit }: Props
               <div className="unit-form-row">
                 <div className="form-field">
                   <label>Unit Code</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. CAB302"
-                    value={code}
-                    onChange={e => setCode(e.target.value)}
-                    required
-                  />
+                  <input type="text" placeholder="e.g. CAB302"
+                    value={code} onChange={e => setCode(e.target.value)} required />
                 </div>
                 <div className="form-field">
                   <label>Semester</label>
@@ -73,13 +71,8 @@ export default function MyUnitsView({ units, onCreateUnit, onSelectUnit }: Props
               </div>
               <div className="form-field">
                 <label>Unit Name</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Software Development"
-                  value={name}
-                  onChange={e => setName(e.target.value)}
-                  required
-                />
+                <input type="text" placeholder="e.g. Software Development"
+                  value={name} onChange={e => setName(e.target.value)} required />
               </div>
               <div className="modal-actions">
                 <button type="button" className="cancel-btn" onClick={() => setShowForm(false)}>Cancel</button>
@@ -90,60 +83,26 @@ export default function MyUnitsView({ units, onCreateUnit, onSelectUnit }: Props
         </div>
       )}
 
-      {/* Units list */}
       <div className="units-list">
         {units.length === 0 && (
           <div className="empty-state">
             <p>No units yet. Click <strong>Create Unit</strong> to get started.</p>
           </div>
         )}
-        {units.map(unit => {
-          const responded = unit.invitedTutors.filter(t => t.status === 'responded').length
-          const pending = unit.invitedTutors.filter(t => t.status === 'pending').length
-          const hasSetup = unit.sessions.length > 0
-
-          return (
-            <div key={unit.id} className="unit-row">
-              <div className="unit-row-left">
-                <div className="unit-code-badge">{unit.code}</div>
-                <div className="unit-row-info">
-                  <h3>{unit.name}</h3>
-                  <span className="unit-meta">{unit.semester}</span>
-                </div>
-              </div>
-
-              <div className="unit-row-stats">
-                <div className="unit-stat">
-                  <span className="stat-num">{unit.sessions.length}</span>
-                  <span className="stat-label">Sessions</span>
-                </div>
-                <div className="unit-stat">
-                  <span className="stat-num">{unit.invitedTutors.length}</span>
-                  <span className="stat-label">Invited</span>
-                </div>
-                <div className="unit-stat">
-                  <span className="stat-num responded">{responded}</span>
-                  <span className="stat-label">Responded</span>
-                </div>
-                {pending > 0 && (
-                  <div className="unit-stat">
-                    <span className="stat-num pending">{pending}</span>
-                    <span className="stat-label">Pending</span>
-                  </div>
-                )}
-              </div>
-
-              <div className="unit-row-actions">
-                {!hasSetup && (
-                  <span className="setup-badge">Setup needed</span>
-                )}
-                <button className="manage-btn" onClick={() => onSelectUnit(unit.id)}>
-                  Manage →
-                </button>
+        {units.map(unit => (
+          <div key={unit.id} className="unit-row">
+            <div className="unit-row-left">
+              <div className="unit-code-badge">{unit.code}</div>
+              <div className="unit-row-info">
+                <h3>{unit.name}</h3>
+                <span className="unit-meta">{unit.semester}</span>
               </div>
             </div>
-          )
-        })}
+            <div className="unit-row-actions">
+              <button className="manage-btn" onClick={() => onSelectUnit(unit.id)}>Manage →</button>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   )

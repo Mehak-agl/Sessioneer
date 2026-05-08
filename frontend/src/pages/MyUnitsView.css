@@ -41,7 +41,6 @@
   transform: translateY(-2px);
 }
 
-/* ── Modal ──────────────────────────────────────────────── */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -152,7 +151,6 @@
   background: #007f96;
 }
 
-/* ── Units list ─────────────────────────────────────────── */
 .units-list {
   display: flex;
   flex-direction: column;
@@ -217,51 +215,10 @@
   color: #657985;
 }
 
-.unit-row-stats {
-  display: flex;
-  gap: 24px;
-  align-items: center;
-}
-
-.unit-stat {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-}
-
-.stat-num {
-  font-family: 'Montserrat', sans-serif;
-  font-size: 22px;
-  font-weight: 700;
-  color: #1f3550;
-}
-
-.stat-num.responded { color: #0097b2; }
-.stat-num.pending   { color: #fbbf24; }
-
-.stat-label {
-  font-size: 11px;
-  color: #657985;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
 .unit-row-actions {
   display: flex;
   align-items: center;
   gap: 12px;
-}
-
-.setup-badge {
-  font-size: 12px;
-  background: #fff8dc;
-  color: #745a00;
-  border: 1px solid #fbbf24;
-  padding: 5px 10px;
-  border-radius: 8px;
-  font-weight: 600;
 }
 
 .manage-btn {

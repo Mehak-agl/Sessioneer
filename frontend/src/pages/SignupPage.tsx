@@ -13,7 +13,7 @@ export default function SignupPage() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState('')
 
-  const handleSignup = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSignup = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setError('')
 
@@ -21,20 +21,51 @@ export default function SignupPage() {
       setError('Passwords do not match.')
       return
     }
+
     if (password.length < 6) {
       setError('Password must be at least 6 characters.')
       return
     }
 
-    // Mock signup — store role and redirect
-    localStorage.setItem('sessioneer_role', role)
-    navigate(role === 'coordinator' ? '/coordinator' : '/staff')
+    // Coordinator signup saves to PostgreSQL through backend
+    if (role === 'coordinator') {
+      try {
+        const response = await fetch('http://localhost:8080/api/coordinators/register', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            fullName,
+            email,
+            password,
+          }),
+        })
+
+        const data = await response.json()
+
+        if (data.success) {
+          localStorage.setItem('sessioneer_role', 'coordinator')
+          localStorage.setItem('sessioneer_user', JSON.stringify(data.coordinator))
+          navigate('/coordinator')
+        } else {
+          setError(data.message || 'Could not create coordinator account.')
+        }
+      } catch (err) {
+        setError('Could not connect to backend. Make sure Spring Boot is running.')
+      }
+
+      return
+    }
+
+    // Staff signup stays mock for now
+    localStorage.setItem('sessioneer_role', 'staff')
+    navigate('/staff')
   }
 
   return (
     <div className="signup-wrapper">
 
-      {/* Left brand panel */}
       <div className="signup-brand">
         <div className="brand-content">
           <img src="/sessioneer-logo.png" alt="Sessioneer" className="brand-logo" />
@@ -56,7 +87,6 @@ export default function SignupPage() {
         </div>
       </div>
 
-      {/* Right form panel */}
       <div className="signup-form-panel">
         <div className="signup-card">
           <div className="signup-header">

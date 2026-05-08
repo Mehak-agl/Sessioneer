@@ -1,5 +1,39 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import "./CalendarPage.css";
+
+type Allocation = {
+  id: number;
+  status: string;
+  tutor: {
+    id: number;
+    fullName: string;
+    email: string;
+    staffId: string;
+    maxSessions: number;
+  };
+  session: {
+    id: number;
+    sessionType: string;
+    dayOfWeek: string;
+    startTime: string;
+    endTime: string;
+    campus: string;
+    deliveryMode: string;
+    unit: {
+      id: number;
+      unitCode: string;
+      unitName: string;
+      coordinatorName: string;
+    };
+  };
+};
+
+type CalendarEvent = {
+  title: string;
+  time: string;
+  type: "allocated" | "pending" | "conflict";
+};
 
 function CalendarPage() {
   const days = [
@@ -10,19 +44,89 @@ function CalendarPage() {
     "26", "27", "28", "29", "30", "", ""
   ];
 
-  const events: Record<string, { title: string; time: string; type: string }[]> = {
-    "6": [{ title: "CAB302 Workshop", time: "9:00 AM", type: "allocated" }],
-    "8": [{ title: "CAB301 Tutorial", time: "11:00 AM", type: "pending" }],
-    "10": [{ title: "IFN660 Lab", time: "2:00 PM", type: "conflict" }],
-    "13": [{ title: "CAB302 Lab A", time: "10:00 AM", type: "allocated" }],
-    "15": [{ title: "CAB302 Lab B", time: "1:00 PM", type: "pending" }],
-    "17": [{ title: "Rohit Conflict", time: "9:00 AM", type: "conflict" }],
-    "20": [{ title: "CAB301 Lecture", time: "12:00 PM", type: "allocated" }],
-    "22": [{ title: "Tutor Pending", time: "3:00 PM", type: "pending" }],
-    "24": [{ title: "IFN660 Workshop", time: "10:00 AM", type: "allocated" }],
-    "27": [{ title: "CAB302 Review", time: "2:00 PM", type: "allocated" }],
-    "29": [{ title: "Allocation Check", time: "11:00 AM", type: "conflict" }]
+  const [events, setEvents] = useState<Record<string, CalendarEvent[]>>({});
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchAllocations();
+  }, []);
+
+  const fetchAllocations = async () => {
+    try {
+      const response = await fetch("http://localhost:8080/api/allocations");
+      const data: Allocation[] = await response.json();
+
+      const mappedEvents: Record<string, CalendarEvent[]> = {};
+
+      data.forEach((allocation) => {
+        const dayNumber = mapDayToAprilDate(allocation.session.dayOfWeek);
+
+        if (!dayNumber) return;
+
+        const eventType =
+          allocation.status?.toLowerCase() === "pending"
+            ? "pending"
+            : allocation.status?.toLowerCase() === "conflict"
+            ? "conflict"
+            : "allocated";
+
+        const event: CalendarEvent = {
+          title: `${allocation.session.unit.unitCode} ${allocation.session.sessionType}`,
+          time: formatTime(allocation.session.startTime),
+          type: eventType,
+        };
+
+        if (!mappedEvents[dayNumber]) {
+          mappedEvents[dayNumber] = [];
+        }
+
+        mappedEvents[dayNumber].push(event);
+      });
+
+      setEvents(mappedEvents);
+    } catch (error) {
+      console.error("Error loading allocations:", error);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const mapDayToAprilDate = (dayOfWeek: string) => {
+    const dayMap: Record<string, string> = {
+      Monday: "6",
+      Tuesday: "7",
+      Wednesday: "8",
+      Thursday: "9",
+      Friday: "10",
+    };
+
+    return dayMap[dayOfWeek];
+  };
+
+  const formatTime = (time: string) => {
+    if (!time) return "";
+
+    const [hourText, minute] = time.split(":");
+    let hour = Number(hourText);
+    const ampm = hour >= 12 ? "PM" : "AM";
+
+    hour = hour % 12;
+    if (hour === 0) hour = 12;
+
+    return `${hour}:${minute} ${ampm}`;
+  };
+
+  const allocatedCount = Object.values(events)
+    .flat()
+    .filter((event) => event.type === "allocated").length;
+
+  const pendingCount = Object.values(events)
+    .flat()
+    .filter((event) => event.type === "pending").length;
+
+  const conflictCount = Object.values(events)
+    .flat()
+    .filter((event) => event.type === "conflict").length;
 
   return (
     <div className="calendar-page">
@@ -44,7 +148,7 @@ function CalendarPage() {
         </div>
 
         <nav className="calendar-menu">
-          <Link to="/dashboard">Dashboard</Link>
+          <Link to="/coordinator">Dashboard</Link>
           <a>My Units</a>
           <a className="active">Calendar</a>
           <a>Tutors</a>
@@ -60,7 +164,7 @@ function CalendarPage() {
             <img src="/logo.png" alt="Page logo" />
             <div>
               <h1>April 2026 Calendar</h1>
-              <p>Class allocation overview for coordinator</p>
+              <p>Class allocation overview from database</p>
             </div>
           </div>
 
@@ -69,15 +173,15 @@ function CalendarPage() {
 
         <section className="calendar-summary">
           <div className="summary-card allocated-card">
-            <h2>6</h2>
+            <h2>{allocatedCount}</h2>
             <p>Allocated Classes</p>
           </div>
           <div className="summary-card pending-card">
-            <h2>3</h2>
+            <h2>{pendingCount}</h2>
             <p>Pending Classes</p>
           </div>
           <div className="summary-card conflict-card">
-            <h2>3</h2>
+            <h2>{conflictCount}</h2>
             <p>Conflicts</p>
           </div>
         </section>
@@ -87,6 +191,8 @@ function CalendarPage() {
           <span><b className="dot pending-dot"></b> Pending</span>
           <span><b className="dot conflict-dot"></b> Conflict</span>
         </section>
+
+        {loading && <p>Loading allocation data...</p>}
 
         <section className="month-calendar">
           <div className="weekdays">

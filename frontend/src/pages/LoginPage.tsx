@@ -16,13 +16,45 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
 
-  const handleLogin = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setError('')
-    const expected = MOCK_USERS[role]
+
+    // Coordinator login uses backend/database
+    if (role === 'coordinator') {
+      try {
+        const response = await fetch('http://localhost:8080/api/coordinators/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email,
+            password,
+          }),
+        })
+
+        const data = await response.json()
+
+        if (data.success) {
+          localStorage.setItem('sessioneer_role', 'coordinator')
+          localStorage.setItem('sessioneer_user', JSON.stringify(data.coordinator))
+          navigate('/coordinator')
+        } else {
+          setError(data.message || 'Invalid email or password.')
+        }
+      } catch (err) {
+        setError('Could not connect to backend. Make sure Spring Boot is running.')
+      }
+
+      return
+    }
+
+    // Staff login stays mock for now
+    const expected = MOCK_USERS.staff
     if (email === expected.email && password === expected.password) {
-      localStorage.setItem('sessioneer_role', role)
-      navigate(role === 'coordinator' ? '/coordinator' : '/staff')
+      localStorage.setItem('sessioneer_role', 'staff')
+      navigate('/staff')
     } else {
       setError('Invalid email or password.')
     }
@@ -31,7 +63,6 @@ export default function LoginPage() {
   return (
     <div className="login-wrapper">
 
-      {/* Left brand panel */}
       <div className="login-brand">
         <div className="brand-content">
           <img src="/sessioneer-logo.png" alt="Sessioneer" className="brand-logo" />
@@ -53,7 +84,6 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* Right form panel */}
       <div className="login-form-panel">
         <div className="login-card">
           <div className="login-header">
@@ -107,9 +137,9 @@ export default function LoginPage() {
 
           <div className="login-hint">
             <strong>Demo credentials</strong>
-            <p>Coordinator: coordinator@qut.edu.au / admin123</p>
+            <p>Coordinator: use the account saved in PostgreSQL</p>
             <p>Staff: staff@qut.edu.au / staff123</p>
-            <p className="login-hint-note">Any personal email works once real auth is set up.</p>
+            <p className="login-hint-note">Coordinator login is now connected to backend database.</p>
           </div>
 
           <p className="login-signup-link">

@@ -2,7 +2,6 @@
   padding: 0;
 }
 
-/* ── Header ─────────────────────────────────────────────── */
 .back-btn {
   background: none;
   border: none;
@@ -53,7 +52,6 @@
   font-size: 14px;
 }
 
-/* ── Section ─────────────────────────────────────────────── */
 .detail-section {
   background: white;
   border: 1.5px solid #d7eaf1;
@@ -108,7 +106,6 @@
   text-align: center;
 }
 
-/* ── Sessions grid ──────────────────────────────────────── */
 .sessions-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
@@ -145,18 +142,6 @@
 .mode-badge.online    { background: #e0f5f9; color: #0097b2; }
 .mode-badge.on-campus { background: #eef6ee; color: #2e7d32; }
 
-.remove-btn {
-  background: none;
-  border: none;
-  color: #aaa;
-  cursor: pointer;
-  font-size: 12px;
-  padding: 2px 4px;
-  transition: 0.2s;
-}
-
-.remove-btn:hover { color: #e53935; }
-
 .session-day {
   font-family: 'Montserrat', sans-serif;
   font-size: 16px;
@@ -177,106 +162,6 @@
   margin-top: 4px;
 }
 
-/* ── Tutors list ─────────────────────────────────────────── */
-.tutors-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.tutor-row {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 14px 18px;
-  background: #f8fcfd;
-  border: 1.5px solid #d7eaf1;
-  border-radius: 14px;
-  transition: 0.2s;
-}
-
-.tutor-row:hover {
-  border-color: #0097b2;
-}
-
-.tutor-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: #0097b2;
-  color: white;
-  font-family: 'Montserrat', sans-serif;
-  font-weight: 700;
-  font-size: 13px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.tutor-info {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  flex: 1;
-}
-
-.tutor-name {
-  font-weight: 700;
-  font-size: 15px;
-  color: #1f3550;
-}
-
-.tutor-email {
-  font-size: 12px;
-  color: #657985;
-}
-
-.tutor-availability {
-  font-size: 13px;
-  color: #0097b2;
-}
-
-.avail-sessions {
-  font-weight: 600;
-}
-
-.status-badge {
-  font-size: 12px;
-  font-weight: 700;
-  padding: 5px 12px;
-  border-radius: 999px;
-  white-space: nowrap;
-}
-
-.status-badge.responded {
-  background: #e0f5f9;
-  color: #0097b2;
-}
-
-.status-badge.pending {
-  background: #fff8dc;
-  color: #745a00;
-}
-
-.remove-tutor-btn {
-  background: none;
-  border: 1.5px solid #d7eaf1;
-  color: #657985;
-  padding: 6px 12px;
-  border-radius: 8px;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-.remove-tutor-btn:hover {
-  border-color: #e53935;
-  color: #e53935;
-}
-
-/* ── Modal (reuse from MyUnitsView) ─────────────────────── */
 .modal-overlay {
   position: fixed;
   inset: 0;

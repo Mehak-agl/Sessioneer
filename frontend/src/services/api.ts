@@ -38,4 +38,5 @@ export const api = {
   allocate: (data: object) => request('POST', '/allocations', data),
   getUnitAllocations: (unitId: number) => request('GET', `/allocations/unit/${unitId}`),
   getMyAllocations: (staffId: number) => request('GET', `/allocations/staff/${staffId}`),
+  getAllStaff: () => request('GET', '/users/staff'),
 }

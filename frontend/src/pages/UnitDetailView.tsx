@@ -199,17 +199,23 @@ export default function UnitDetailView({ unit, onBack }: Props) {
         )}
 
         <div className="tutors-list">
-          {invitedStaff.map(staff => (
-            <div key={staff.id} className="tutor-row">
-              <div className="tutor-avatar">{staff.fullName.split(' ').map(n => n[0]).join('')}</div>
-              <div className="tutor-info">
-                <span className="tutor-name">{staff.fullName}</span>
-                <span className="tutor-email">{staff.email}</span>
+          {invitedStaff.map(staff => {
+            const name = staff.fullName || staff.email
+            const initials = staff.fullName
+              ? staff.fullName.split(' ').filter(Boolean).map(n => n[0]).join('').toUpperCase()
+              : staff.email[0].toUpperCase()
+            return (
+              <div key={staff.id} className="tutor-row">
+                <div className="tutor-avatar">{initials}</div>
+                <div className="tutor-info">
+                  <span className="tutor-name">{name}</span>
+                  <span className="tutor-email">{staff.email}</span>
+                </div>
+                <span className="status-badge pending">⏳ Pending</span>
+                <button className="remove-tutor-btn" onClick={() => handleRemoveStaff(staff.id)}>Remove</button>
               </div>
-              <span className="status-badge pending">⏳ Pending</span>
-              <button className="remove-tutor-btn" onClick={() => handleRemoveStaff(staff.id)}>Remove</button>
-            </div>
-          ))}
+            )
+          })}
         </div>
       </div>
 

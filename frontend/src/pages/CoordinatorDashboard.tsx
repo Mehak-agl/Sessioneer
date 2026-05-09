@@ -75,8 +75,6 @@ function CoordinatorDashboard() {
           <p>Reports</p>
           <p>Chat</p>
         </nav>
-
-        <button className="logout-btn" onClick={handleLogout}>Logout</button>
       </aside>
 
       <main className="main-content">
@@ -90,7 +88,10 @@ function CoordinatorDashboard() {
                   <p>Manage tutors, units, schedules and allocations</p>
                 </div>
               </div>
-              <button className="new-unit-btn" onClick={() => setView('units')}>+ New Unit</button>
+              <div style={{display:'flex', gap:'12px'}}>
+                <button className="new-unit-btn" onClick={() => setView('units')}>+ New Unit</button>
+                <button className="logout-btn" onClick={handleLogout}>Logout</button>
+              </div>
             </header>
 
             <section className="stats-grid">

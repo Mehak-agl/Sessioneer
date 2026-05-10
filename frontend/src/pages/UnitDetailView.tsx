@@ -50,6 +50,9 @@ export default function UnitDetailView({ unit, onBack }: Props) {
   useEffect(() => {
     api.getSessions(unit.id).then(setSessions).catch(console.error)
     api.getAllStaff().then(setStaffList).catch(console.error)
+    api.getUnitInvitations(unit.id).then(invitations => {
+      setInvitedStaff(invitations.map((inv: any) => inv.staff))
+    }).catch(console.error)
   }, [unit.id])
 
   const handleAddSession = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -71,19 +74,26 @@ export default function UnitDetailView({ unit, onBack }: Props) {
     }
   }
 
-  const handleInvite = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleInvite = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    const staff = staffList.find(s => String(s.id) === selectedStaffId)
-    if (!staff) return
-    if (!invitedStaff.find(s => s.id === staff.id)) {
-      setInvitedStaff([...invitedStaff, staff])
+    try {
+      await api.inviteStaff(unit.id, Number(selectedStaffId))
+      const invitations = await api.getUnitInvitations(unit.id)
+      setInvitedStaff(invitations.map((inv: any) => inv.staff))
+      setSelectedStaffId('')
+      setShowInviteForm(false)
+    } catch (err) {
+      console.error(err)
     }
-    setSelectedStaffId('')
-    setShowInviteForm(false)
   }
 
-  const handleRemoveStaff = (id: number) => {
-    setInvitedStaff(invitedStaff.filter(s => s.id !== id))
+  const handleRemoveStaff = async (id: number) => {
+    try {
+      await api.removeInvitation(unit.id, id)
+      setInvitedStaff(invitedStaff.filter(s => s.id !== id))
+    } catch (err) {
+      console.error(err)
+    }
   }
 
   const uninvited = staffList.filter(s => !invitedStaff.find(i => i.id === s.id))

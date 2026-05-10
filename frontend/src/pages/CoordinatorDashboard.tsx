@@ -19,12 +19,21 @@ function CoordinatorDashboard() {
   const [units, setUnits] = useState<Unit[]>([])
   const [view, setView] = useState<View>('dashboard')
   const [selectedUnit, setSelectedUnit] = useState<Unit | null>(null)
+  const [pendingCount, setPendingCount] = useState(0)
   const fullName = localStorage.getItem("sessioneer_name") || "Coordinator";
   const initials = fullName.split(" ").map((n: string) => n[0]).join("");
 
-  const loadUnits = () => {
-    api.getUnits().then(setUnits).catch(console.error)
+  const loadUnits = async () => {
+    const fetchedUnits = await api.getUnits().catch(() => [])
+    setUnits(fetchedUnits)
+    let pending = 0
+    for (const unit of fetchedUnits) {
+      const invitations = await api.getUnitInvitations(unit.id).catch(() => [])
+      pending += invitations.filter((inv: any) => inv.status === 'PENDING').length
+    }
+    setPendingCount(pending)
   }
+
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -102,7 +111,7 @@ function CoordinatorDashboard() {
               </div>
               <div className="stat-card">
                 <span>Pending Responses</span>
-                <h2>0</h2>
+                <h2>{pendingCount}</h2>
                 <p>Awaiting tutor replies</p>
               </div>
               <div className="stat-card warning">

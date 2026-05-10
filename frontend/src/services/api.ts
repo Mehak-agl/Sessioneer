@@ -39,4 +39,8 @@ export const api = {
   getUnitAllocations: (unitId: number) => request('GET', `/allocations/unit/${unitId}`),
   getMyAllocations: (staffId: number) => request('GET', `/allocations/staff/${staffId}`),
   getAllStaff: () => request('GET', '/users/staff'),
+  inviteStaff: (unitId: number, staffId: number) => request('POST', `/units/${unitId}/invite/${staffId}`),
+  getUnitInvitations: (unitId: number) => request('GET', `/units/${unitId}/invitations`),
+  getMyInvitations: () => request('GET', '/invitations/me'),
+  removeInvitation: (unitId: number, staffId: number) => request('DELETE', `/units/${unitId}/invite/${staffId}`),
 }

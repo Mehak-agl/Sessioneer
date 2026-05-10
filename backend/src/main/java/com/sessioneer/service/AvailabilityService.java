@@ -2,13 +2,17 @@ package com.sessioneer.service;
 
 import com.sessioneer.dto.AvailabilityRequest;
 import com.sessioneer.model.Availability;
+import com.sessioneer.model.InvitationStatus;
 import com.sessioneer.model.Unit;
 import com.sessioneer.model.User;
 import com.sessioneer.repository.AvailabilityRepository;
+import com.sessioneer.repository.UnitInvitationRepository;
 import com.sessioneer.repository.UnitRepository;
 import com.sessioneer.repository.UserRepository;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import com.sessioneer.model.InvitationStatus;
+import com.sessioneer.repository.UnitInvitationRepository;
 
 import java.util.List;
 
@@ -18,13 +22,16 @@ public class AvailabilityService {
     private final AvailabilityRepository availabilityRepository;
     private final UnitRepository unitRepository;
     private final UserRepository userRepository;
+    private final UnitInvitationRepository invitationRepository;
 
     public AvailabilityService(AvailabilityRepository availabilityRepository,
                                 UnitRepository unitRepository,
-                                UserRepository userRepository) {
+                                UserRepository userRepository,
+                                UnitInvitationRepository invitationRepository) {
         this.availabilityRepository = availabilityRepository;
         this.unitRepository = unitRepository;
         this.userRepository = userRepository;
+        this.invitationRepository = invitationRepository;
     }
 
     private User getCurrentUser() {
@@ -43,6 +50,12 @@ public class AvailabilityService {
         availability.setUnit(unit);
         availability.setStartTime(request.getStartTime());
         availability.setEndTime(request.getEndTime());
+
+        invitationRepository.findByUnitIdAndStaffId(unit.getId(), staff.getId())
+            .ifPresent(invitation -> {
+                invitation.setStatus(InvitationStatus.RESPONDED);
+                invitationRepository.save(invitation);
+            });
 
         return availabilityRepository.save(availability);
     }

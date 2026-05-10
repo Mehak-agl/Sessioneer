@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { Unit } from '../types'
+import { api } from '../services/api'
 import './TutorAvailabilityView.css'
 
 type Props = {
@@ -83,10 +84,28 @@ export default function TutorAvailabilityView({ units, onBack }: Props) {
   const totalSlots = unitsWithSlots.reduce((sum, u) => sum + (slotsByUnit[u.id]?.size ?? 0), 0)
   const canSubmit = unitsWithSlots.length > 0 && confirmed
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!canSubmit) return
-    // TODO: wire to api.submitAvailability({ submissions: unitsWithSlots.map(u => ({ unitId: u.id, slots: [...slotsByUnit[u.id]] })), modePreference, campusPreference, maxSessions, notes })
-    setSubmitted(true)
+    try {
+      for (const unit of unitsWithSlots) {
+        const slots = [...(slotsByUnit[unit.id] ?? [])]
+        for (const slot of slots) {
+          const [day, time] = slot.split('-')
+          const dayIndex = ['Monday','Tuesday','Wednesday','Thursday','Friday'].indexOf(day) + 1
+          const startTime = `2026-06-0${dayIndex}T${time}:00`
+          const endTimeHour = String(parseInt(time.split(':')[0]) + 1).padStart(2, '0')
+          const endTime = `2026-06-0${dayIndex}T${endTimeHour}:00:00`
+          await api.submitAvailability({
+            unitId: Number(unit.id),
+            startTime,
+            endTime
+          })
+        }
+      }
+      setSubmitted(true)
+    } catch (err) {
+      console.error(err)
+    }
   }
 
   if (submitted) {
@@ -148,7 +167,7 @@ export default function TutorAvailabilityView({ units, onBack }: Props) {
                 key={unit.id}
                 type="button"
                 className={`avail-unit-tab ${isActive ? 'active' : ''} ${unitSlotCount > 0 ? 'has-slots' : ''}`}
-                onClick={() => setActiveUnitId(unit.id)}
+                onClick={() => setActiveUnitId(String(unit.id))}
               >
                 <span className="avail-tab-code">{unit.code}</span>
                 <span className="avail-tab-name">{unit.name}</span>

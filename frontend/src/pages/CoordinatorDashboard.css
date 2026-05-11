@@ -19,13 +19,15 @@ body {
 /* SIDEBAR */
 .sidebar {
   width: 285px;
-  min-height: 100vh;
+  height: 100vh;
   background: linear-gradient(180deg, #1f3550 0%, #132336 100%);
   color: white;
   padding: 24px;
   position: fixed;
   left: 0;
   top: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .sidebar-logo {
@@ -381,6 +383,7 @@ body {
     gap: 16px;
   }
 }
+<<<<<<< HEAD
 .dashboard-section {
   margin-top: 28px;
 }
@@ -410,4 +413,32 @@ body {
 
 .unit-actions a {
   text-decoration: none;
+=======
+
+.menu a {
+  color: inherit;
+  text-decoration: none;
+  font-weight: bold;
+  padding: 14px 18px;
+  display: block;
+}
+
+.logout-btn {
+  padding: 10px 20px;
+  background: transparent;
+  color: #657985;
+  border: 1.5px solid #d7eaf1;
+  border-radius: 10px;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.logout-btn:hover {
+  background: #fee2e2;
+  border-color: #e53935;
+  color: #e53935;
+>>>>>>> main
 }

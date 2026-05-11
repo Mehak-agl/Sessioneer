@@ -427,3 +427,145 @@ body {
   color: #745a00;
   font-weight: bold;
 }
+.calendar-box-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 22px;
+  background: #eef8fb;
+  padding: 16px;
+  border-radius: 16px;
+}
+
+.calendar-select-group {
+  display: flex;
+  gap: 12px;
+}
+
+.calendar-select-group select {
+  padding: 11px 16px;
+  border-radius: 12px;
+  border: 1px solid #cfe3eb;
+  background: white;
+  color: #1f3550;
+  font-weight: bold;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.calendar-nav-btn {
+  background: #1f3550;
+  color: white;
+  border: none;
+  padding: 12px 18px;
+  border-radius: 12px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.calendar-nav-btn:hover {
+  background: #0097b2;
+}
+
+.inside-calendar {
+  margin-top: 0;
+  margin-bottom: 20px;
+}
+
+.legend {
+  justify-content: center;
+  background: #f6fbfd;
+  padding: 14px;
+  border-radius: 14px;
+}
+
+.empty {
+  background: #edf3f6;
+  opacity: 0.6;
+}
+
+@media (max-width: 800px) {
+  .calendar-box-header {
+    flex-direction: column;
+  }
+
+  .calendar-select-group {
+    width: 100%;
+  }
+
+  .calendar-select-group select,
+  .calendar-nav-btn {
+    width: 100%;
+  }
+}
+/* Remove logo image from page heading/sidebar where needed */
+.no-page-logo img {
+  display: none;
+}
+
+/* Filter row above calendar */
+.calendar-filter-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 20px;
+}
+
+.unit-filter-box {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #f6fbfd;
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid #d7eaf1;
+}
+
+.unit-filter-box label {
+  color: #1f3550;
+  font-weight: bold;
+  font-size: 15px;
+}
+
+.unit-filter-box select {
+  min-width: 190px;
+  padding: 11px 14px;
+  border-radius: 12px;
+  border: 1px solid #cfe3eb;
+  background: white;
+  color: #1f3550;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+/* Show unit name inside event */
+.class-event small {
+  display: block;
+  margin-top: 3px;
+  font-size: 11px;
+  color: #425868;
+}
+
+/* Better event spacing */
+.class-event {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* Mobile filter */
+@media (max-width: 800px) {
+  .calendar-filter-row {
+    justify-content: stretch;
+  }
+
+  .unit-filter-box {
+    width: 100%;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .unit-filter-box select {
+    width: 100%;
+  }
+}

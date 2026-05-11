@@ -91,7 +91,6 @@ function CoordinatorDashboard() {
           <>
             <header className="topbar">
               <div className="page-title">
-                <img src="/icons.svg" alt="Page logo" />
                 <div>
                   <h1>Coordinator Dashboard</h1>
                   <p>Manage tutors, units, schedules and allocations</p>

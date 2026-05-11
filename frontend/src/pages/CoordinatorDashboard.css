@@ -376,14 +376,8 @@ body {
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);
   }
-
-  .unit-card {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 16px;
-  }
 }
-<<<<<<< HEAD
+
 .dashboard-section {
   margin-top: 28px;
 }
@@ -413,7 +407,7 @@ body {
 
 .unit-actions a {
   text-decoration: none;
-=======
+}
 
 .menu a {
   color: inherit;
@@ -429,16 +423,10 @@ body {
   color: #657985;
   border: 1.5px solid #d7eaf1;
   border-radius: 10px;
-  font-family: 'Montserrat', sans-serif;
+  font-family: "Montserrat", sans-serif;
   font-weight: 700;
   font-size: 13px;
   cursor: pointer;
   transition: 0.2s;
 }
 
-.logout-btn:hover {
-  background: #fee2e2;
-  border-color: #e53935;
-  color: #e53935;
->>>>>>> main
-}

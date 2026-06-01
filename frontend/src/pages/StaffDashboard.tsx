@@ -28,7 +28,7 @@ interface Unit {
 function StaffDashboard() {
   const navigate = useNavigate()
   const [availability, setAvailability] = useState<Availability[]>([])
-  const [allocations, setAllocations] = useState<Allocation[]>([])
+  const [allocations] = useState<Allocation[]>([])
   const [invitedUnits, setInvitedUnits] = useState<Unit[]>([])
   const [showAvailability, setShowAvailability] = useState(false)
 

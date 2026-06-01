@@ -20,7 +20,8 @@ type View = 'dashboard' | 'units' | 'unit-detail'
 function CoordinatorDashboard() {
   const navigate = useNavigate()
   const [units, setUnits] = useState<Unit[]>([])
-  const [view, setView] = useState<View>('dashboard')
+  const initialView: View = new URLSearchParams(window.location.search).get('view') === 'units' ? 'units' : 'dashboard'
+  const [view, setView] = useState<View>(initialView)
   const [selectedUnit, setSelectedUnit] = useState<Unit | null>(null)
   const [pendingCount, setPendingCount] = useState(0)
   const [showImportModal, setShowImportModal] = useState(false)
@@ -248,9 +249,8 @@ function CoordinatorDashboard() {
 
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    if (params.get('view') === 'units') setView('units') 
-    loadUnits() }, [])
+    loadUnits()
+  }, [])
 
   const handleLogout = () => {
     localStorage.removeItem("sessioneer_token");

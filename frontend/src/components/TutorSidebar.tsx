@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import "./StaffSidebar.css";
+import "./TutorSidebar.css";
 
 function StaffSidebar() {
   const fullName = localStorage.getItem('sessioneer_name') || 'Staff';
@@ -24,13 +24,13 @@ function StaffSidebar() {
       </div>
 
       <nav className="staff-menu">
-        <Link className="active" to="/staff">Dashboard</Link>
+        <Link to="/staff">Dashboard</Link>
         <Link to="/staff">My Units</Link>
-        <Link to="/staff">Calendar</Link>
+        <Link to="/staff-calendar">Calendar</Link>
         <Link to="/staff">Contracts</Link>
         <Link to="/staff">Notification</Link>
         <Link to="/staff">Reports</Link>
-        <Link to="/staff">Chat</Link>
+        <Link to="/staff-chat">Chat</Link>
       </nav>
     </aside>
   );

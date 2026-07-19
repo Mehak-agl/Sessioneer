@@ -1,0 +1,91 @@
+.coord-sidebar {
+  width: 285px;
+  min-height: 100vh;
+  background: linear-gradient(180deg, #1f3550 0%, #132336 100%);
+  color: white;
+  padding: 24px;
+  position: fixed;
+  left: 0;
+  top: 0;
+}
+
+.coord-logo {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  margin-bottom: 28px;
+}
+
+.coord-logo img {
+  width: 58px;
+  height: 58px;
+  object-fit: contain;
+  background: transparent;
+  border-radius: 16px;
+  padding: 7px;
+}
+
+.coord-logo h2 {
+  margin: 0;
+  font-size: 20px;
+  letter-spacing: 2px;
+}
+
+.coord-logo p {
+  margin: 4px 0 0;
+  color: #c9d6df;
+  font-size: 13px;
+}
+
+.coord-profile {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 16px;
+  border-radius: 18px;
+  margin-bottom: 30px;
+}
+
+.coord-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #0097b2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+}
+
+.coord-profile h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.coord-profile p {
+  margin: 4px 0 0;
+  color: #c9d6df;
+  font-size: 13px;
+}
+
+.coord-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.coord-menu a {
+  color: #d5e5ee;
+  text-decoration: none;
+  padding: 14px 18px;
+  border-radius: 14px;
+  font-weight: bold;
+  transition: 0.2s ease;
+}
+
+.coord-menu a:hover,
+.coord-menu a.active {
+  background: #0097b2;
+  color: white;
+}

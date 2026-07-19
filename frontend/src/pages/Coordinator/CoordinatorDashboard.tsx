@@ -3,9 +3,11 @@ import { Link, useNavigate } from "react-router-dom";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { api } from "../services/api";
-import MyUnitsView from "./MyUnitsView";
-import UnitDetailView from "./UnitDetailView";
+import { api } from "../../services/api";
+import MyUnitsView from "./CoordinatorMyUnitsView";
+import UnitDetailView from "./CoordinatorUnitDetailView";
+import CoordinatorSidebar from "../../components/CoordinatorSidebar";
+
 import "./CoordinatorDashboard.css";
 
 interface Unit {
@@ -31,8 +33,8 @@ function CoordinatorDashboard() {
   const [importWorkbook, setImportWorkbook] = useState<any>(null)
   const [exportMenuUnit, setExportMenuUnit] = useState<Unit | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const fullName = localStorage.getItem("sessioneer_name") || "Coordinator";
-  const initials = fullName.split(" ").map((n: string) => n[0]).join("");
+
+
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -269,34 +271,7 @@ function CoordinatorDashboard() {
 
   return (
     <div className="dashboard-page">
-      <aside className="sidebar">
-        <div className="sidebar-logo">
-          <img src="/logo.png" alt="Sessioneer logo" />
-          <div>
-            <h2>SESSIONEER</h2>
-            <p>Scheduling System</p>
-          </div>
-        </div>
-
-        <div className="profile">
-          <div className="profile-avatar">{initials}</div>
-          <div>
-            <h3>{fullName}</h3>
-            <p>Coordinator</p>
-          </div>
-        </div>
-
-        <nav className="menu">
-          <p className={view === 'dashboard' ? 'active' : ''} onClick={() => setView('dashboard')} style={{cursor:'pointer'}}>Dashboard</p>
-          <p className={view === 'units' || view === 'unit-detail' ? 'active' : ''} onClick={() => setView('units')} style={{cursor:'pointer'}}>My Units</p>
-          <Link to="/calendar">Calendar</Link>
-          <p>Tutors</p>
-          <p>Allocations</p>
-          <p>Contracts</p>
-          <p>Reports</p>
-          <p>Chat</p>
-        </nav>
-      </aside>
+      <CoordinatorSidebar />
 
       <main className="main-content">
         {view === 'dashboard' && (

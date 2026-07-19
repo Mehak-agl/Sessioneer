@@ -1,6 +1,11 @@
 import { useState } from 'react'
-import type { Unit } from '../types'
-import { api } from '../services/api'
+interface Unit {
+  id: number;
+  code: string;
+  name: string;
+  semester: string;
+}
+import { api } from "../../services/api";
 import './TutorAvailabilityView.css'
 
 type Props = {
@@ -17,7 +22,7 @@ type CampusPreference = 'Gardens Point' | 'Kelvin Grove' | 'No preference'
 const slotKey = (day: string, time: string) => `${day}-${time}`
 
 export default function TutorAvailabilityView({ units, onBack }: Props) {
-  const [activeUnitId, setActiveUnitId] = useState<string>(units[0]?.id ?? '')
+  const [activeUnitId, setActiveUnitId] = useState<number>(units[0]?.id ?? 0)
   const [slotsByUnit, setSlotsByUnit] = useState<Record<string, Set<string>>>({})
   const [isDragging, setIsDragging] = useState(false)
   const [dragMode, setDragMode] = useState<'add' | 'remove'>('add')
@@ -167,7 +172,8 @@ export default function TutorAvailabilityView({ units, onBack }: Props) {
                 key={unit.id}
                 type="button"
                 className={`avail-unit-tab ${isActive ? 'active' : ''} ${unitSlotCount > 0 ? 'has-slots' : ''}`}
-                onClick={() => setActiveUnitId(String(unit.id))}
+                onClick={() => setActiveUnitId(unit.id)}
+
               >
                 <span className="avail-tab-code">{unit.code}</span>
                 <span className="avail-tab-name">{unit.name}</span>

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { api } from "../services/api";
-import "./CalendarPage.css";
+import { api } from "../../services/api";
+import "./CoordinatorCalendarPage.css";
+import CoordinatorSidebar from "../../components/CoordinatorSidebar";
 
 interface Session {
   id: number;
@@ -62,33 +62,7 @@ function CalendarPage() {
 
   return (
     <div className="calendar-page">
-      <aside className="calendar-sidebar">
-        <div className="calendar-logo">
-          <img src="/logo.png" alt="Sessioneer logo" />
-          <div>
-            <h2>SESSIONEER</h2>
-            <p>Coordinator</p>
-          </div>
-        </div>
-
-        <div className="profile-card">
-          <div className="profile-circle">SC</div>
-          <div>
-            <h3>Sarah Chen</h3>
-            <p>Coordinator</p>
-          </div>
-        </div>
-
-        <nav className="calendar-menu">
-          <Link to="/coordinator">Dashboard</Link>
-          <Link to="/coordinator?view=units">My Units</Link>
-          <a className="active">Calendar</a>
-          <a>Tutors</a>
-          <a>Allocations</a>
-          <a>Reports</a>
-          <a>Chat</a>
-        </nav>
-      </aside>
+      <CoordinatorSidebar />
 
       <main className="calendar-main">
         <header className="calendar-topbar">

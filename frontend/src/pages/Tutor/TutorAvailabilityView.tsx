@@ -6,7 +6,7 @@ interface Unit {
   semester: string;
 }
 import { api } from "../../services/api";
-import './TutorAvailabilityView.css'
+
 
 type Props = {
   units: Unit[]

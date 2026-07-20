@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { api } from "../../services/api";
-import "./CoordinatorCalendarPage.css";
 import CoordinatorSidebar from "../../components/CoordinatorSidebar";
 
 interface Session {

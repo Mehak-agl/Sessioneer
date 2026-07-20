@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { api } from "../../services/api";
 import StaffSidebar from "../../components/TutorSidebar"
 import TutorAvailabilityView from "./TutorAvailabilityView"
-import "./TutorDashboard.css"
+
 
 interface Availability {
   id: number;

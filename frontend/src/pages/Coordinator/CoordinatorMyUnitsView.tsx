@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { api } from "../../services/api";
 import CoordinatorSidebar from "../../components/CoordinatorSidebar";
-import './CoordinatorMyUnitsView.css'
+
 
 interface Unit {
   id: number;

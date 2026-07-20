@@ -8,7 +8,7 @@ import MyUnitsView from "./CoordinatorMyUnitsView";
 import UnitDetailView from "./CoordinatorUnitDetailView";
 import CoordinatorSidebar from "../../components/CoordinatorSidebar";
 
-import "./CoordinatorDashboard.css";
+
 
 interface Unit {
   id: number;

@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
 import CoordinatorSidebar from '../../components/CoordinatorSidebar'
-import './CoordinatorChat.css'
+
 
 type ChatContact = {
   id: string

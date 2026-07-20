@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
 import StaffSidebar from '../../components/TutorSidebar'
-import './TutorChat.css'
+
 
 type ChatContact = {
   id: string

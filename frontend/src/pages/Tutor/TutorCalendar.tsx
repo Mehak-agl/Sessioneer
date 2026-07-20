@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { api } from "../../services/api";
 import StaffSidebar from "../../components/TutorSidebar";
-import "./TutorCalendar.css";
+
 
 interface Session {
   id: number;

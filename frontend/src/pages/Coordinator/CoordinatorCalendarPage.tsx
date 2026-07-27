@@ -7,24 +7,65 @@ interface Session {
   title: string;
   startTime: string;
   status: string;
+  unitId: number;
+  unitName: string;
+  allocatedStaffNames: string[];
 }
+
+interface Unit {
+  id: number;
+  name: string;
+  code: string;
+}
+
+type FilterMode = "all" | "unit" | "personal";
 
 function CalendarPage() {
   const [sessions, setSessions] = useState<Session[]>([]);
+  const [units, setUnits] = useState<Unit[]>([]);
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [filterMode, setFilterMode] = useState<FilterMode>("all");
+  const [selectedUnitId, setSelectedUnitId] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const currentUser = localStorage.getItem("sessioneer_name");
 
   useEffect(() => {
     async function loadSessions() {
       try {
-        const units = await api.getUnits();
+        const loadedUnits = await api.getUnits();
+        setUnits(loadedUnits);
+        if (loadedUnits.length > 0) setSelectedUnitId(loadedUnits[0].id);
+
         const allSessions: Session[] = [];
-        for (const unit of units) {
-          const s = await api.getSessions(unit.id);
-          allSessions.push(...s);
+        for (const unit of loadedUnits) {
+          const [unitSessions, unitAllocations] = await Promise.all([
+            api.getSessions(unit.id).catch(() => []),
+            api.getUnitAllocations(unit.id).catch(() => []),
+          ]);
+
+          for (const session of unitSessions) {
+            // Which staff (if any) are allocated to THIS specific session —
+            // used below to work out whether the current coordinator
+            // themselves is personally teaching it.
+            const allocatedStaffNames = unitAllocations
+              .filter((a: any) => a.session?.id === session.id)
+              .map((a: any) => a.staff?.fullName)
+              .filter(Boolean);
+
+            allSessions.push({
+              ...session,
+              unitId: unit.id,
+              unitName: unit.name,
+              allocatedStaffNames,
+            });
+          }
         }
         setSessions(allSessions);
       } catch (err) {
         console.error(err);
+      } finally {
+        setLoading(false);
       }
     }
     loadSessions();
@@ -33,6 +74,19 @@ function CalendarPage() {
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
   const monthName = currentDate.toLocaleString('default', { month: 'long' });
+
+  // ── Filters ───────────────────────────────────────────────────────────
+  // All Classes: every session under every unit this coordinator owns.
+  // Unit Classes: only the sessions belonging to the selected unit.
+  // Personal Calendar: only sessions where the coordinator personally
+  // appears as allocated teaching staff (a real, if narrow, case — it's
+  // only non-empty if this coordinator has actually been assigned as
+  // staff on a session, same as any tutor would be).
+  const filteredSessions = sessions.filter((session) => {
+    if (filterMode === "unit") return session.unitId === selectedUnitId;
+    if (filterMode === "personal") return session.allocatedStaffNames.includes(currentUser ?? "");
+    return true;
+  });
 
   const firstDay = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -43,7 +97,7 @@ function CalendarPage() {
   while (days.length % 7 !== 0) days.push("");
 
   const eventsByDay: Record<string, Session[]> = {};
-  for (const session of sessions) {
+  for (const session of filteredSessions) {
     const d = new Date(session.startTime);
     if (d.getFullYear() === year && d.getMonth() === month) {
       const day = String(d.getDate());
@@ -52,9 +106,9 @@ function CalendarPage() {
     }
   }
 
-  const allocated = sessions.filter(s => s.status === "ALLOCATED").length;
-  const pending = sessions.filter(s => s.status === "PENDING").length;
-  const conflict = sessions.filter(s => s.status === "CONFLICT").length;
+  const allocated = filteredSessions.filter(s => s.status === "ALLOCATED").length;
+  const pending = filteredSessions.filter(s => s.status === "PENDING").length;
+  const conflict = filteredSessions.filter(s => s.status === "CONFLICT").length;
 
   const prevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
   const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
@@ -77,6 +131,45 @@ function CalendarPage() {
             <button className="publish-btn" onClick={nextMonth}>Next →</button>
           </div>
         </header>
+
+        {/* ── Filter dropdown ─────────────────────────────────────────── */}
+        <section className="calendar-filter-tabs">
+          <div className="unit-filter-box">
+            <label>View</label>
+            <select
+              value={filterMode}
+              onChange={(e) => setFilterMode(e.target.value as FilterMode)}
+            >
+              <option value="all">All Classes</option>
+              <option value="unit">Unit Classes</option>
+              <option value="personal">Personal Calendar</option>
+            </select>
+          </div>
+
+          {filterMode === "unit" && (
+            <div className="unit-filter-box calendar-unit-select">
+              <label>Unit</label>
+              <select
+                value={selectedUnitId ?? ""}
+                onChange={(e) => setSelectedUnitId(Number(e.target.value))}
+              >
+                {units.length === 0 ? (
+                  <option disabled>No units yet</option>
+                ) : (
+                  units.map((unit) => (
+                    <option key={unit.id} value={unit.id}>{unit.code} — {unit.name}</option>
+                  ))
+                )}
+              </select>
+            </div>
+          )}
+
+          {filterMode === "personal" && (
+            <p className="avail-range-hint calendar-filter-hint">
+              Showing only sessions where you're personally allocated as teaching staff.
+            </p>
+          )}
+        </section>
 
         <section className="calendar-summary">
           <div className="summary-card allocated-card">
@@ -115,6 +208,7 @@ function CalendarPage() {
                       <div className={`class-event ${session.status.toLowerCase()}`} key={i}>
                         <strong>{new Date(session.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</strong>
                         <span>{session.title}</span>
+                        <small>{session.unitName}</small>
                       </div>
                     ))}
                   </>
@@ -122,6 +216,12 @@ function CalendarPage() {
               </div>
             ))}
           </div>
+
+          {!loading && filterMode === "personal" && filteredSessions.length === 0 && (
+            <div className="empty-info calendar-empty-note">
+              You're not personally allocated to any sessions right now.
+            </div>
+          )}
         </section>
       </main>
     </div>

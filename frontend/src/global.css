@@ -2029,6 +2029,27 @@ p {
   border-left: 5px solid #ef4444;
 }
 
+/* Thin yellow strip showing the tutor's own submitted availability for a
+   day — deliberately much slimmer than .class-event (which represents an
+   actual scheduled session), so the two are never visually confused. */
+.availability-strip {
+  margin-top: 6px;
+  padding: 3px 6px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #92400e;
+  background: #fffbeb;
+  border-left: 3px solid #fbbf24;
+  border-radius: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.availability-dot {
+  background: #fbbf24;
+}
+
 /* tutor-only additions (no coordinator equivalent, kept as-is) */
 
 .calendar-box-header {
@@ -3596,4 +3617,642 @@ p {
   font-size: 13px;
   color: #657985;
   padding: 6px 0 2px;
+}
+
+
+/* ── 12. Tutor "My Units" page ─────────────────────────────────────────────
+   New for this page only. Reuses a lot of existing classes directly:
+   .chat-search-box / .chat-lists-scroll / .chat-empty-hint / .chat-window-empty
+   (from the chat page's list panel), .unit-code-badge (from MyUnitsView),
+   .detail-section / .section-header / .sessions-grid / .session-card
+   (from the coordinator's unit detail view), and .accept-btn / .decline-btn
+   / .status-badge (from the staff dashboard + unit detail view). Only the
+   genuinely new bits are below. */
+
+.myunits-workspace {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+}
+
+.myunits-list-panel {
+  width: 320px;
+  flex-shrink: 0;
+  background: white;
+  border: 1.5px solid #d7eaf1;
+  border-radius: 20px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 160px);
+}
+
+.myunits-detail-panel {
+  flex: 1;
+  min-width: 0;
+}
+
+.myunits-unit-card {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 18px;
+  background: none;
+  border: none;
+  border-bottom: 1px solid #eef3f5;
+  cursor: pointer;
+  text-align: left;
+  transition: 0.15s;
+}
+
+.myunits-unit-card:hover,
+.myunits-unit-card.active {
+  background: #f0fafc;
+}
+
+.myunits-unit-card.active {
+  border-left: 3px solid #0097b2;
+}
+
+.myunits-unit-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.myunits-status-pill {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.myunits-status-pill.pending {
+  background: #fff8dc;
+  color: #745a00;
+}
+
+.myunits-status-pill.accepted {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.myunits-unit-name {
+  font-weight: 700;
+  font-size: 14px;
+  color: #1f3550;
+}
+
+.myunits-unit-sem {
+  font-size: 12px;
+  color: #657985;
+}
+
+.announcement-card {
+  background: #f8fcfd;
+  border: 1.5px solid #d7eaf1;
+  border-radius: 14px;
+  padding: 16px 18px;
+  margin-top: 12px;
+}
+
+.announcement-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.announcement-title {
+  font-weight: 700;
+  color: #1f3550;
+  font-size: 14px;
+}
+
+.announcement-date {
+  font-size: 12px;
+  color: #99adb6;
+}
+
+.announcement-card p {
+  margin: 0;
+  color: #657985;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+@media (max-width: 1000px) {
+  .myunits-workspace {
+    flex-direction: column;
+  }
+  .myunits-list-panel {
+    width: 100%;
+    max-height: none;
+  }
+}
+
+
+/* ── 13. Tutor availability modal (opened from Calendar) ────────────────
+   Reuses .modal-overlay / .modal / .form-field / .modal-actions /
+   .cancel-btn / .confirm-btn from section 7, and .avail-grid / .avail-cell
+   / .avail-day-header etc from section 11 (same grid styling as the old
+   dashboard availability view). Only the header + saved-message are new. */
+
+.avail-modal {
+  max-width: 680px;
+  max-height: 88vh;
+  overflow-y: auto;
+}
+
+.avail-period-estimate {
+  margin: 0 0 16px;
+  font-size: 12px;
+  color: #657985;
+  font-style: italic;
+}
+
+.avail-submission-estimate {
+  margin: 12px 0 0;
+  font-size: 12px;
+  color: #0097b2;
+  font-weight: 600;
+}
+
+.avail-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.avail-modal-header h2 {
+  margin: 0;
+}
+
+.avail-saved-message {
+  margin: 14px 0 0;
+  color: #166534;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+/* was missing before — the modal was reusing .avail-saved-message (green)
+   for error text too, which is why "Something went wrong" showed in green.
+   Errors now use this instead. */
+.avail-error-message {
+  margin: 14px 0 0;
+  color: #991b1b;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.avail-range-hint {
+  margin: 8px 0 0;
+  color: #657985;
+  font-size: 12px;
+}
+
+
+/* ── 14. QUT Tutor Directory ──────────────────────────────────────────────
+   Reuses .tutors-list / .tutor-row / .tutor-avatar / .tutor-info /
+   .tutor-name / .tutor-email from section 7 (coordinator's invited-tutors
+   list) directly — only the teaching-info row below each tutor is new. */
+
+.directory-tutor-row {
+  align-items: flex-start;
+}
+
+.directory-teaching-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.directory-teaching-badge {
+  font-size: 11px;
+  padding: 3px 10px;
+}
+
+.directory-teaching-unknown {
+  font-size: 12px;
+  color: #99adb6;
+  font-style: italic;
+  margin-top: 8px;
+}
+
+
+/* ── 15. Coordinator Calendar filter tabs ─────────────────────────────────
+   Reuses .avail-pill-row / .avail-pill (section 11) for the three filter
+   buttons, and .unit-filter-box (section 9) for the unit dropdown — only
+   the wrapping layout below is new. */
+
+.calendar-filter-tabs {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  background: white;
+  border-radius: 18px;
+  padding: 18px 22px;
+  margin-top: 20px;
+  box-shadow: 0 12px 28px rgba(31, 53, 80, 0.08);
+}
+
+.calendar-unit-select {
+  margin: 0;
+}
+
+.calendar-filter-hint {
+  margin: 0;
+}
+
+.calendar-empty-note {
+  margin-top: 18px;
+}
+
+
+/* ── 16. Chat: Admin & Member Permission management ──────────────────────
+   Reuses .group-permission-row (already defined in section 10) for every
+   checkbox row — only the expand/collapse wrappers below are new. */
+
+.perm-section-hint {
+  padding: 0 0 8px;
+}
+
+.admin-perm-block {
+  border: 1.5px solid #eef3f5;
+  border-radius: 10px;
+  margin-bottom: 8px;
+  overflow: hidden;
+}
+
+.admin-perm-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: #f8fcfd;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1f3550;
+}
+
+.admin-perm-name {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-perm-chevron {
+  font-size: 10px;
+  color: #99adb6;
+}
+
+.admin-perm-panel {
+  padding: 4px 14px 10px;
+  border-top: 1px solid #eef3f5;
+}
+
+.member-perm-panel {
+  background: #f8fcfd;
+  border: 1.5px solid #d7eaf1;
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin: 4px 0 10px;
+}
+
+.member-perm-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 700;
+  color: #1f3550;
+  margin-bottom: 8px;
+}
+
+.member-perm-close {
+  position: static;
+  font-size: 16px;
+}
+
+.member-perm-row {
+  padding: 6px 0;
+  border-bottom: 1px solid #eef3f5;
+}
+
+.member-perm-row:last-child {
+  border-bottom: none;
+}
+
+.member-perm-checkbox-row {
+  padding: 0 0 4px;
+}
+
+.member-perm-default-hint {
+  font-size: 11px;
+  color: #99adb6;
+  font-style: italic;
+}
+
+.member-perm-reset {
+  font-size: 11px;
+  color: #0097b2;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+}
+
+
+/* ── 17. Profile pages (Coordinator + Tutor) ──────────────────────────────
+   Reuses .detail-section / .section-header / .add-btn / .form-field /
+   .form-row-2 / .detail-form / .confirm-btn from section 7, and
+   .avail-saved-message / .avail-error-message from section 11/13. Only
+   the profile-card and settings-specific pieces below are new. */
+
+.profile-card-section {
+  background: white;
+  border: 1.5px solid #d7eaf1;
+  border-radius: 20px;
+  padding: 36px;
+  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.profile-photo-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.profile-photo-circle {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 4px solid #e7f6fa;
+  box-shadow: 0 12px 28px rgba(31, 53, 80, 0.12);
+}
+
+.profile-photo-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0097b2;
+  color: white;
+  font-size: 36px;
+  font-weight: 700;
+  font-family: 'Montserrat', sans-serif;
+}
+
+.profile-photo-edit-btn {
+  background: transparent;
+  border: 1.5px solid #d7eaf1;
+  color: #0097b2;
+  padding: 8px 18px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.profile-photo-edit-btn:hover {
+  background: #e7f6fa;
+  border-color: #0097b2;
+}
+
+.profile-name {
+  margin: 0 0 8px;
+  color: #1f3550;
+  font-size: 24px;
+}
+
+.profile-position-badge {
+  background: #e7f6fa;
+  color: #0097b2;
+  font-weight: 700;
+  font-size: 13px;
+  padding: 6px 16px;
+  border-radius: 999px;
+}
+
+.resume-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.resume-filename {
+  flex: 1;
+  min-width: 160px;
+  color: #657985;
+  font-size: 14px;
+}
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.settings-row-title {
+  margin: 0 0 4px;
+  color: #1f3550;
+  font-size: 16px;
+}
+
+.settings-row-sub {
+  margin: 0;
+  color: #657985;
+  font-size: 13px;
+}
+
+.settings-divider {
+  border-top: 1.5px solid #eef3f5;
+  margin: 20px 0;
+}
+
+.theme-toggle-btn {
+  background: #1f3550;
+  color: white;
+  border: none;
+  padding: 11px 20px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: 0.2s;
+}
+
+.theme-toggle-btn:hover {
+  background: #0097b2;
+}
+
+.password-form {
+  margin-top: 14px;
+}
+
+.password-submit-btn {
+  align-self: flex-start;
+}
+
+
+/* ── 18. Dark theme ────────────────────────────────────────────────────
+   Applied via a `dark-theme` class toggled on <body> from the Profile
+   pages. This is a first pass covering the main page backgrounds, cards,
+   modals, and form inputs across the app — not every single element has
+   been hand-checked, so if something looks off in dark mode on a page
+   not listed here, it just needs its own override added below. */
+
+body.dark-theme {
+  background: #0f1b2b;
+  color: #e2e8f0;
+}
+
+body.dark-theme .dashboard-page,
+body.dark-theme .staff-dashboard-page,
+body.dark-theme .calendar-page,
+body.dark-theme .chat-page {
+  background: #0f1b2b;
+}
+
+body.dark-theme .stat-card,
+body.dark-theme .staff-stat-card,
+body.dark-theme .unit-card,
+body.dark-theme .unit-row,
+body.dark-theme .detail-section,
+body.dark-theme .units-panel,
+body.dark-theme .staff-panel,
+body.dark-theme .session-card,
+body.dark-theme .tutor-row,
+body.dark-theme .summary-card,
+body.dark-theme .month-calendar,
+body.dark-theme .day-box,
+body.dark-theme .avail-units-panel,
+body.dark-theme .avail-grid-section,
+body.dark-theme .avail-prefs-section,
+body.dark-theme .avail-submit-section,
+body.dark-theme .profile-card-section,
+body.dark-theme .myunits-list-panel,
+body.dark-theme .myunits-unit-card,
+body.dark-theme .chat-shell,
+body.dark-theme .chat-list-panel,
+body.dark-theme .chat-bubble-row.theirs .chat-bubble,
+body.dark-theme .calendar-filter-tabs,
+body.dark-theme .calendar-topbar,
+body.dark-theme .announcement-card {
+  background: #182437;
+  border-color: #2a3b52;
+  color: #e2e8f0;
+}
+
+body.dark-theme .stat-card h2,
+body.dark-theme .staff-stat-card h2,
+body.dark-theme .unit-card h3,
+body.dark-theme .detail-section h2,
+body.dark-theme .staff-panel h2,
+body.dark-theme .session-day,
+body.dark-theme .tutor-name,
+body.dark-theme .profile-name,
+body.dark-theme .day-number,
+body.dark-theme .page-title h1,
+body.dark-theme .staff-page-title h1,
+body.dark-theme .chat-window-name,
+body.dark-theme .group-info-name {
+  color: #f1f5f9;
+}
+
+body.dark-theme .stat-card p,
+body.dark-theme .unit-card p,
+body.dark-theme .unit-meta,
+body.dark-theme .tutor-email,
+body.dark-theme .settings-row-sub,
+body.dark-theme .page-title p,
+body.dark-theme .staff-page-title p,
+body.dark-theme .chat-window-sub,
+body.dark-theme .chat-list-item-sub {
+  color: #94a3b8;
+}
+
+body.dark-theme .day-box.empty {
+  background: #131f30;
+}
+
+body.dark-theme .modal,
+body.dark-theme .chat-modal,
+body.dark-theme .avail-modal {
+  background: #182437;
+  color: #e2e8f0;
+}
+
+body.dark-theme .modal h2,
+body.dark-theme .chat-modal h2 {
+  color: #f1f5f9;
+}
+
+body.dark-theme .form-field input,
+body.dark-theme .form-field select,
+body.dark-theme .form-group input,
+body.dark-theme .chat-search-box input,
+body.dark-theme .avail-notes,
+body.dark-theme .chat-input-row textarea {
+  background: #131f30;
+  border-color: #2a3b52;
+  color: #e2e8f0;
+}
+
+body.dark-theme .avail-cell {
+  background: #131f30;
+  border-color: #2a3b52;
+}
+
+body.dark-theme .avail-day-header {
+  background: #131f30;
+  border-color: #2a3b52;
+}
+
+body.dark-theme .weekdays {
+  background: #0a1420;
+}
+
+body.dark-theme .empty-state,
+body.dark-theme .empty-info,
+body.dark-theme .empty-state-warning {
+  background: #131f30;
+  border-color: #2a3b52;
+  color: #94a3b8;
+}
+
+.sidebar-avatar-photo {
+  object-fit: cover;
+}
+
+/* Teaching Preferences, scoped down slightly when it's inside the modal
+   rather than sitting on its own full page (less padding, no card shadow
+   since the modal itself already has one). */
+.avail-prefs-in-modal {
+  border: none;
+  border-top: 1.5px solid #d7eaf1;
+  border-radius: 0;
+  padding: 20px 0 0;
+  margin: 20px 0 0;
 }

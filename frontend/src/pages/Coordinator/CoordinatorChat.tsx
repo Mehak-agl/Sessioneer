@@ -1,7 +1,6 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
 import CoordinatorSidebar from '../../components/CoordinatorSidebar'
 
-
 type ChatContact = {
   id: string
   name: string
@@ -27,17 +26,42 @@ type DMConversation = {
   messages: ChatMessage[]
 }
 
-type GroupMember = {
-  contact: ChatContact
-  isAdmin: boolean
-}
-
+// Group-wide default permissions — what applies to a member UNLESS they
+// have a specific override set (see MemberOverrides below).
 type GroupPermissions = {
   sendText: boolean
   sharePhoto: boolean
   shareFile: boolean
   shareDocument: boolean
   addMembers: boolean
+}
+
+// What an admin (someone who isn't the group owner) is allowed to manage.
+// The owner always has all of these implicitly — this only applies to
+// members who've been promoted to admin.
+type AdminPermissions = {
+  manageMembers: boolean       // add / remove members
+  editGroupInfo: boolean       // rename the group
+  manageMemberPermissions: boolean // restrict/allow individual members
+}
+
+const DEFAULT_ADMIN_PERMISSIONS: AdminPermissions = {
+  manageMembers: true,
+  editGroupInfo: true,
+  manageMemberPermissions: true,
+}
+
+// Per-member override of the group-wide message/share permissions. Any
+// key left undefined here means "use the group default" — only keys
+// that are explicitly set (true or false) override it for this one
+// person, without touching anyone else.
+type MemberOverrides = Partial<Pick<GroupPermissions, 'sendText' | 'sharePhoto' | 'shareFile' | 'shareDocument'>>
+
+type GroupMember = {
+  contact: ChatContact
+  isAdmin: boolean
+  adminPermissions?: AdminPermissions // only meaningful if isAdmin is true
+  overrides?: MemberOverrides
 }
 
 type GroupConversation = {
@@ -85,6 +109,25 @@ const DEFAULT_PERMISSIONS: GroupPermissions = {
   addMembers: false,
 }
 
+const PERMISSION_LABELS: Record<keyof GroupPermissions, string> = {
+  sendText: 'Send text messages',
+  sharePhoto: 'Share photos',
+  shareFile: 'Share files',
+  shareDocument: 'Share documents',
+  addMembers: 'Add members',
+}
+
+const ADMIN_PERMISSION_LABELS: Record<keyof AdminPermissions, string> = {
+  manageMembers: 'Add / remove members',
+  editGroupInfo: 'Edit group name',
+  manageMemberPermissions: 'Manage individual member permissions',
+}
+
+// The four message/share permissions that can be overridden per-member.
+// addMembers is deliberately excluded — that one only makes sense as a
+// group-wide or admin-level setting.
+const OVERRIDABLE_KEYS: (keyof MemberOverrides)[] = ['sendText', 'sharePhoto', 'shareFile', 'shareDocument']
+
 function getInitials(name: string) {
   return name.split(' ').filter(Boolean).map(n => n[0]).join('').toUpperCase()
 }
@@ -104,6 +147,8 @@ export default function CoordinatorChat() {
   const [showGroupInfo, setShowGroupInfo] = useState(false)
   const [showAttachMenu, setShowAttachMenu] = useState(false)
   const [openMemberMenuId, setOpenMemberMenuId] = useState<string | null>(null)
+  const [openMemberPermId, setOpenMemberPermId] = useState<string | null>(null)
+  const [openAdminPermId, setOpenAdminPermId] = useState<string | null>(null)
   const [showAddMembers, setShowAddMembers] = useState(false)
   const [editingName, setEditingName] = useState(false)
   const [nameDraft, setNameDraft] = useState('')
@@ -138,6 +183,11 @@ export default function CoordinatorChat() {
           ? { title: activeContactFromSearch.name, sub: activeContactFromSearch.email }
           : null
 
+  // The group owner is whoever created it — always fully trusted, never
+  // shown in the "manage this admin's permissions" list, and the only
+  // one who can grant/revoke what OTHER admins are allowed to do.
+  const isOwner = activeConversation?.type === 'group' && activeConversation.creatorId === CURRENT_USER_ID
+
   // Am I an admin of the currently open group? (creator counts as admin)
   const isCurrentUserAdmin =
     activeConversation?.type === 'group' &&
@@ -153,6 +203,8 @@ export default function CoordinatorChat() {
     setShowAddMembers(false)
     setEditingName(false)
     setOpenMemberMenuId(null)
+    setOpenMemberPermId(null)
+    setOpenAdminPermId(null)
   }, [activeConversationId])
 
   const openDM = (contactId: string) => {
@@ -283,9 +335,64 @@ export default function CoordinatorChat() {
   const toggleAdmin = (memberId: string) => {
     updateActiveGroup(g => ({
       ...g,
-      members: g.members.map(m => (m.contact.id === memberId ? { ...m, isAdmin: !m.isAdmin } : m)),
+      members: g.members.map(m =>
+        m.contact.id === memberId
+          ? {
+              ...m,
+              isAdmin: !m.isAdmin,
+              // give a freshly-promoted admin the full default set of
+              // admin permissions — the owner can then dial these back
+              adminPermissions: !m.isAdmin ? { ...DEFAULT_ADMIN_PERMISSIONS } : m.adminPermissions,
+            }
+          : m
+      ),
     }))
     setOpenMemberMenuId(null)
+  }
+
+  // Owner-only: grant/revoke a specific capability for a specific admin,
+  // without touching any other admin's permissions.
+  const updateAdminPermission = (adminId: string, key: keyof AdminPermissions) => {
+    updateActiveGroup(g => ({
+      ...g,
+      members: g.members.map(m =>
+        m.contact.id === adminId && m.isAdmin
+          ? {
+              ...m,
+              adminPermissions: {
+                ...(m.adminPermissions ?? DEFAULT_ADMIN_PERMISSIONS),
+                [key]: !(m.adminPermissions ?? DEFAULT_ADMIN_PERMISSIONS)[key],
+              },
+            }
+          : m
+      ),
+    }))
+  }
+
+  // Admin action: override one message/share permission for ONE member,
+  // independent of the group-wide default and every other member.
+  const setMemberOverride = (memberId: string, key: keyof MemberOverrides, value: boolean) => {
+    updateActiveGroup(g => ({
+      ...g,
+      members: g.members.map(m =>
+        m.contact.id === memberId
+          ? { ...m, overrides: { ...m.overrides, [key]: value } }
+          : m
+      ),
+    }))
+  }
+
+  // Clears one specific override, falling back to the group default again.
+  const clearMemberOverride = (memberId: string, key: keyof MemberOverrides) => {
+    updateActiveGroup(g => ({
+      ...g,
+      members: g.members.map(m => {
+        if (m.contact.id !== memberId || !m.overrides) return m
+        const nextOverrides = { ...m.overrides }
+        delete nextOverrides[key]
+        return { ...m, overrides: nextOverrides }
+      }),
+    }))
   }
 
   const removeMember = (memberId: string) => {
@@ -315,6 +422,13 @@ export default function CoordinatorChat() {
     activeConversation?.messages
       .filter(m => m.attachment)
       .map(m => m.attachment!) ?? []
+
+  // admins other than the owner — these are the ones the owner can
+  // actually manage permissions for
+  const manageableAdmins =
+    activeConversation?.type === 'group'
+      ? activeConversation.members.filter(m => m.isAdmin && m.contact.id !== activeConversation.creatorId)
+      : []
 
   return (
     <div className="chat-page">
@@ -529,29 +643,23 @@ export default function CoordinatorChat() {
                     ))}
                   </section>
 
-                  {/* Permissions */}
+                  {/* Group-wide default permissions */}
                   <section className="group-info-section">
-                    <h3>Member permissions</h3>
-                    {(Object.keys(activeConversation.permissions) as (keyof GroupPermissions)[]).map(key => {
-                      const labels: Record<keyof GroupPermissions, string> = {
-                        sendText: 'Send text messages',
-                        sharePhoto: 'Share photos',
-                        shareFile: 'Share files',
-                        shareDocument: 'Share documents',
-                        addMembers: 'Add members',
-                      }
-                      return (
-                        <label key={key} className="group-permission-row">
-                          <span>{labels[key]}</span>
-                          <input
-                            type="checkbox"
-                            checked={activeConversation.permissions[key]}
-                            disabled={!isCurrentUserAdmin}
-                            onChange={() => togglePermission(key)}
-                          />
-                        </label>
-                      )
-                    })}
+                    <h3>Group Default Permissions</h3>
+                    <p className="chat-empty-hint perm-section-hint">
+                      These apply to every member unless overridden individually below.
+                    </p>
+                    {(Object.keys(activeConversation.permissions) as (keyof GroupPermissions)[]).map(key => (
+                      <label key={key} className="group-permission-row">
+                        <span>{PERMISSION_LABELS[key]}</span>
+                        <input
+                          type="checkbox"
+                          checked={activeConversation.permissions[key]}
+                          disabled={!isCurrentUserAdmin}
+                          onChange={() => togglePermission(key)}
+                        />
+                      </label>
+                    ))}
                   </section>
 
                   {/* Admins */}
@@ -560,41 +668,154 @@ export default function CoordinatorChat() {
                     {activeConversation.members.filter(m => m.isAdmin).map(m => (
                       <div key={m.contact.id} className="group-member-row">
                         <div className="chat-avatar chat-avatar-sm">{getInitials(m.contact.name)}</div>
-                        <span>{m.contact.name}{m.contact.id === CURRENT_USER_ID ? ' (you)' : ''}</span>
+                        <span>
+                          {m.contact.name}
+                          {m.contact.id === CURRENT_USER_ID ? ' (you)' : ''}
+                          {m.contact.id === activeConversation.creatorId ? ' — Owner' : ''}
+                        </span>
                       </div>
                     ))}
                   </section>
 
+                  {/* Owner-only: manage what each (non-owner) admin can do */}
+                  {isOwner && (
+                    <section className="group-info-section">
+                      <h3>Admin Permissions</h3>
+                      {manageableAdmins.length === 0 && (
+                        <div className="chat-empty-hint">
+                          No other admins yet. Promote a member to admin first.
+                        </div>
+                      )}
+                      {manageableAdmins.map(admin => {
+                        const perms = admin.adminPermissions ?? DEFAULT_ADMIN_PERMISSIONS
+                        const expanded = openAdminPermId === admin.contact.id
+                        return (
+                          <div key={admin.contact.id} className="admin-perm-block">
+                            <button
+                              type="button"
+                              className="admin-perm-toggle"
+                              onClick={() => setOpenAdminPermId(expanded ? null : admin.contact.id)}
+                            >
+                              <span className="admin-perm-name">
+                                <span className="chat-avatar chat-avatar-sm">{getInitials(admin.contact.name)}</span>
+                                {admin.contact.name}
+                              </span>
+                              <span className="admin-perm-chevron">{expanded ? '▲' : '▼'}</span>
+                            </button>
+                            {expanded && (
+                              <div className="admin-perm-panel">
+                                {(Object.keys(ADMIN_PERMISSION_LABELS) as (keyof AdminPermissions)[]).map(key => (
+                                  <label key={key} className="group-permission-row">
+                                    <span>{ADMIN_PERMISSION_LABELS[key]}</span>
+                                    <input
+                                      type="checkbox"
+                                      checked={perms[key]}
+                                      onChange={() => updateAdminPermission(admin.contact.id, key)}
+                                    />
+                                  </label>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </section>
+                  )}
+
                   {/* Members */}
                   <section className="group-info-section">
                     <h3>Members ({activeConversation.members.length})</h3>
-                    {activeConversation.members.map(m => (
-                      <div key={m.contact.id} className="group-member-row-wrapper">
-                        <button
-                          className="group-member-row group-member-row-clickable"
-                          onClick={() => setOpenMemberMenuId(v => (v === m.contact.id ? null : m.contact.id))}
-                        >
-                          <div className="chat-avatar chat-avatar-sm">{getInitials(m.contact.name)}</div>
-                          <div className="chat-list-item-info">
-                            <span className="chat-list-item-name">
-                              {m.contact.name}{m.contact.id === CURRENT_USER_ID ? ' (you)' : ''}
-                            </span>
-                            <span className="chat-list-item-sub">{m.isAdmin ? 'Admin' : 'Member'}</span>
-                          </div>
-                        </button>
+                    {activeConversation.members.map(m => {
+                      const isSelf = m.contact.id === CURRENT_USER_ID
+                      const isOwnerRow = m.contact.id === activeConversation.creatorId
+                      const overrideCount = m.overrides ? Object.keys(m.overrides).length : 0
+                      const permExpanded = openMemberPermId === m.contact.id
 
-                        {openMemberMenuId === m.contact.id && isCurrentUserAdmin && m.contact.id !== CURRENT_USER_ID && (
-                          <div className="group-member-menu">
-                            <button onClick={() => toggleAdmin(m.contact.id)}>
-                              {m.isAdmin ? 'Remove as admin' : 'Make admin'}
-                            </button>
-                            <button className="group-member-menu-danger" onClick={() => removeMember(m.contact.id)}>
-                              Remove from group
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    ))}
+                      return (
+                        <div key={m.contact.id} className="group-member-row-wrapper">
+                          <button
+                            className="group-member-row group-member-row-clickable"
+                            onClick={() => setOpenMemberMenuId(v => (v === m.contact.id ? null : m.contact.id))}
+                          >
+                            <div className="chat-avatar chat-avatar-sm">{getInitials(m.contact.name)}</div>
+                            <div className="chat-list-item-info">
+                              <span className="chat-list-item-name">
+                                {m.contact.name}{isSelf ? ' (you)' : ''}
+                              </span>
+                              <span className="chat-list-item-sub">
+                                {m.isAdmin ? (isOwnerRow ? 'Owner' : 'Admin') : 'Member'}
+                                {overrideCount > 0 && ` · ${overrideCount} custom permission${overrideCount !== 1 ? 's' : ''}`}
+                              </span>
+                            </div>
+                          </button>
+
+                          {openMemberMenuId === m.contact.id && isCurrentUserAdmin && !isSelf && (
+                            <div className="group-member-menu">
+                              {!isOwnerRow && (
+                                <button onClick={() => toggleAdmin(m.contact.id)}>
+                                  {m.isAdmin ? 'Remove as admin' : 'Make admin'}
+                                </button>
+                              )}
+                              {!m.isAdmin && (
+                                <button
+                                  onClick={() => {
+                                    setOpenMemberPermId(m.contact.id)
+                                    setOpenMemberMenuId(null)
+                                  }}
+                                >
+                                  Manage permissions
+                                </button>
+                              )}
+                              {!isOwnerRow && (
+                                <button className="group-member-menu-danger" onClick={() => removeMember(m.contact.id)}>
+                                  Remove from group
+                                </button>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Per-member permission overrides — only for
+                              non-admin members, restricting/allowing them
+                              individually without touching anyone else. */}
+                          {permExpanded && !m.isAdmin && (
+                            <div className="member-perm-panel">
+                              <div className="member-perm-header">
+                                <span>Permissions for {m.contact.name}</span>
+                                <button className="group-info-close member-perm-close" onClick={() => setOpenMemberPermId(null)}>×</button>
+                              </div>
+                              {OVERRIDABLE_KEYS.map(key => {
+                                const hasOverride = m.overrides?.[key] !== undefined
+                                const effectiveValue = hasOverride
+                                  ? (m.overrides![key] as boolean)
+                                  : activeConversation.permissions[key]
+                                return (
+                                  <div key={key} className="member-perm-row">
+                                    <label className="group-permission-row member-perm-checkbox-row">
+                                      <span>{PERMISSION_LABELS[key]}</span>
+                                      <input
+                                        type="checkbox"
+                                        checked={effectiveValue}
+                                        onChange={e => setMemberOverride(m.contact.id, key, e.target.checked)}
+                                      />
+                                    </label>
+                                    {hasOverride ? (
+                                      <button
+                                        className="member-perm-reset"
+                                        onClick={() => clearMemberOverride(m.contact.id, key)}
+                                      >
+                                        Custom — reset to group default
+                                      </button>
+                                    ) : (
+                                      <span className="member-perm-default-hint">Using group default</span>
+                                    )}
+                                  </div>
+                                )
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })}
                   </section>
 
                   {/* Add members */}

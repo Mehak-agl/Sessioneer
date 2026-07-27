@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { api } from "../../services/api";
 import StaffSidebar from "../../components/TutorSidebar";
+import TutorAvailabilityModal from "./TutorAvailabilityModal";
 
 
 interface Session {
@@ -16,6 +18,14 @@ interface Session {
 interface Unit {
   id: number;
   name: string;
+  code: string;
+}
+
+interface AvailabilitySlot {
+  id: number;
+  startTime: string;
+  endTime: string;
+  unit: { id: number; code: string; name: string };
 }
 
 const months = [
@@ -26,32 +36,39 @@ const months = [
 const years = Array.from({ length: 1001 }, (_, i) => 2000 + i);
 
 function TutorCalendar() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [sessions, setSessions] = useState<Session[]>([]);
+  const [availability, setAvailability] = useState<AvailabilitySlot[]>([]);
   const [units, setUnits] = useState<Unit[]>([]);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [unitFilter, setUnitFilter] = useState("all");
+  const [showAvailabilityModal, setShowAvailabilityModal] = useState(false);
+  const [initialAvailabilityUnitId, setInitialAvailabilityUnitId] = useState<number | null>(null);
 
   useEffect(() => {
     async function loadData() {
       try {
-        const loadedUnits = await api.getUnits();
+        const invitations = await api.getMyInvitations();
+        const loadedUnits: Unit[] = invitations.map((inv: any) => inv.unit);
         setUnits(loadedUnits);
 
         const allSessions: Session[] = [];
-
         for (const unit of loadedUnits) {
           const unitSessions = await api.getSessions(unit.id);
-
           const sessionsWithUnit = unitSessions.map((session: Session) => ({
             ...session,
             unitId: unit.id,
             unitName: unit.name,
           }));
-
           allSessions.push(...sessionsWithUnit);
         }
-
         setSessions(allSessions);
+
+        // Submitted availability — rendered separately from sessions below,
+        // as a thin strip rather than a full event block, so it's visually
+        // clear this is "I said I'm free" rather than "I'm actually teaching".
+        const myAvailability = await api.getMyAvailability();
+        setAvailability(myAvailability);
       } catch (err) {
         console.error(err);
       }
@@ -59,6 +76,24 @@ function TutorCalendar() {
 
     loadData();
   }, []);
+
+  // reload availability after the modal closes, in case something was
+  // just submitted/changed while it was open
+  const handleModalClose = () => {
+    setShowAvailabilityModal(false);
+    api.getMyAvailability().then(setAvailability).catch(console.error);
+  };
+
+  useEffect(() => {
+    if (searchParams.get("availability") === "1") {
+      const unitParam = searchParams.get("unit");
+      setInitialAvailabilityUnitId(unitParam ? Number(unitParam) : null);
+      setShowAvailabilityModal(true);
+      searchParams.delete("availability");
+      searchParams.delete("unit");
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -75,6 +110,16 @@ function TutorCalendar() {
     return true;
   });
 
+  // "my" doesn't apply here since getMyAvailability() already only returns
+  // the current tutor's own records — only the unit filter is meaningful.
+  const filteredAvailability = availability.filter((slot) => {
+    if (unitFilter.startsWith("unit-")) {
+      const selectedUnitId = unitFilter.replace("unit-", "");
+      return String(slot.unit.id) === selectedUnitId;
+    }
+    return true;
+  });
+
   const firstDay = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
 
@@ -84,13 +129,22 @@ function TutorCalendar() {
   while (days.length % 7 !== 0) days.push("");
 
   const eventsByDay: Record<string, Session[]> = {};
-
   for (const session of filteredSessions) {
     const d = new Date(session.startTime);
     if (d.getFullYear() === year && d.getMonth() === month) {
       const day = String(d.getDate());
       if (!eventsByDay[day]) eventsByDay[day] = [];
       eventsByDay[day].push(session);
+    }
+  }
+
+  const availabilityByDay: Record<string, AvailabilitySlot[]> = {};
+  for (const slot of filteredAvailability) {
+    const d = new Date(slot.startTime);
+    if (d.getFullYear() === year && d.getMonth() === month) {
+      const day = String(d.getDate());
+      if (!availabilityByDay[day]) availabilityByDay[day] = [];
+      availabilityByDay[day].push(slot);
     }
   }
 
@@ -121,6 +175,9 @@ function TutorCalendar() {
               <p>Your teaching schedule</p>
             </div>
           </div>
+          <button className="publish-btn" onClick={() => setShowAvailabilityModal(true)}>
+            Availability
+          </button>
         </header>
 
         <section className="month-calendar">
@@ -181,6 +238,7 @@ function TutorCalendar() {
             <span><b className="dot allocated-dot"></b> Allocated</span>
             <span><b className="dot pending-dot"></b> Pending</span>
             <span><b className="dot conflict-dot"></b> Conflict</span>
+            <span><b className="dot availability-dot"></b> Your Availability</span>
           </section>
 
           <div className="weekdays">
@@ -194,8 +252,9 @@ function TutorCalendar() {
                 {day && (
                   <>
                     <div className="day-number">{day}</div>
+
                     {eventsByDay[day]?.map((session, i) => (
-                      <div className={`class-event ${session.status.toLowerCase()}`} key={i}>
+                      <div className={`class-event ${session.status.toLowerCase()}`} key={`s-${i}`}>
                         <strong>
                           {new Date(session.startTime).toLocaleTimeString([], {
                             hour: "2-digit",
@@ -206,6 +265,16 @@ function TutorCalendar() {
                         {session.unitName && <small>{session.unitName}</small>}
                       </div>
                     ))}
+
+                    {availabilityByDay[day]?.map((slot, i) => (
+                      <div className="availability-strip" key={`a-${i}`} title="Your submitted availability">
+                        {new Date(slot.startTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                        {"–"}
+                        {new Date(slot.endTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                        {" · "}
+                        {slot.unit.code}
+                      </div>
+                    ))}
                   </>
                 )}
               </div>
@@ -213,6 +282,14 @@ function TutorCalendar() {
           </div>
         </section>
       </main>
+
+      {showAvailabilityModal && (
+        <TutorAvailabilityModal
+          units={units}
+          initialUnitId={initialAvailabilityUnitId}
+          onClose={handleModalClose}
+        />
+      )}
     </div>
   );
 }

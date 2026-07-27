@@ -1,9 +1,9 @@
 import { Link } from "react-router-dom";
-import "./CoordinatorSidebar.css";
 
 function CoordinatorSidebar() {
   const fullName = localStorage.getItem('sessioneer_name') || 'Coordinator';
   const initials = fullName.split(' ').map((n: string) => n[0]).join('');
+  const photo = localStorage.getItem('sessioneer_photo');
 
   return (
     <aside className="coord-sidebar">
@@ -16,7 +16,11 @@ function CoordinatorSidebar() {
       </div>
 
       <div className="coord-profile">
-        <div className="coord-avatar">{initials}</div>
+        {photo ? (
+          <img src={photo} alt={fullName} className="coord-avatar sidebar-avatar-photo" />
+        ) : (
+          <div className="coord-avatar">{initials}</div>
+        )}
         <div>
           <h3>{fullName}</h3>
           <p>Coordinator</p>
@@ -31,6 +35,7 @@ function CoordinatorSidebar() {
         <Link to="/coordinator">Allocations</Link>
         <Link to="/coordinator">Reports</Link>
         <Link to="/coordinator-chat">Chat</Link>
+        <Link to="/coordinator-profile">Profile</Link>
       </nav>
     </aside>
   );

@@ -1,0 +1,4464 @@
+/* ==========================================================================
+   GLOBAL.CSS — merged from all page-level .css files
+   ==========================================================================
+   See chat for the full list of conflicts found + how they were resolved.
+   Quick summary of the non-obvious decisions (search these tags below):
+     [CONFLICT: body/*]        one canonical body/reset block, not one per page
+     [CONFLICT: calendar]      coordinator + tutor calendar used the same
+                                class names with different values — merged
+                                using the coordinator version (more complete)
+     [CONFLICT: modal h2]      margin-bottom 8px vs 24px — kept 24px
+     [CONFLICT: empty-state]   two different designs under the same name —
+                                renamed the tutor-dashboard one
+   ========================================================================== */
+
+/* ── 1. Root variables + base reset [CONFLICT: body/*] ───────────────────
+   index.css, CoordinatorCalendarPage.css, CoordinatorDashboard.css, and
+   TutorCalendar.css EACH declared their own `body { ... }` / `* { ... }`.
+   Only the LAST one in the file would have actually applied, silently,
+   to the WHOLE app (not just that page) — different font-family (Arial
+   vs Lato) and background depending on import order. Keeping exactly one
+   copy here, taken from index.css since it's the real app-wide stylesheet.
+   Each page's own background color is still applied via its wrapper div
+   (.dashboard-page, .calendar-page, .login-wrapper, etc.) further down,
+   so nothing changes visually — this just makes it not order-dependent. */
+
+:root {
+  --primary: #0097B2;
+  --primary-dark: #007a91;
+  --primary-light: #e0f5f9;
+  --text: #000000;
+  --text-muted: #555555;
+  --bg: #ffffff;
+  --border: #e0e0e0;
+  --error: #F87171;
+  --shadow: rgba(0, 151, 178, 0.15) 0 4px 20px;
+
+  --font-heading: 'Montserrat', sans-serif;
+  --font-body: 'Lato', sans-serif;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  margin: 0;
+}
+
+p {
+  margin: 0;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+
+/* ── 2. Login + Signup (shared brand panel, role selector, form fields) ──
+   These two files declared identical rules for .brand-*, .role-selector,
+   .role-btn, .form-group — deduped cleanly, no conflicts, just merged. */
+
+.login-wrapper,
+.signup-wrapper {
+  display: flex;
+  min-height: 100vh;
+}
+
+.login-brand,
+.signup-brand {
+  width: 45%;
+  background: linear-gradient(160deg, #00b4d8 0%, #0097B2 40%, #006d82 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 56px 48px 40px;
+  position: relative;
+  overflow: hidden;
+}
+
+.login-brand::before,
+.signup-brand::before {
+  content: '';
+  position: absolute;
+  top: -80px;
+  right: -80px;
+  width: 320px;
+  height: 320px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 50%;
+}
+
+.login-brand::after,
+.signup-brand::after {
+  content: '';
+  position: absolute;
+  bottom: -60px;
+  left: -60px;
+  width: 240px;
+  height: 240px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 50%;
+}
+
+.brand-content {
+  position: relative;
+  z-index: 1;
+}
+
+.brand-logo {
+  width: 120px;
+  height: 120px;
+  object-fit: contain;
+  margin-bottom: 20px;
+  filter: drop-shadow(0 6px 20px rgba(0,0,0,0.2));
+}
+
+.brand-title {
+  font-family: var(--font-heading);
+  font-size: 44px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 1px;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+}
+
+.brand-title-accent {
+  color: #00407a;
+}
+
+.brand-tagline {
+  font-family: var(--font-body);
+  font-size: 17px;
+  color: rgba(255,255,255,0.88);
+  line-height: 1.6;
+  margin-bottom: 40px;
+}
+
+.brand-features {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.brand-features li {
+  font-family: var(--font-body);
+  font-size: 15px;
+  color: rgba(255,255,255,0.9);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand-features li::before {
+  content: '✓';
+  font-size: 13px;
+  color: #378ADD;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.brand-footer {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255,255,255,0.12);
+  border-radius: 10px;
+  padding: 12px 16px;
+  width: fit-content;
+}
+
+.qut-logo {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  border-radius: 4px;
+}
+
+.brand-footer span {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: rgba(255,255,255,0.9);
+  font-weight: 500;
+}
+
+.login-form-panel,
+.signup-form-panel {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8fafb;
+  padding: 40px 24px;
+}
+
+.login-card {
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.08);
+  padding: 48px 44px;
+  width: 100%;
+  max-width: 420px;
+}
+
+.signup-card {
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.08);
+  padding: 48px 44px;
+  width: 100%;
+  max-width: 480px;
+}
+
+.login-header,
+.signup-header {
+  margin-bottom: 28px;
+}
+
+.login-header h2,
+.signup-header h2 {
+  font-family: var(--font-heading);
+  font-size: 26px;
+  font-weight: 700;
+  color: #000000;
+  margin-bottom: 6px;
+}
+
+.login-header p,
+.signup-header p {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.role-selector {
+  display: flex;
+  background: #f0f0f0;
+  border-radius: 10px;
+  padding: 4px;
+  gap: 4px;
+  margin-bottom: 24px;
+}
+
+.role-btn {
+  flex: 1;
+  padding: 10px 0;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.role-btn.active {
+  background: var(--primary);
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0,151,178,0.3);
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.signup-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-group label {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  color: #333;
+}
+
+.form-group input {
+  padding: 12px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-family: var(--font-body);
+  font-size: 15px;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  background: #fafafa;
+}
+
+.form-group input:focus {
+  border-color: var(--primary);
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(0,151,178,0.1);
+}
+
+.login-error,
+.signup-error {
+  color: var(--error);
+  font-size: 13px;
+  text-align: center;
+  background: #fff0f0;
+  border-radius: 6px;
+  padding: 8px 12px;
+}
+
+.login-btn,
+.signup-btn {
+  padding: 13px;
+  background: var(--primary);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-family: var(--font-heading);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+  margin-top: 4px;
+  letter-spacing: 0.3px;
+}
+
+.login-btn:hover,
+.signup-btn:hover {
+  background: var(--primary-dark);
+}
+
+.login-btn:active,
+.signup-btn:active {
+  transform: scale(0.99);
+}
+
+.login-hint {
+  margin-top: 20px;
+  font-size: 12px;
+  color: var(--text-muted);
+  background: #f4f4f4;
+  border-radius: 8px;
+  padding: 12px 14px;
+  line-height: 1.9;
+}
+
+.login-hint strong {
+  display: block;
+  color: #333;
+  margin-bottom: 4px;
+  font-size: 12px;
+}
+
+.login-hint p {
+  margin: 0;
+}
+
+.login-hint-note {
+  margin-top: 6px !important;
+  color: var(--primary);
+  font-style: italic;
+}
+
+.login-signup-link,
+.signup-login-link {
+  margin-top: 16px;
+  text-align: center;
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.login-signup-link a,
+.signup-login-link a {
+  color: var(--primary);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.login-signup-link a:hover,
+.signup-login-link a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+  .login-wrapper,
+  .signup-wrapper {
+    flex-direction: column;
+  }
+
+  .login-brand,
+  .signup-brand {
+    width: 100%;
+    padding: 36px 28px 32px;
+  }
+
+  .brand-title {
+    font-size: 28px;
+  }
+
+  .login-card,
+  .signup-card {
+    padding: 32px 24px;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* ── 3. Coordinator sidebar ────────────────────────────────────────────── */
+
+.coord-sidebar {
+  width: 285px;
+  height: 100vh;
+  overflow-y: auto;
+  scrollbar-width: none;
+  background: linear-gradient(180deg, #1f3550 0%, #132336 100%);
+  color: white;
+  padding: 24px;
+  position: fixed;
+  left: 0;
+  top: 0;
+}
+
+.coord-logo {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  margin-bottom: 28px;
+}
+
+.coord-logo img {
+  width: 58px;
+  height: 58px;
+  object-fit: contain;
+  background: transparent;
+  border-radius: 16px;
+  padding: 7px;
+}
+
+.coord-logo h2 {
+  margin: 0;
+  font-size: 20px;
+  letter-spacing: 2px;
+}
+
+.coord-logo p {
+  margin: 4px 0 0;
+  color: #c9d6df;
+  font-size: 13px;
+}
+
+.coord-profile {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 16px;
+  border-radius: 18px;
+  margin-bottom: 30px;
+}
+
+.coord-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #0097b2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+}
+
+.coord-profile h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.coord-profile p {
+  margin: 4px 0 0;
+  color: #c9d6df;
+  font-size: 13px;
+}
+
+.coord-sidebar::-webkit-scrollbar {
+  display: none;
+}
+
+.coord-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.coord-menu a {
+  color: #d5e5ee;
+  text-decoration: none;
+  padding: 14px 18px;
+  border-radius: 14px;
+  font-weight: bold;
+  transition: 0.2s ease;
+}
+
+.coord-menu a:hover,
+.coord-menu a.active {
+  background: #0097b2;
+  color: white;
+}
+
+
+/* ── 4. Tutor / staff sidebar ─────────────────────────────────────────── */
+
+.staff-sidebar {
+  width: 285px;
+  min-height: 100vh;
+  background: linear-gradient(180deg, #1f3550 0%, #132336 100%);
+  color: white;
+  padding: 24px;
+  position: fixed;
+  left: 0;
+  top: 0;
+}
+
+.staff-logo {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  margin-bottom: 28px;
+}
+
+.staff-logo img {
+  width: 58px;
+  height: 58px;
+  object-fit: contain;
+  background: white;
+  border-radius: 16px;
+  padding: 7px;
+}
+
+.staff-logo h2 {
+  margin: 0;
+  font-size: 20px;
+  letter-spacing: 2px;
+}
+
+.staff-logo p {
+  margin: 4px 0 0;
+  color: #c9d6df;
+  font-size: 13px;
+}
+
+.staff-profile {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 16px;
+  border-radius: 18px;
+  margin-bottom: 30px;
+}
+
+.staff-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #0097b2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+}
+
+.staff-profile h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.staff-profile p {
+  margin: 4px 0 0;
+  color: #c9d6df;
+  font-size: 13px;
+}
+
+.staff-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.staff-menu a {
+  color: #d5e5ee;
+  text-decoration: none;
+  padding: 14px 18px;
+  border-radius: 14px;
+  font-weight: bold;
+  transition: 0.2s ease;
+}
+
+.staff-menu a:hover,
+.staff-menu a.active {
+  background: #0097b2;
+  color: white;
+}
+
+
+/* ── 5. Coordinator dashboard shell (also reused by MyUnitsView) ─────────
+   NOTE: .sidebar / .sidebar-logo / .profile / .menu below look like
+   leftovers from before CoordinatorSidebar.tsx was split into its own
+   component (which now uses .coord-sidebar instead). They don't appear
+   to be used anywhere anymore — left in as dead weight rather than
+   deleted, since removing them isn't a CSS-merge decision to make
+   silently. Safe to delete later once you confirm nothing references
+   them. */
+
+.dashboard-page {
+  display: flex;
+  min-height: 100vh;
+  background: #eef8fb;
+}
+
+.sidebar {
+  width: 285px;
+  height: 100vh;
+  background: linear-gradient(180deg, #1f3550 0%, #132336 100%);
+  color: white;
+  padding: 24px;
+  position: fixed;
+  left: 0;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-logo {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.sidebar-logo img {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  background: white;
+  border-radius: 18px;
+  padding: 8px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
+}
+
+.sidebar-logo h2 {
+  margin: 12px 0 4px;
+  font-family: "Montserrat", sans-serif;
+  letter-spacing: 2.5px;
+  font-size: 23px;
+}
+
+.sidebar-logo p {
+  margin: 0;
+  color: #c9d6df;
+  font-size: 14px;
+}
+
+.profile {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: rgba(255, 255, 255, 0.09);
+  padding: 16px;
+  border-radius: 18px;
+  margin-bottom: 30px;
+}
+
+.profile-avatar {
+  width: 48px;
+  height: 48px;
+  background: #0097b2;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+
+.profile h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.profile p {
+  margin: 4px 0 0;
+  color: #c9d6df;
+  font-size: 13px;
+}
+
+.menu {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.menu p {
+  margin: 0;
+  padding: 14px 18px;
+  border-radius: 14px;
+  color: #d5e5ee;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.menu p:hover {
+  background: rgba(0, 151, 178, 0.22);
+  transform: translateX(4px);
+}
+
+.menu p.active {
+  background: #0097b2;
+  color: white;
+  box-shadow: 0 10px 22px rgba(0, 151, 178, 0.35);
+}
+
+.menu a {
+  color: inherit;
+  text-decoration: none;
+  font-weight: bold;
+  padding: 14px 18px;
+  display: block;
+}
+
+.main-content {
+  margin-left: 285px;
+  flex: 1;
+  padding: 34px;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 28px;
+}
+
+.page-title {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.page-title img {
+  width: 62px;
+  height: 62px;
+  object-fit: contain;
+  background: white;
+  border-radius: 18px;
+  padding: 8px;
+  box-shadow: 0 10px 24px rgba(31, 53, 80, 0.12);
+}
+
+.page-title h1 {
+  margin: 0;
+  font-family: "Montserrat", sans-serif;
+  color: #1f3550;
+  font-size: 34px;
+}
+
+.page-title p {
+  margin: 6px 0 0;
+  color: #657985;
+  font-size: 17px;
+}
+
+.new-unit-btn {
+  background: #0097b2;
+  color: white;
+  border: none;
+  padding: 14px 26px;
+  border-radius: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 12px 24px rgba(0, 151, 178, 0.3);
+  transition: 0.2s ease;
+}
+
+.new-unit-btn:hover {
+  background: #007f96;
+  transform: translateY(-2px);
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 22px;
+  margin-bottom: 26px;
+}
+
+.stat-card {
+  background: white;
+  border-radius: 22px;
+  padding: 24px;
+  min-height: 145px;
+  box-shadow: 0 14px 35px rgba(31, 53, 80, 0.08);
+  border: 1px solid #d7eaf1;
+  transition: 0.2s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 42px rgba(31, 53, 80, 0.12);
+}
+
+.stat-card span {
+  color: #657985;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.stat-card h2 {
+  margin: 14px 0 6px;
+  color: #1f3550;
+  font-family: "Montserrat", sans-serif;
+  font-size: 42px;
+}
+
+.stat-card p {
+  margin: 0;
+  color: #7a8b94;
+  font-size: 16px;
+}
+
+.stat-card.warning {
+  border-left: 7px solid #fbbf24;
+}
+
+.stat-card.success {
+  border-left: 7px solid #0097b2;
+}
+
+.alert-box {
+  background: #fff8dc;
+  color: #745a00;
+  border: 1.5px solid #fbbf24;
+  padding: 18px 22px;
+  border-radius: 18px;
+  font-weight: 700;
+  font-size: 16px;
+  margin-bottom: 28px;
+  box-shadow: 0 10px 24px rgba(251, 191, 36, 0.12);
+}
+
+.units-panel {
+  background: white;
+  border-radius: 24px;
+  padding: 26px;
+  box-shadow: 0 14px 35px rgba(31, 53, 80, 0.08);
+  border: 1px solid #d7eaf1;
+}
+
+.panel-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.panel-heading h2 {
+  margin: 0;
+  font-family: "Montserrat", sans-serif;
+  color: #1f3550;
+  font-size: 26px;
+}
+
+.panel-heading p {
+  margin: 5px 0 0;
+  color: #657985;
+  font-size: 16px;
+}
+
+.panel-heading span {
+  background: #e7f6fa;
+  color: #0097b2;
+  padding: 9px 16px;
+  border-radius: 999px;
+  font-weight: 700;
+}
+
+.unit-card {
+  background: #f8fcfd;
+  border: 1px solid #d7eaf1;
+  border-radius: 18px;
+  padding: 22px;
+  margin-top: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: 0.2s ease;
+}
+
+.unit-card:hover {
+  background: #f1fbfd;
+  transform: translateY(-2px);
+}
+
+.unit-card h3 {
+  margin: 0;
+  color: #1f3550;
+  font-family: "Montserrat", sans-serif;
+  font-size: 21px;
+}
+
+.unit-card p {
+  margin: 8px 0 0;
+  color: #657985;
+  font-size: 16px;
+}
+
+.unit-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.unit-actions button,
+.calendar-btn {
+  background: white;
+  color: #1f3550;
+  border: 1.5px solid #425868;
+  border-radius: 10px;
+  padding: 11px 18px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.unit-actions button:hover {
+  background: #0097b2;
+  color: white;
+  border-color: #0097b2;
+}
+
+.setup-btn {
+  background: #1f3550 !important;
+  color: white !important;
+}
+
+.calendar-btn {
+  margin-top: 24px;
+  background: #0097b2;
+  color: white;
+  border: none;
+  box-shadow: 0 12px 24px rgba(0, 151, 178, 0.25);
+}
+
+.calendar-btn:hover {
+  background: #007f96;
+}
+
+.logout-btn {
+  padding: 10px 20px;
+  background: transparent;
+  color: #657985;
+  border: 1.5px solid #d7eaf1;
+  border-radius: 10px;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.logout-btn:hover {
+  background: #fee2e2;
+  border-color: #e53935;
+  color: #e53935;
+}
+
+@media (max-width: 950px) {
+  .dashboard-page {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    position: relative;
+    width: 100%;
+    min-height: auto;
+  }
+
+  .main-content {
+    margin-left: 0;
+    padding: 24px;
+  }
+
+  .topbar {
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .unit-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+}
+
+
+/* ── 6. Tutor / staff dashboard [CONFLICT: empty-state] ──────────────────
+   StaffDashboard.css had its own `.empty-state` (yellow warning box) that
+   is a DIFFERENT design from MyUnitsView's `.empty-state` (dashed grey
+   call-to-action box, in section 8 below). They mean different things —
+   "here's a warning" vs "click here to create something" — so merging
+   them under one name would visibly break one of the two pages. Renamed
+   this one to `.empty-state-warning`. You'll need to update the tutor
+   dashboard .tsx — see the "exact changes" list in chat. */
+
+.staff-dashboard-page {
+  display: flex;
+  min-height: 100vh;
+  background: #eef8fb;
+}
+
+.staff-main-content {
+  margin-left: 285px;
+  flex: 1;
+  padding: 34px;
+}
+
+.staff-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 28px;
+}
+
+.staff-page-title {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.staff-page-title img {
+  width: 62px;
+  height: 62px;
+  object-fit: contain;
+  background: white;
+  border-radius: 18px;
+  padding: 8px;
+  box-shadow: 0 10px 24px rgba(31, 53, 80, 0.12);
+}
+
+.staff-page-title h1 {
+  margin: 0;
+  font-family: "Montserrat", sans-serif;
+  color: #1f3550;
+  font-size: 34px;
+}
+
+.staff-page-title p {
+  margin: 6px 0 0;
+  color: #657985;
+  font-size: 17px;
+}
+
+.staff-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 22px;
+  margin-bottom: 26px;
+}
+
+.staff-stat-card {
+  background: white;
+  border-radius: 22px;
+  padding: 24px;
+  min-height: 145px;
+  box-shadow: 0 14px 35px rgba(31, 53, 80, 0.08);
+  border: 1px solid #d7eaf1;
+}
+
+.staff-stat-card span {
+  color: #657985;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.staff-stat-card h2 {
+  margin: 14px 0 6px;
+  color: #1f3550;
+  font-size: 34px;
+}
+
+.staff-stat-card p {
+  margin: 0;
+  color: #7a8b94;
+  font-size: 16px;
+}
+
+.deadline-card {
+  border-left: 7px solid #0097b2;
+}
+
+.staff-panel {
+  background: white;
+  border-radius: 24px;
+  padding: 26px;
+  box-shadow: 0 14px 35px rgba(31, 53, 80, 0.08);
+  border: 1px solid #d7eaf1;
+  margin-bottom: 26px;
+}
+
+.staff-panel-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.staff-panel-heading h2 {
+  margin: 0;
+  color: #1f3550;
+  font-size: 26px;
+}
+
+.staff-panel-heading p {
+  margin: 5px 0 0;
+  color: #657985;
+  font-size: 16px;
+}
+
+.staff-panel-heading button {
+  background: #0097b2;
+  color: white;
+  border: none;
+  padding: 12px 18px;
+  border-radius: 12px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.preference-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+
+.preference-card {
+  background: #f8fcfd;
+  border: 1px solid #d7eaf1;
+  border-radius: 18px;
+  padding: 18px;
+}
+
+.preference-card h3 {
+  margin: 0;
+  color: #1f3550;
+}
+
+.preference-card p {
+  margin: 8px 0 0;
+  color: #657985;
+}
+
+.staff-class-card {
+  background: #f8fcfd;
+  border: 1px solid #d7eaf1;
+  border-radius: 18px;
+  padding: 22px;
+  margin-top: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.staff-class-card h3 {
+  margin: 0;
+  color: #1f3550;
+  font-size: 21px;
+}
+
+.staff-class-card p {
+  margin: 8px 0 0;
+  color: #657985;
+}
+
+.staff-class-card.allocated {
+  border-left: 7px solid #22c55e;
+}
+
+.staff-class-card.pending {
+  border-left: 7px solid #fbbf24;
+}
+
+.staff-class-card span {
+  background: #dcfce7;
+  color: #166534;
+  padding: 9px 14px;
+  border-radius: 999px;
+  font-weight: bold;
+}
+
+.request-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.accept-btn {
+  background: #22c55e;
+  color: white;
+  border: none;
+  padding: 11px 18px;
+  border-radius: 10px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.decline-btn {
+  background: #fee2e2;
+  color: #991b1b;
+  border: none;
+  padding: 11px 18px;
+  border-radius: 10px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+/* renamed from .empty-state — see conflict note above */
+.empty-state-warning {
+  background: #fff8dc;
+  color: #745a00;
+  padding: 18px;
+  border-radius: 16px;
+  font-weight: bold;
+}
+
+
+/* ── 7. Coordinator unit detail view ──────────────────────────────────── */
+
+.unit-detail {
+  padding: 0;
+}
+
+.back-btn {
+  background: none;
+  border: none;
+  color: #0097b2;
+  font-family: 'Lato', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: 20px;
+  display: block;
+  transition: 0.2s;
+}
+
+.back-btn:hover { opacity: 0.7; }
+
+.detail-header {
+  margin-bottom: 32px;
+}
+
+.detail-title {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.detail-code {
+  background: #e7f6fa;
+  color: #0097b2;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  padding: 10px 18px;
+  border-radius: 12px;
+  white-space: nowrap;
+}
+
+.detail-title h1 {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 28px;
+  color: #1f3550;
+  margin: 0 0 4px;
+}
+
+.detail-title p {
+  margin: 0;
+  color: #657985;
+  font-size: 14px;
+}
+
+.detail-section {
+  background: white;
+  border: 1.5px solid #d7eaf1;
+  border-radius: 20px;
+  padding: 28px;
+  margin-bottom: 24px;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+.section-header h2 {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 20px;
+  color: #1f3550;
+  margin: 0 0 4px;
+}
+
+.section-header p {
+  margin: 0;
+  color: #657985;
+  font-size: 13px;
+}
+
+.add-btn {
+  background: #0097b2;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition: 0.2s;
+  white-space: nowrap;
+}
+
+.add-btn:hover { background: #007f96; }
+
+.empty-info {
+  color: #657985;
+  font-size: 14px;
+  background: #f8fcfd;
+  border: 1.5px dashed #d7eaf1;
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+}
+
+.sessions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 14px;
+}
+
+.session-card {
+  background: #f8fcfd;
+  border: 1.5px solid #d7eaf1;
+  border-radius: 14px;
+  padding: 16px;
+  transition: 0.2s;
+}
+
+.session-card:hover {
+  border-color: #0097b2;
+  box-shadow: 0 4px 14px rgba(0, 151, 178, 0.1);
+}
+
+.session-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.mode-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+.mode-badge.online    { background: #e0f5f9; color: #0097b2; }
+.mode-badge.on-campus { background: #eef6ee; color: #2e7d32; }
+
+.session-day {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: #1f3550;
+}
+
+.session-time {
+  font-size: 13px;
+  color: #0097b2;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+.session-location {
+  font-size: 12px;
+  color: #657985;
+  margin-top: 4px;
+}
+
+/* ── shared modal styling [CONFLICT: modal h2] ────────────────────────────
+   .modal h2 had margin-bottom: 8px here (unit detail modal, which is
+   always followed by a .modal-sub subtitle) vs margin-bottom: 24px in
+   MyUnitsView (which has no subtitle). Kept 24px — for the unit-detail
+   modal this just adds ~16px more space above .modal-sub, which reads
+   fine; nothing overlaps or breaks. */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.modal {
+  background: white;
+  border-radius: 20px;
+  padding: 36px;
+  width: 100%;
+  max-width: 500px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.15);
+}
+
+.modal h2 {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 22px;
+  color: #1f3550;
+  margin-bottom: 24px;
+}
+
+.modal-sub {
+  color: #657985;
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-field label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1f3550;
+}
+
+.form-field input,
+.form-field select {
+  padding: 11px 14px;
+  border: 1.5px solid #d7eaf1;
+  border-radius: 10px;
+  font-family: 'Lato', sans-serif;
+  font-size: 14px;
+  color: #1f3550;
+  outline: none;
+  background: #f8fcfd;
+  transition: border-color 0.2s;
+}
+
+.form-field input:focus,
+.form-field select:focus {
+  border-color: #0097b2;
+  background: white;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.cancel-btn {
+  padding: 11px 22px;
+  background: transparent;
+  border: 1.5px solid #d7eaf1;
+  border-radius: 10px;
+  font-family: 'Lato', sans-serif;
+  font-weight: 600;
+  color: #657985;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.cancel-btn:hover { border-color: #aaa; color: #333; }
+
+.confirm-btn {
+  padding: 11px 22px;
+  background: #0097b2;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.confirm-btn:hover { background: #007f96; }
+
+.detail-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-row-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+}
+
+.form-row-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.tutors-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.tutor-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  background: #f8fcfd;
+  border: 1.5px solid #d7eaf1;
+  border-radius: 14px;
+  transition: 0.2s;
+}
+
+.tutor-row:hover { border-color: #0097b2; }
+
+.tutor-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: #0097b2;
+  color: white;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.tutor-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.tutor-name {
+  font-weight: 700;
+  font-size: 15px;
+  color: #1f3550;
+}
+
+.tutor-email {
+  font-size: 12px;
+  color: #657985;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.status-badge {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 5px 12px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.status-badge.responded { background: #e0f5f9; color: #0097b2; }
+.status-badge.pending   { background: #fff8dc; color: #745a00; }
+
+.remove-tutor-btn {
+  background: none;
+  border: 1.5px solid #d7eaf1;
+  color: #657985;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+  white-space: nowrap;
+}
+
+.remove-tutor-btn:hover {
+  border-color: #e53935;
+  color: #e53935;
+}
+
+
+/* ── 8. My Units view [CONFLICT: modal h2 — see note in section 7] ────── */
+
+.my-units {
+  padding: 0;
+}
+
+.my-units-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 28px;
+}
+
+.my-units-header h1 {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 32px;
+  color: #1f3550;
+  margin-bottom: 4px;
+}
+
+.my-units-header p {
+  color: #657985;
+  font-size: 15px;
+  margin: 0;
+}
+
+.create-btn {
+  background: #0097b2;
+  color: white;
+  border: none;
+  padding: 13px 24px;
+  border-radius: 12px;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(0, 151, 178, 0.3);
+  transition: 0.2s;
+}
+
+.create-btn:hover {
+  background: #007f96;
+  transform: translateY(-2px);
+}
+
+.unit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.unit-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.units-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* NOTE: this is the "no units yet" call-to-action style — different from
+   .empty-state-warning in section 6, kept as its original name/design. */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #657985;
+  background: white;
+  border-radius: 18px;
+  border: 1.5px dashed #d7eaf1;
+}
+
+.unit-row {
+  background: white;
+  border: 1.5px solid #d7eaf1;
+  border-radius: 18px;
+  padding: 22px 26px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  justify-content: space-between;
+  transition: 0.2s;
+}
+
+.unit-row:hover {
+  border-color: #0097b2;
+  box-shadow: 0 8px 24px rgba(0, 151, 178, 0.1);
+  transform: translateY(-2px);
+}
+
+.unit-row-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+  min-width: 0;
+}
+
+.unit-code-badge {
+  background: #e7f6fa;
+  color: #0097b2;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+
+.unit-row-info h3 {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 17px;
+  color: #1f3550;
+  margin: 0 0 4px;
+}
+
+.unit-meta {
+  font-size: 13px;
+  color: #657985;
+}
+
+.unit-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.manage-btn {
+  background: #1f3550;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition: 0.2s;
+  white-space: nowrap;
+}
+
+.manage-btn:hover {
+  background: #0097b2;
+}
+
+
+/* ── 9. Calendar (coordinator + tutor) [CONFLICT: calendar] ──────────────
+   Both calendar pages used the exact same class names with different
+   values (padding, border-radius, whether events show a colored left
+   border + text color, whether the legend is a styled bar, etc).
+   Merged using the coordinator version everywhere, since it was the
+   more "finished" one (drop shadows, colored event borders, styled
+   legend bar) and the tutor version's differences read like an earlier
+   draft rather than an intentional design choice. Net effect: the
+   tutor/staff calendar page will pick up nicer-looking day cells,
+   events, and legend than it currently has. Tutor-only additions
+   (month/year dropdowns, unit filter) are kept as-is below. */
+
+.calendar-page {
+  display: flex;
+  min-height: 100vh;
+  background: #eef8fb;
+  width: 100%;
+}
+
+.calendar-main {
+  margin-left: 285px;
+  width: calc(100% - 285px);
+  padding: 28px;
+}
+
+.calendar-topbar {
+  width: 100%;
+  background: white;
+  border-radius: 18px;
+  padding: 20px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 12px 28px rgba(31, 53, 80, 0.08);
+}
+
+.page-heading {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.page-heading img {
+  width: 58px;
+  height: 58px;
+  object-fit: contain;
+  background: #eef8fb;
+  border-radius: 16px;
+  padding: 8px;
+}
+
+.page-heading h1 {
+  margin: 0;
+  color: #1f3550;
+  font-size: 30px;
+}
+
+.page-heading p {
+  margin: 6px 0 0;
+  color: #6d7d85;
+}
+
+.publish-btn {
+  background: #0097b2;
+  color: white;
+  border: none;
+  padding: 13px 24px;
+  border-radius: 12px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.calendar-summary {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 22px;
+  margin-top: 24px;
+}
+
+.summary-card {
+  background: white;
+  padding: 22px;
+  border-radius: 20px;
+  box-shadow: 0 12px 28px rgba(31, 53, 80, 0.08);
+}
+
+.summary-card h2 {
+  margin: 0;
+  color: #1f3550;
+  font-size: 36px;
+}
+
+.summary-card p {
+  margin: 8px 0 0;
+  color: #6d7d85;
+  font-weight: bold;
+}
+
+.allocated-card {
+  border-left: 7px solid #22c55e;
+}
+
+.pending-card {
+  border-left: 7px solid #fbbf24;
+}
+
+.conflict-card {
+  border-left: 7px solid #ef4444;
+}
+
+.legend {
+  width: 100%;
+  display: flex;
+  gap: 20px;
+  margin: 20px 0;
+  font-weight: bold;
+  justify-content: center;
+  background: #f6fbfd;
+  padding: 14px;
+  border-radius: 14px;
+}
+
+.legend span {
+  color: #425868;
+  font-weight: bold;
+}
+
+.dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 6px;
+}
+
+.allocated-dot {
+  background: #22c55e;
+}
+
+.pending-dot {
+  background: #fbbf24;
+}
+
+.conflict-dot {
+  background: #ef4444;
+}
+
+.month-calendar {
+  width: 100%;
+  background: white;
+  border-radius: 22px;
+  padding: 22px;
+  box-shadow: 0 12px 28px rgba(31, 53, 80, 0.08);
+}
+
+.weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  background: #1f3550;
+  color: white;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.weekdays div {
+  padding: 14px;
+  text-align: center;
+  font-weight: bold;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.day-box {
+  min-height: 125px;
+  background: #f6fbfd;
+  border: 1px solid #d7eaf1;
+  border-radius: 14px;
+  padding: 10px;
+}
+
+.day-box.empty {
+  background: #edf4f7;
+  opacity: 0.6;
+}
+
+.day-number {
+  font-weight: bold;
+  color: #1f3550;
+  margin-bottom: 8px;
+}
+
+.class-event {
+  padding: 8px;
+  border-radius: 10px;
+  margin-top: 7px;
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.class-event:hover {
+  transform: scale(1.02);
+  transition: 0.2s ease;
+}
+
+.class-event strong {
+  display: block;
+  margin-bottom: 3px;
+}
+
+.class-event span {
+  display: block;
+}
+
+.class-event small {
+  display: block;
+  margin-top: 3px;
+  font-size: 11px;
+  color: #425868;
+}
+
+.class-event.allocated {
+  background: #dcfce7;
+  color: #166534;
+  border-left: 5px solid #22c55e;
+}
+
+.class-event.pending {
+  background: #fef3c7;
+  color: #92400e;
+  border-left: 5px solid #fbbf24;
+}
+
+.class-event.conflict {
+  background: #fee2e2;
+  color: #991b1b;
+  border-left: 5px solid #ef4444;
+}
+
+/* Thin yellow strip showing the tutor's own submitted availability for a
+   day — deliberately much slimmer than .class-event (which represents an
+   actual scheduled session), so the two are never visually confused. */
+.availability-strip {
+  margin-top: 6px;
+  padding: 3px 6px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #92400e;
+  background: #fffbeb;
+  border-left: 3px solid #fbbf24;
+  border-radius: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.availability-dot {
+  background: #fbbf24;
+}
+
+/* tutor-only additions (no coordinator equivalent, kept as-is) */
+
+.calendar-box-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 22px;
+  background: #eef8fb;
+  padding: 16px;
+  border-radius: 16px;
+}
+
+.calendar-select-group {
+  display: flex;
+  gap: 12px;
+}
+
+.calendar-select-group select {
+  padding: 11px 16px;
+  border-radius: 12px;
+  border: 1px solid #cfe3eb;
+  background: white;
+  color: #1f3550;
+  font-weight: bold;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.calendar-nav-btn {
+  background: #1f3550;
+  color: white;
+  border: none;
+  padding: 12px 18px;
+  border-radius: 12px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.calendar-nav-btn:hover {
+  background: #0097b2;
+}
+
+.calendar-filter-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 20px;
+}
+
+.unit-filter-box {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #f6fbfd;
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid #d7eaf1;
+}
+
+.unit-filter-box label {
+  color: #1f3550;
+  font-weight: bold;
+  font-size: 15px;
+}
+
+.unit-filter-box select {
+  min-width: 190px;
+  padding: 11px 14px;
+  border-radius: 12px;
+  border: 1px solid #cfe3eb;
+  background: white;
+  color: #1f3550;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+@media (max-width: 1000px) {
+  .calendar-page {
+    flex-direction: column;
+  }
+
+  .calendar-sidebar {
+    width: 100%;
+  }
+
+  .calendar-main {
+    margin-left: 0;
+  }
+
+  .calendar-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .calendar-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .weekdays {
+    display: none;
+  }
+
+  .calendar-topbar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 18px;
+  }
+}
+
+@media (max-width: 800px) {
+  .calendar-box-header {
+    flex-direction: column;
+  }
+  .calendar-select-group,
+  .calendar-select-group select,
+  .calendar-nav-btn {
+    width: 100%;
+  }
+  .calendar-filter-row {
+    justify-content: stretch;
+  }
+  .unit-filter-box {
+    width: 100%;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .unit-filter-box select {
+    width: 100%;
+  }
+}
+
+/* Leftover sidebar wrapper class from an earlier calendar layout —
+   referenced in the media query above but not currently used by any
+   element; harmless, left in rather than silently deleting it. */
+.calendar-sidebar {
+  width: 285px;
+  min-height: 100vh;
+  background: linear-gradient(180deg, #1f3550 0%, #152638 100%);
+  color: white;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  left: 0;
+  top: 0;
+}
+
+.calendar-logo {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  margin-bottom: 28px;
+  justify-content: flex-start;
+}
+
+.calendar-logo img {
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+  background: white;
+  border-radius: 14px;
+  padding: 6px;
+}
+
+.calendar-logo h2 {
+  margin: 0;
+  font-size: 19px;
+  letter-spacing: 2.5px;
+  color: white;
+}
+
+.calendar-logo p {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: #c9d6df;
+}
+
+.calendar-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.calendar-menu a {
+  color: #d5e5ee;
+  text-decoration: none;
+  padding: 13px 15px;
+  border-radius: 12px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.calendar-menu a:hover,
+.calendar-menu a.active {
+  background: #0097b2;
+  color: white;
+}
+
+
+/* ── 10. Chat (coordinator + tutor — identical, deduped cleanly) ─────────
+   These two files were the same rule-for-rule, no conflicts. TutorChat.css
+   just had one extra block (.chat-permission-notice) that CoordinatorChat
+   didn't need — included below, harmless either way. */
+
+.chat-page {
+  display: flex;
+  min-height: 100vh;
+  background: #eef8fb;
+}
+
+.chat-main {
+  margin-left: 285px;
+  flex: 1;
+  padding: 28px;
+}
+
+.chat-shell {
+  display: flex;
+  height: calc(100vh - 56px);
+  background: white;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 12px 28px rgba(31, 53, 80, 0.08);
+}
+
+.chat-list-panel {
+  width: 320px;
+  border-right: 1.5px solid #d7eaf1;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-search-box {
+  padding: 18px;
+  border-bottom: 1.5px solid #d7eaf1;
+}
+
+.chat-search-box input {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1.5px solid #d7eaf1;
+  border-radius: 10px;
+  font-size: 14px;
+  outline: none;
+  background: #f8fcfd;
+}
+
+.chat-search-box input:focus {
+  border-color: #0097b2;
+  background: white;
+}
+
+.chat-list-label {
+  padding: 14px 18px 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #99adb6;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.chat-dm-list, .chat-search-results {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.chat-empty-hint {
+  padding: 12px 18px;
+  font-size: 13px;
+  color: #99adb6;
+}
+
+.chat-list-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 18px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: 0.15s;
+}
+
+.chat-list-item:hover, .chat-list-item.active {
+  background: #f0fafc;
+}
+
+.chat-list-item.active {
+  border-right: 3px solid #0097b2;
+}
+
+.chat-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #0097b2;
+  color: white;
+  font-weight: 700;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.chat-list-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.chat-list-item-name {
+  font-weight: 700;
+  font-size: 14px;
+  color: #1f3550;
+}
+
+.chat-list-item-sub {
+  font-size: 12px;
+  color: #657985;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chat-window {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-window-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #99adb6;
+  font-size: 14px;
+}
+
+.chat-window-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 24px;
+  border-bottom: 1.5px solid #d7eaf1;
+  position: relative;
+}
+
+.chat-window-name {
+  font-weight: 700;
+  font-size: 15px;
+  color: #1f3550;
+}
+
+.chat-window-sub {
+  font-size: 12px;
+  color: #657985;
+}
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.chat-first-message-hint {
+  text-align: center;
+  margin: auto;
+}
+
+.chat-bubble-row {
+  display: flex;
+}
+
+.chat-bubble-row.mine {
+  justify-content: flex-end;
+}
+
+.chat-bubble-row.theirs {
+  justify-content: flex-start;
+}
+
+.chat-bubble {
+  max-width: 60%;
+  padding: 10px 14px;
+  border-radius: 14px;
+  font-size: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.chat-bubble-row.mine .chat-bubble {
+  background: #0097b2;
+  color: white;
+  border-bottom-right-radius: 4px;
+}
+
+.chat-bubble-row.theirs .chat-bubble {
+  background: #f0f7fa;
+  color: #1f3550;
+  border-bottom-left-radius: 4px;
+}
+
+.chat-bubble-time {
+  font-size: 10px;
+  opacity: 0.7;
+  align-self: flex-end;
+}
+
+.chat-input-row {
+  display: flex;
+  gap: 12px;
+  padding: 16px 24px;
+  border-top: 1.5px solid #d7eaf1;
+}
+
+.chat-input-row textarea {
+  flex: 1;
+  resize: none;
+  padding: 11px 14px;
+  border: 1.5px solid #d7eaf1;
+  border-radius: 10px;
+  font-size: 14px;
+  outline: none;
+  font-family: inherit;
+}
+
+.chat-input-row textarea:focus {
+  border-color: #0097b2;
+}
+
+.chat-send-btn {
+  background: #0097b2;
+  color: white;
+  border: none;
+  padding: 0 22px;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.chat-send-btn:disabled {
+  background: #c8e3ec;
+  cursor: not-allowed;
+}
+
+.chat-lists-scroll {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.chat-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-right: 14px;
+}
+
+.chat-add-group-btn {
+  background: #0097b2;
+  color: white;
+  border: none;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chat-add-group-btn:hover {
+  background: #007f96;
+}
+
+.chat-avatar-group {
+  background: #1f3550;
+}
+
+.chat-avatar-sm {
+  width: 32px;
+  height: 32px;
+  font-size: 11px;
+}
+
+.chat-bubble-sender {
+  font-size: 11px;
+  font-weight: 700;
+  opacity: 0.8;
+}
+
+.chat-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+}
+
+.chat-modal {
+  background: white;
+  border-radius: 20px;
+  padding: 32px;
+  width: 100%;
+  max-width: 460px;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.15);
+}
+
+.chat-modal h2 {
+  margin: 0 0 6px;
+  color: #1f3550;
+  font-size: 20px;
+}
+
+.chat-modal-sub {
+  margin: 0 0 20px;
+  color: #657985;
+  font-size: 13px;
+}
+
+.chat-modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.chat-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.chat-form-field label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1f3550;
+}
+
+.chat-form-field input[type="text"],
+.chat-form-field select {
+  padding: 11px 14px;
+  border: 1.5px solid #d7eaf1;
+  border-radius: 10px;
+  font-size: 14px;
+  outline: none;
+}
+
+.chat-form-field input[type="text"]:focus,
+.chat-form-field select:focus {
+  border-color: #0097b2;
+}
+
+.chat-member-checklist {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 220px;
+  overflow-y: auto;
+  border: 1.5px solid #d7eaf1;
+  border-radius: 10px;
+  padding: 8px;
+}
+
+.chat-member-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.chat-member-row:hover {
+  background: #f8fcfd;
+}
+
+.chat-member-row.checked {
+  background: #e7f6fa;
+}
+
+.chat-member-row input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #0097b2;
+}
+
+.chat-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.chat-cancel-btn {
+  padding: 11px 22px;
+  background: transparent;
+  border: 1.5px solid #d7eaf1;
+  border-radius: 10px;
+  font-weight: 600;
+  color: #657985;
+  cursor: pointer;
+}
+
+.chat-confirm-btn {
+  padding: 11px 22px;
+  background: #0097b2;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.chat-confirm-btn:disabled {
+  background: #c8e3ec;
+  cursor: not-allowed;
+}
+
+.chat-window-header-text {
+  flex: 1;
+}
+
+.chat-info-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1.5px solid #d7eaf1;
+  background: white;
+  color: #1f3550;
+  font-weight: 700;
+  font-style: italic;
+  cursor: pointer;
+}
+
+.chat-info-btn:hover {
+  border-color: #0097b2;
+  color: #0097b2;
+}
+
+.chat-attach-wrapper {
+  position: relative;
+}
+
+.chat-attach-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  border: 1.5px solid #d7eaf1;
+  background: white;
+  font-size: 18px;
+  font-weight: 700;
+  color: #1f3550;
+  cursor: pointer;
+}
+
+.chat-attach-menu {
+  position: absolute;
+  bottom: 48px;
+  left: 0;
+  background: white;
+  border: 1.5px solid #d7eaf1;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(31, 53, 80, 0.12);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 50;
+}
+
+.chat-attach-menu button {
+  padding: 10px 18px;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  font-size: 13px;
+  color: #1f3550;
+}
+
+.chat-attach-menu button:hover {
+  background: #f0fafc;
+}
+
+.chat-attachment-tag {
+  font-style: italic;
+}
+
+.group-info-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.25);
+  z-index: 150;
+}
+
+.group-info-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 360px;
+  background: white;
+  box-shadow: -8px 0 30px rgba(31, 53, 80, 0.15);
+  z-index: 160;
+  display: flex;
+  flex-direction: column;
+}
+
+.group-info-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1.5px solid #d7eaf1;
+}
+
+.group-info-header h2 {
+  margin: 0;
+  font-size: 18px;
+  color: #1f3550;
+}
+
+.group-info-close {
+  background: none;
+  border: none;
+  font-size: 22px;
+  cursor: pointer;
+  color: #657985;
+}
+
+.group-info-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 24px 24px;
+}
+
+.group-info-section {
+  padding: 18px 0;
+  border-bottom: 1px solid #eef3f5;
+}
+
+.group-info-section h3 {
+  margin: 0 0 12px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #99adb6;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.group-name-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.group-info-name {
+  font-size: 17px;
+  font-weight: 700;
+  color: #1f3550;
+}
+
+.group-info-unit {
+  font-size: 12px;
+  color: #657985;
+  margin-top: 2px;
+}
+
+.group-name-edit-row {
+  display: flex;
+  gap: 8px;
+}
+
+.group-name-edit-row input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1.5px solid #d7eaf1;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.group-media-row {
+  display: flex;
+  gap: 10px;
+  padding: 8px 0;
+  font-size: 13px;
+  color: #1f3550;
+}
+
+.group-media-type {
+  text-transform: capitalize;
+  font-weight: 700;
+  color: #0097b2;
+  width: 70px;
+  flex-shrink: 0;
+}
+
+.group-permission-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+  font-size: 14px;
+  color: #1f3550;
+  cursor: pointer;
+}
+
+.group-permission-row input {
+  width: 16px;
+  height: 16px;
+  accent-color: #0097b2;
+}
+
+.group-member-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+}
+
+.group-member-row-wrapper {
+  position: relative;
+}
+
+.group-member-row-clickable {
+  width: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  border-radius: 8px;
+}
+
+.group-member-row-clickable:hover {
+  background: #f8fcfd;
+}
+
+.group-member-menu {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  background: white;
+  border: 1.5px solid #d7eaf1;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(31, 53, 80, 0.12);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 50;
+  min-width: 180px;
+}
+
+.group-member-menu button {
+  padding: 10px 16px;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  font-size: 13px;
+  color: #1f3550;
+}
+
+.group-member-menu button:hover {
+  background: #f0fafc;
+}
+
+.group-member-menu-danger {
+  color: #e53935 !important;
+}
+
+.chat-add-group-btn-wide {
+  width: 100%;
+  border-radius: 10px;
+  padding: 10px;
+  font-size: 13px;
+}
+
+.group-add-list {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.group-add-name {
+  flex: 1;
+  font-size: 13px;
+  color: #1f3550;
+}
+
+.group-exit-btn {
+  width: 100%;
+  padding: 12px;
+  background: #fee2e2;
+  color: #991b1b;
+  border: none;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.group-exit-btn:hover {
+  background: #fecaca;
+}
+
+.chat-permission-notice {
+  padding: 8px 24px;
+  background: #fff8dc;
+  color: #745a00;
+  font-size: 12px;
+  text-align: center;
+}
+
+
+/* ── 11. Tutor availability view ──────────────────────────────────────── */
+
+.tutor-availability {
+  padding: 0;
+}
+
+.avail-back-link {
+  background: none;
+  border: none;
+  color: #0097b2;
+  font-family: 'Lato', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: 20px;
+  display: block;
+  transition: opacity 0.2s;
+}
+.avail-back-link:hover { opacity: 0.7; }
+
+.avail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 28px;
+  gap: 24px;
+}
+
+.avail-header h1 {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 28px;
+  color: #1f3550;
+  margin: 0 0 6px;
+}
+
+.avail-header > div:first-child p {
+  margin: 0;
+  color: #657985;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.avail-deadline-badge {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #fff8dc;
+  border: 1.5px solid #fbbf24;
+  border-radius: 16px;
+  padding: 14px 20px;
+  color: #745a00;
+  flex-shrink: 0;
+}
+
+.avail-deadline-icon { font-size: 22px; }
+
+.avail-deadline-badge div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.avail-deadline-badge strong {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.avail-deadline-badge span { font-size: 12px; }
+
+.avail-units-panel {
+  background: white;
+  border: 1.5px solid #d7eaf1;
+  border-radius: 20px;
+  padding: 24px 28px;
+  margin-bottom: 24px;
+}
+
+.avail-units-panel h2 {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 18px;
+  color: #1f3550;
+  margin: 0 0 4px;
+}
+
+.avail-units-panel > p {
+  margin: 0 0 16px;
+  color: #657985;
+  font-size: 13px;
+}
+
+.avail-unit-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.avail-no-units {
+  color: #99adb6;
+  font-size: 14px;
+  font-style: italic;
+  margin: 0;
+}
+
+.avail-unit-tab {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #f8fcfd;
+  border: 1.5px solid #d7eaf1;
+  border-radius: 14px;
+  padding: 12px 18px;
+  cursor: pointer;
+  transition: all 0.18s;
+  text-align: left;
+}
+
+.avail-unit-tab:hover {
+  border-color: #0097b2;
+  background: #f0fafc;
+}
+
+.avail-unit-tab.active {
+  border-color: #0097b2;
+  background: #e7f6fa;
+  box-shadow: 0 4px 14px rgba(0, 151, 178, 0.12);
+}
+
+.avail-unit-tab.has-slots .avail-tab-code {
+  background: #0097b2;
+  color: white;
+}
+
+.avail-tab-code {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  color: #0097b2;
+  background: #e7f6fa;
+  padding: 4px 10px;
+  border-radius: 7px;
+  transition: 0.18s;
+}
+
+.avail-tab-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f3550;
+}
+
+.avail-tab-sem {
+  font-size: 12px;
+  color: #99adb6;
+}
+
+.avail-tab-badge {
+  font-size: 11px;
+  font-weight: 700;
+  background: #0097b2;
+  color: white;
+  padding: 3px 9px;
+  border-radius: 999px;
+  margin-left: 4px;
+}
+
+.avail-grid-section {
+  background: white;
+  border: 1.5px solid #d7eaf1;
+  border-radius: 20px;
+  padding: 28px;
+  margin-bottom: 24px;
+}
+
+.avail-grid-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 6px;
+  gap: 20px;
+}
+
+.avail-grid-heading h2 {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 20px;
+  color: #1f3550;
+  margin: 0 0 4px;
+}
+
+.avail-grid-heading > div p {
+  margin: 0;
+  color: #657985;
+  font-size: 13px;
+}
+
+.avail-slot-count {
+  font-size: 12px;
+  font-weight: 700;
+  color: #99adb6;
+  background: #f0f5f7;
+  padding: 5px 14px;
+  border-radius: 999px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin-top: 4px;
+  transition: 0.2s;
+}
+
+.avail-slot-count.has-slots {
+  color: #0097b2;
+  background: #e7f6fa;
+}
+
+.avail-grid {
+  display: grid;
+  grid-template-columns: 52px repeat(5, 1fr);
+  gap: 4px;
+  margin-top: 16px;
+  user-select: none;
+}
+
+.avail-row-fragment {
+  display: contents;
+}
+
+.avail-day-header {
+  background: #f0f7fa;
+  border: 1.5px solid #d7eaf1;
+  border-radius: 10px;
+  padding: 8px 4px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  transition: 0.15s;
+  font-family: 'Montserrat', sans-serif;
+}
+
+.avail-day-header:hover {
+  border-color: #0097b2;
+  background: #e7f6fa;
+}
+
+.avail-day-header.partial {
+  border-color: #7dcfde;
+  background: #edf9fc;
+}
+
+.avail-day-header.all-selected {
+  border-color: #0097b2;
+  background: #0097b2;
+}
+
+.avail-day-header.all-selected .avail-day-label { color: white; }
+.avail-day-header.all-selected .avail-day-count { background: rgba(255,255,255,0.25); color: white; }
+
+.avail-day-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #1f3550;
+}
+
+.avail-day-count {
+  font-size: 10px;
+  font-weight: 700;
+  background: #e7f6fa;
+  color: #0097b2;
+  border-radius: 999px;
+  padding: 1px 6px;
+}
+
+.avail-time-label {
+  display: flex;
+  align-items: center;
+  font-size: 11px;
+  color: #99adb6;
+  font-weight: 600;
+  padding-right: 4px;
+  height: 40px;
+  justify-content: flex-end;
+}
+
+.avail-cell {
+  height: 40px;
+  background: #f0f7fa;
+  border: 1.5px solid #e8f3f7;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: background 0.1s, border-color 0.1s;
+}
+
+.avail-cell:hover {
+  background: #c5e8f0;
+  border-color: #7dcfde;
+}
+
+.avail-cell.selected {
+  background: #0097b2;
+  border-color: #0097b2;
+}
+
+.avail-cell.selected:hover {
+  background: #007f96;
+}
+
+.avail-prefs-section {
+  background: white;
+  border: 1.5px solid #d7eaf1;
+  border-radius: 20px;
+  padding: 28px;
+  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.avail-prefs-section h2 {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 20px;
+  color: #1f3550;
+  margin: 0 0 2px;
+}
+
+.avail-prefs-section > p {
+  color: #657985;
+  font-size: 13px;
+  margin: -14px 0 0;
+}
+
+.avail-pref-field {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.avail-pref-field label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1f3550;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.avail-max-val {
+  background: #0097b2;
+  color: white;
+  border-radius: 999px;
+  font-size: 12px;
+  padding: 2px 10px;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+}
+
+.avail-pill-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.avail-pill {
+  background: #f8fcfd;
+  border: 1.5px solid #d7eaf1;
+  border-radius: 999px;
+  padding: 9px 18px;
+  font-family: 'Lato', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: #657985;
+  cursor: pointer;
+  transition: 0.15s;
+}
+
+.avail-pill:hover { border-color: #0097b2; color: #0097b2; }
+
+.avail-pill.selected {
+  background: #e7f6fa;
+  border-color: #0097b2;
+  color: #0097b2;
+}
+
+.avail-slider {
+  width: 100%;
+  max-width: 360px;
+  accent-color: #0097b2;
+  cursor: pointer;
+}
+
+.avail-slider-labels {
+  display: flex;
+  justify-content: space-between;
+  max-width: 360px;
+  font-size: 12px;
+  color: #99adb6;
+}
+
+.avail-optional {
+  font-weight: 400;
+  color: #99adb6;
+  font-size: 12px;
+}
+
+.avail-notes {
+  padding: 12px 14px;
+  border: 1.5px solid #d7eaf1;
+  border-radius: 12px;
+  font-family: 'Lato', sans-serif;
+  font-size: 14px;
+  color: #1f3550;
+  background: #f8fcfd;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.2s;
+  width: 100%;
+  box-sizing: border-box;
+  line-height: 1.5;
+}
+
+.avail-notes:focus {
+  border-color: #0097b2;
+  background: white;
+}
+
+.avail-submit-section {
+  background: white;
+  border: 1.5px solid #d7eaf1;
+  border-radius: 20px;
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.avail-grid-unit-label {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 16px;
+  color: #0097b2;
+}
+
+.avail-summary {
+  min-height: 48px;
+}
+
+.avail-summary-empty {
+  margin: 0;
+  color: #99adb6;
+  font-size: 14px;
+  font-style: italic;
+}
+
+.avail-summary-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.avail-summary-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: #f0fafc;
+  border-radius: 10px;
+}
+
+.avail-summary-code {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  color: #0097b2;
+  background: #e7f6fa;
+  padding: 3px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.avail-summary-name {
+  font-size: 14px;
+  color: #1f3550;
+  font-weight: 600;
+  flex: 1;
+}
+
+.avail-summary-slots {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0097b2;
+  white-space: nowrap;
+}
+
+.avail-confirm-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  cursor: pointer;
+  color: #1f3550;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.avail-confirm-row input[type='checkbox'] {
+  margin-top: 3px;
+  accent-color: #0097b2;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.avail-submit-btn {
+  background: #0097b2;
+  color: white;
+  border: none;
+  padding: 14px 32px;
+  border-radius: 12px;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.2s;
+  align-self: flex-start;
+  box-shadow: 0 8px 20px rgba(0, 151, 178, 0.25);
+}
+
+.avail-submit-btn:hover:not(:disabled) {
+  background: #007f96;
+  transform: translateY(-2px);
+}
+
+.avail-submit-btn:disabled {
+  background: #c0dce3;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+.avail-success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  text-align: center;
+}
+
+.avail-success-icon {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  background: #0097b2;
+  color: white;
+  font-size: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 28px;
+  box-shadow: 0 16px 40px rgba(0, 151, 178, 0.3);
+}
+
+.avail-success h2 {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 28px;
+  color: #1f3550;
+  margin: 0 0 12px;
+}
+
+.avail-success p {
+  color: #657985;
+  font-size: 15px;
+  margin: 0 0 32px;
+  line-height: 1.6;
+  max-width: 420px;
+}
+
+.avail-back-action-btn {
+  background: #0097b2;
+  color: white;
+  border: none;
+  padding: 13px 30px;
+  border-radius: 12px;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: 0.2s;
+  box-shadow: 0 8px 20px rgba(0, 151, 178, 0.25);
+}
+
+.avail-back-action-btn:hover { background: #007f96; }
+
+.avail-success-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  max-width: 440px;
+  margin-bottom: 28px;
+}
+
+.avail-success-unit-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #f0fafc;
+  border: 1.5px solid #c2e6ee;
+  border-radius: 12px;
+}
+
+.avail-success-unit-code {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  color: #0097b2;
+  background: #e7f6fa;
+  padding: 3px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.avail-success-unit-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f3550;
+  flex: 1;
+}
+
+.avail-success-unit-slots {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0097b2;
+  white-space: nowrap;
+}
+
+.avail-success-total {
+  text-align: center;
+  font-size: 13px;
+  color: #657985;
+  padding: 6px 0 2px;
+}
+
+
+/* ── 12. Tutor "My Units" page ─────────────────────────────────────────────
+   New for this page only. Reuses a lot of existing classes directly:
+   .chat-search-box / .chat-lists-scroll / .chat-empty-hint / .chat-window-empty
+   (from the chat page's list panel), .unit-code-badge (from MyUnitsView),
+   .detail-section / .section-header / .sessions-grid / .session-card
+   (from the coordinator's unit detail view), and .accept-btn / .decline-btn
+   / .status-badge (from the staff dashboard + unit detail view). Only the
+   genuinely new bits are below. */
+
+.myunits-workspace {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+}
+
+.myunits-list-panel {
+  width: 320px;
+  flex-shrink: 0;
+  background: white;
+  border: 1.5px solid #d7eaf1;
+  border-radius: 20px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 160px);
+}
+
+.myunits-detail-panel {
+  flex: 1;
+  min-width: 0;
+}
+
+.myunits-unit-card {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 18px;
+  background: none;
+  border: none;
+  border-bottom: 1px solid #eef3f5;
+  cursor: pointer;
+  text-align: left;
+  transition: 0.15s;
+}
+
+.myunits-unit-card:hover,
+.myunits-unit-card.active {
+  background: #f0fafc;
+}
+
+.myunits-unit-card.active {
+  border-left: 3px solid #0097b2;
+}
+
+.myunits-unit-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.myunits-status-pill {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.myunits-status-pill.pending {
+  background: #fff8dc;
+  color: #745a00;
+}
+
+.myunits-status-pill.accepted {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.myunits-unit-name {
+  font-weight: 700;
+  font-size: 14px;
+  color: #1f3550;
+}
+
+.myunits-unit-sem {
+  font-size: 12px;
+  color: #657985;
+}
+
+.announcement-card {
+  background: #f8fcfd;
+  border: 1.5px solid #d7eaf1;
+  border-radius: 14px;
+  padding: 16px 18px;
+  margin-top: 12px;
+}
+
+.announcement-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.announcement-title {
+  font-weight: 700;
+  color: #1f3550;
+  font-size: 14px;
+}
+
+.announcement-date {
+  font-size: 12px;
+  color: #99adb6;
+}
+
+.announcement-card p {
+  margin: 0;
+  color: #657985;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+@media (max-width: 1000px) {
+  .myunits-workspace {
+    flex-direction: column;
+  }
+  .myunits-list-panel {
+    width: 100%;
+    max-height: none;
+  }
+}
+
+
+/* ── 13. Tutor availability modal (opened from Calendar) ────────────────
+   Reuses .modal-overlay / .modal / .form-field / .modal-actions /
+   .cancel-btn / .confirm-btn from section 7, and .avail-grid / .avail-cell
+   / .avail-day-header etc from section 11 (same grid styling as the old
+   dashboard availability view). Only the header + saved-message are new. */
+
+.avail-modal {
+  max-width: 680px;
+  max-height: 88vh;
+  overflow-y: auto;
+}
+
+.avail-period-estimate {
+  margin: 0 0 16px;
+  font-size: 12px;
+  color: #657985;
+  font-style: italic;
+}
+
+.avail-submission-estimate {
+  margin: 12px 0 0;
+  font-size: 12px;
+  color: #0097b2;
+  font-weight: 600;
+}
+
+.avail-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.avail-modal-header h2 {
+  margin: 0;
+}
+
+.avail-saved-message {
+  margin: 14px 0 0;
+  color: #166534;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+/* was missing before — the modal was reusing .avail-saved-message (green)
+   for error text too, which is why "Something went wrong" showed in green.
+   Errors now use this instead. */
+.avail-error-message {
+  margin: 14px 0 0;
+  color: #991b1b;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.avail-range-hint {
+  margin: 8px 0 0;
+  color: #657985;
+  font-size: 12px;
+}
+
+
+/* ── 14. QUT Tutor Directory ──────────────────────────────────────────────
+   Reuses .tutors-list / .tutor-row / .tutor-avatar / .tutor-info /
+   .tutor-name / .tutor-email from section 7 (coordinator's invited-tutors
+   list) directly — only the teaching-info row below each tutor is new. */
+
+.directory-tutor-row {
+  align-items: flex-start;
+}
+
+.directory-teaching-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.directory-teaching-badge {
+  font-size: 11px;
+  padding: 3px 10px;
+}
+
+.directory-teaching-unknown {
+  font-size: 12px;
+  color: #99adb6;
+  font-style: italic;
+  margin-top: 8px;
+}
+
+
+/* ── 15. Coordinator Calendar filter tabs ─────────────────────────────────
+   Reuses .avail-pill-row / .avail-pill (section 11) for the three filter
+   buttons, and .unit-filter-box (section 9) for the unit dropdown — only
+   the wrapping layout below is new. */
+
+.calendar-filter-tabs {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  background: white;
+  border-radius: 18px;
+  padding: 18px 22px;
+  margin-top: 20px;
+  box-shadow: 0 12px 28px rgba(31, 53, 80, 0.08);
+}
+
+.calendar-unit-select {
+  margin: 0;
+}
+
+.calendar-filter-hint {
+  margin: 0;
+}
+
+.calendar-empty-note {
+  margin-top: 18px;
+}
+
+
+/* ── 16. Chat: Admin & Member Permission management ──────────────────────
+   Reuses .group-permission-row (already defined in section 10) for every
+   checkbox row — only the expand/collapse wrappers below are new. */
+
+.perm-section-hint {
+  padding: 0 0 8px;
+}
+
+.admin-perm-block {
+  border: 1.5px solid #eef3f5;
+  border-radius: 10px;
+  margin-bottom: 8px;
+  overflow: hidden;
+}
+
+.admin-perm-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: #f8fcfd;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1f3550;
+}
+
+.admin-perm-name {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-perm-chevron {
+  font-size: 10px;
+  color: #99adb6;
+}
+
+.admin-perm-panel {
+  padding: 4px 14px 10px;
+  border-top: 1px solid #eef3f5;
+}
+
+.member-perm-panel {
+  background: #f8fcfd;
+  border: 1.5px solid #d7eaf1;
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin: 4px 0 10px;
+}
+
+.member-perm-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 700;
+  color: #1f3550;
+  margin-bottom: 8px;
+}
+
+.member-perm-close {
+  position: static;
+  font-size: 16px;
+}
+
+.member-perm-row {
+  padding: 6px 0;
+  border-bottom: 1px solid #eef3f5;
+}
+
+.member-perm-row:last-child {
+  border-bottom: none;
+}
+
+.member-perm-checkbox-row {
+  padding: 0 0 4px;
+}
+
+.member-perm-default-hint {
+  font-size: 11px;
+  color: #99adb6;
+  font-style: italic;
+}
+
+.member-perm-reset {
+  font-size: 11px;
+  color: #0097b2;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+}
+
+
+/* ── 17. Profile pages (Coordinator + Tutor) ──────────────────────────────
+   Reuses .detail-section / .section-header / .add-btn / .form-field /
+   .form-row-2 / .detail-form / .confirm-btn from section 7, and
+   .avail-saved-message / .avail-error-message from section 11/13. Only
+   the profile-card and settings-specific pieces below are new. */
+
+.profile-card-section {
+  background: white;
+  border: 1.5px solid #d7eaf1;
+  border-radius: 20px;
+  padding: 36px;
+  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.profile-photo-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.profile-photo-circle {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 4px solid #e7f6fa;
+  box-shadow: 0 12px 28px rgba(31, 53, 80, 0.12);
+}
+
+.profile-photo-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0097b2;
+  color: white;
+  font-size: 36px;
+  font-weight: 700;
+  font-family: 'Montserrat', sans-serif;
+}
+
+.profile-photo-edit-btn {
+  background: transparent;
+  border: 1.5px solid #d7eaf1;
+  color: #0097b2;
+  padding: 8px 18px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.profile-photo-edit-btn:hover {
+  background: #e7f6fa;
+  border-color: #0097b2;
+}
+
+.profile-name {
+  margin: 0 0 8px;
+  color: #1f3550;
+  font-size: 24px;
+}
+
+.profile-position-badge {
+  background: #e7f6fa;
+  color: #0097b2;
+  font-weight: 700;
+  font-size: 13px;
+  padding: 6px 16px;
+  border-radius: 999px;
+}
+
+.resume-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.resume-filename {
+  flex: 1;
+  min-width: 160px;
+  color: #657985;
+  font-size: 14px;
+}
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.settings-row-title {
+  margin: 0 0 4px;
+  color: #1f3550;
+  font-size: 16px;
+}
+
+.settings-row-sub {
+  margin: 0;
+  color: #657985;
+  font-size: 13px;
+}
+
+.settings-divider {
+  border-top: 1.5px solid #eef3f5;
+  margin: 20px 0;
+}
+
+.theme-toggle-btn {
+  background: #1f3550;
+  color: white;
+  border: none;
+  padding: 11px 20px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: 0.2s;
+}
+
+.theme-toggle-btn:hover {
+  background: #0097b2;
+}
+
+.password-form {
+  margin-top: 14px;
+}
+
+.password-submit-btn {
+  align-self: flex-start;
+}
+
+
+/* ── 18. Dark theme ────────────────────────────────────────────────────
+   Applied via a `dark-theme` class toggled on <body> from the Profile
+   pages. This is a first pass covering the main page backgrounds, cards,
+   modals, and form inputs across the app — not every single element has
+   been hand-checked, so if something looks off in dark mode on a page
+   not listed here, it just needs its own override added below. */
+
+body.dark-theme {
+  background: #0f1b2b;
+  color: #e2e8f0;
+}
+
+body.dark-theme .dashboard-page,
+body.dark-theme .staff-dashboard-page,
+body.dark-theme .calendar-page,
+body.dark-theme .chat-page {
+  background: #0f1b2b;
+}
+
+body.dark-theme .stat-card,
+body.dark-theme .staff-stat-card,
+body.dark-theme .unit-card,
+body.dark-theme .unit-row,
+body.dark-theme .detail-section,
+body.dark-theme .units-panel,
+body.dark-theme .staff-panel,
+body.dark-theme .session-card,
+body.dark-theme .tutor-row,
+body.dark-theme .summary-card,
+body.dark-theme .month-calendar,
+body.dark-theme .day-box,
+body.dark-theme .avail-units-panel,
+body.dark-theme .avail-grid-section,
+body.dark-theme .avail-prefs-section,
+body.dark-theme .avail-submit-section,
+body.dark-theme .profile-card-section,
+body.dark-theme .myunits-list-panel,
+body.dark-theme .myunits-unit-card,
+body.dark-theme .chat-shell,
+body.dark-theme .chat-list-panel,
+body.dark-theme .chat-bubble-row.theirs .chat-bubble,
+body.dark-theme .calendar-filter-tabs,
+body.dark-theme .calendar-topbar,
+body.dark-theme .announcement-card {
+  background: #182437;
+  border-color: #2a3b52;
+  color: #e2e8f0;
+}
+
+body.dark-theme .stat-card h2,
+body.dark-theme .staff-stat-card h2,
+body.dark-theme .unit-card h3,
+body.dark-theme .detail-section h2,
+body.dark-theme .staff-panel h2,
+body.dark-theme .session-day,
+body.dark-theme .tutor-name,
+body.dark-theme .profile-name,
+body.dark-theme .day-number,
+body.dark-theme .page-title h1,
+body.dark-theme .staff-page-title h1,
+body.dark-theme .chat-window-name,
+body.dark-theme .group-info-name {
+  color: #f1f5f9;
+}
+
+body.dark-theme .stat-card p,
+body.dark-theme .unit-card p,
+body.dark-theme .unit-meta,
+body.dark-theme .tutor-email,
+body.dark-theme .settings-row-sub,
+body.dark-theme .page-title p,
+body.dark-theme .staff-page-title p,
+body.dark-theme .chat-window-sub,
+body.dark-theme .chat-list-item-sub {
+  color: #94a3b8;
+}
+
+body.dark-theme .day-box.empty {
+  background: #131f30;
+}
+
+body.dark-theme .modal,
+body.dark-theme .chat-modal,
+body.dark-theme .avail-modal {
+  background: #182437;
+  color: #e2e8f0;
+}
+
+body.dark-theme .modal h2,
+body.dark-theme .chat-modal h2 {
+  color: #f1f5f9;
+}
+
+body.dark-theme .form-field input,
+body.dark-theme .form-field select,
+body.dark-theme .form-group input,
+body.dark-theme .chat-search-box input,
+body.dark-theme .avail-notes,
+body.dark-theme .chat-input-row textarea {
+  background: #131f30;
+  border-color: #2a3b52;
+  color: #e2e8f0;
+}
+
+body.dark-theme .avail-cell {
+  background: #131f30;
+  border-color: #2a3b52;
+}
+
+body.dark-theme .avail-day-header {
+  background: #131f30;
+  border-color: #2a3b52;
+}
+
+body.dark-theme .weekdays {
+  background: #0a1420;
+}
+
+body.dark-theme .empty-state,
+body.dark-theme .empty-info,
+body.dark-theme .empty-state-warning {
+  background: #131f30;
+  border-color: #2a3b52;
+  color: #94a3b8;
+}
+
+.sidebar-avatar-photo {
+  object-fit: cover;
+}
+
+/* Teaching Preferences, scoped down slightly when it's inside the modal
+   rather than sitting on its own full page (less padding, no card shadow
+   since the modal itself already has one). */
+.avail-prefs-in-modal {
+  border: none;
+  border-top: 1.5px solid #d7eaf1;
+  border-radius: 0;
+  padding: 20px 0 0;
+  margin: 20px 0 0;
+}
+
+/* ── 18. Notifications page ──────────────────────────────────────────────── */
+
+.sidebar-notif-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  background: #ef4444;
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 10px;
+  margin-left: auto;
+  line-height: 1;
+}
+
+.notif-nav-link {
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
+}
+
+.notif-filter-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.notif-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border: 1.5px solid #d7eaf1;
+  border-radius: 20px;
+  background: white;
+  color: #1f3550;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.notif-tab:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.notif-tab.active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+.notif-tab-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  background: rgba(0, 0, 0, 0.12);
+  border-radius: 10px;
+  font-size: 11px;
+}
+
+.notif-tab.active .notif-tab-count {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.notif-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.notif-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  background: white;
+  border: 1.5px solid #d7eaf1;
+  border-radius: 16px;
+  padding: 18px 20px;
+  cursor: pointer;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.notif-item:hover {
+  box-shadow: 0 4px 16px rgba(0, 151, 178, 0.12);
+  border-color: var(--primary);
+}
+
+.notif-item.unread {
+  background: #f0fafd;
+  border-color: #b2e3ed;
+}
+
+.notif-icon {
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.notif-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.notif-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+  gap: 12px;
+}
+
+.notif-title {
+  font-family: var(--font-heading);
+  font-size: 15px;
+  font-weight: 700;
+  color: #1f3550;
+}
+
+.notif-time {
+  font-size: 12px;
+  color: #657985;
+  flex-shrink: 0;
+}
+
+.notif-message {
+  font-size: 14px;
+  color: #444;
+  line-height: 1.5;
+  margin-bottom: 10px;
+}
+
+.notif-footer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.notif-unread-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--primary);
+  flex-shrink: 0;
+}
+
+.notif-empty {
+  background: white;
+  border: 1.5px solid #d7eaf1;
+  border-radius: 16px;
+  padding: 48px;
+  text-align: center;
+  color: #657985;
+  font-size: 15px;
+}
+
+body.dark-theme .notif-item,
+body.dark-theme .notif-tab,
+body.dark-theme .notif-empty {
+  background: #182437;
+  border-color: #2a3b52;
+}
+
+body.dark-theme .notif-item.unread {
+  background: #1a2d42;
+  border-color: #1e4060;
+}
+
+body.dark-theme .notif-title {
+  color: #e0eaf0;
+}
+
+body.dark-theme .notif-message {
+  color: #b0c4d0;
+}
+
+body.dark-theme .notif-tab {
+  color: #b0c4d0;
+}
+
+body.dark-theme .notif-tab.active {
+  background: var(--primary);
+  color: white;
+}

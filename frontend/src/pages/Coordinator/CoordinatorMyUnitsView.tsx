@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { api } from '../services/api'
-import './MyUnitsView.css'
+import { api } from "../../services/api";
+import CoordinatorSidebar from "../../components/CoordinatorSidebar";
+
 
 interface Unit {
   id: number;
@@ -42,8 +43,13 @@ export default function MyUnitsView({ units, onUnitCreated, onSelectUnit }: Prop
   }
 
   return (
-    <div className="my-units">
+    <div className="dashboard-page">
+      <CoordinatorSidebar />
+      <main className="main-content">
+      <div className="my-units">
       <div className="my-units-header">
+
+      
         <div>
           <h1>My Units</h1>
           <p>{units.length} unit{units.length !== 1 ? 's' : ''} this semester</p>
@@ -104,6 +110,8 @@ export default function MyUnitsView({ units, onUnitCreated, onSelectUnit }: Prop
           </div>
         ))}
       </div>
+      </div>
+      </main>
     </div>
   )
 }

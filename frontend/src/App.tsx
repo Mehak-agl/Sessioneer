@@ -5,6 +5,7 @@ import CoordinatorDashboard from './pages/Coordinator/CoordinatorDashboard'
 import CoordinatorCalendarPage from './pages/Coordinator/CoordinatorCalendarPage'
 import CoordinatorChat from './pages/Coordinator/CoordinatorChat'
 import CoordinatorProfile from './pages/Coordinator/CoordinatorProfile'
+import CoordinatorNotifications from './pages/Coordinator/CoordinatorNotifications'
 
 import TutorDashboard from './pages/Tutor/TutorDashboard'
 import TutorMyUnits from './pages/Tutor/TutorMyUnits'
@@ -19,6 +20,7 @@ export default function App() {
         <Route path="/" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/coordinator" element={<CoordinatorDashboard />} />
+        <Route path="/coordinator-notifications" element={<CoordinatorNotifications />} />
         <Route path="/coordinator-chat" element={<CoordinatorChat />} />
         <Route path="/calendar" element={<CoordinatorCalendarPage />} />
         <Route path="/staff" element={<TutorDashboard />} />

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { MOCK_NOTIFICATIONS, NOTIF_READ_KEY, NOTIF_EVENT } from '../data/notifications'
 
 function getUnreadCount(): number {
@@ -17,6 +17,8 @@ function CoordinatorSidebar() {
   const initials = fullName.split(' ').map((n: string) => n[0]).join('')
   const photo = localStorage.getItem('sessioneer_photo')
   const [unreadCount, setUnreadCount] = useState(getUnreadCount)
+  const location = useLocation()
+  const path = location.pathname
 
   useEffect(() => {
     const handler = () => setUnreadCount(getUnreadCount())
@@ -47,20 +49,20 @@ function CoordinatorSidebar() {
       </div>
 
       <nav className="coord-menu">
-        <Link className="active" to="/coordinator">Dashboard</Link>
+        <Link className={path === '/coordinator' ? 'active' : ''} to="/coordinator">Dashboard</Link>
         <Link to="/coordinator">My Units</Link>
-        <Link to="/calendar">Calendar</Link>
+        <Link className={path === '/calendar' ? 'active' : ''} to="/calendar">Calendar</Link>
         <Link to="/coordinator">Tutors</Link>
         <Link to="/coordinator">Allocations</Link>
         <Link to="/coordinator">Reports</Link>
-        <Link to="/coordinator-notifications" className="notif-nav-link">
+        <Link to="/coordinator-notifications" className={`notif-nav-link${path === '/coordinator-notifications' ? ' active' : ''}`}>
           Notifications
           {unreadCount > 0 && (
             <span className="sidebar-notif-badge">{unreadCount}</span>
           )}
         </Link>
-        <Link to="/coordinator-chat">Chat</Link>
-        <Link to="/coordinator-profile">Profile</Link>
+        <Link className={path === '/coordinator-chat' ? 'active' : ''} to="/coordinator-chat">Chat</Link>
+        <Link className={path === '/coordinator-profile' ? 'active' : ''} to="/coordinator-profile">Profile</Link>
       </nav>
     </aside>
   )

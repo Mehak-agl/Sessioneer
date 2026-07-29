@@ -40,7 +40,7 @@ export default function LoginPage() {
         } else {
           setError(data.message || 'Invalid email or password.')
         }
-      } catch (err) {
+      } catch {
         setError('Could not connect to backend. Make sure Spring Boot is running.')
       }
 

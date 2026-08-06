@@ -19,12 +19,19 @@ function CoordinatorSidebar() {
   const [unreadCount, setUnreadCount] = useState(getUnreadCount)
   const location = useLocation()
   const path = location.pathname
+  const search = location.search
 
   useEffect(() => {
     const handler = () => setUnreadCount(getUnreadCount())
     window.addEventListener(NOTIF_EVENT, handler)
     return () => window.removeEventListener(NOTIF_EVENT, handler)
   }, [])
+
+  // "My Units" needs the ?view=units query param to actually land on the
+  // units screen (CoordinatorDashboard reads this from the URL to decide
+  // which sub-view to show) — previously this just pointed at plain
+  // /coordinator, which always fell back to the Dashboard view instead.
+  const isMyUnitsActive = path === '/coordinator' && search.includes('view=units')
 
   return (
     <aside className="coord-sidebar">
@@ -49,8 +56,18 @@ function CoordinatorSidebar() {
       </div>
 
       <nav className="coord-menu">
-        <Link className={path === '/coordinator' ? 'active' : ''} to="/coordinator">Dashboard</Link>
-        <Link to="/coordinator">My Units</Link>
+        <Link
+          className={path === '/coordinator' && !isMyUnitsActive ? 'active' : ''}
+          to="/coordinator"
+        >
+          Dashboard
+        </Link>
+        <Link
+          className={isMyUnitsActive ? 'active' : ''}
+          to="/coordinator?view=units"
+        >
+          My Units
+        </Link>
         <Link className={path === '/calendar' ? 'active' : ''} to="/calendar">Calendar</Link>
         <Link to="/coordinator">Tutors</Link>
         <Link to="/coordinator">Allocations</Link>

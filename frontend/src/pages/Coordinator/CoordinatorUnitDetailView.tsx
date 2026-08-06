@@ -8,6 +8,11 @@ interface Session {
   startTime: string;
   location: string;
   status: string;
+  // Client-side only — the backend Session entity has no "mode" field,
+  // so this exists purely to drive the badge/edit UI here. It's inferred
+  // from location when a session first loads, and can be changed by the
+  // local-only edit below.
+  mode?: 'on-campus' | 'online' | 'hybrid';
 }
 
 interface Unit {
@@ -31,24 +36,47 @@ type Props = {
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
 const TIMES = ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00']
 const DURATIONS = ['1hr', '2hr', '3hr']
-const MODES = ['on-campus', 'online']
+const MODES: Session['mode'][] = ['on-campus', 'online', 'hybrid']
+
+function inferMode(session: { location: string }): Session['mode'] {
+  return session.location === 'Online' ? 'online' : 'on-campus'
+}
+
+function modeLabel(mode: Session['mode']) {
+  if (mode === 'online') return '🌐 Online'
+  if (mode === 'hybrid') return '🔀 Hybrid'
+  return '🏫 On-campus'
+}
 
 export default function UnitDetailView({ unit, onBack }: Props) {
   const [sessions, setSessions] = useState<Session[]>([])
   const [staffList, setStaffList] = useState<StaffUser[]>([])
   const [showSessionForm, setShowSessionForm] = useState(false)
-  const [showInviteForm, setShowInviteForm] = useState(false)
-  const [selectedStaffId, setSelectedStaffId] = useState('')
   const [invitedStaff, setInvitedStaff] = useState<StaffUser[]>([])
 
   const [day, setDay] = useState('Monday')
   const [time, setTime] = useState('09:00')
   const [duration, setDuration] = useState('2hr')
-  const [mode, setMode] = useState('on-campus')
+  const [mode, setMode] = useState<Session['mode']>('on-campus')
   const [location, setLocation] = useState('')
 
+  // ── Invite Tutors: searchable multi-select, Invite All / Invite Selected ──
+  const [showInviteForm, setShowInviteForm] = useState(false)
+  const [inviteSearch, setInviteSearch] = useState('')
+  const [selectedInviteIds, setSelectedInviteIds] = useState<Set<number>>(new Set())
+  const [inviting, setInviting] = useState(false)
+  const [inviteMessage, setInviteMessage] = useState('')
+
+  // ── Editable sessions (local only — see note above Session type) ──────
+  const [editingSession, setEditingSession] = useState<Session | null>(null)
+  const [editTitle, setEditTitle] = useState('')
+  const [editLocation, setEditLocation] = useState('')
+  const [editMode, setEditMode] = useState<Session['mode']>('on-campus')
+
   useEffect(() => {
-    api.getSessions(unit.id).then(setSessions).catch(console.error)
+    api.getSessions(unit.id)
+      .then((data: any[]) => setSessions(data.map(s => ({ ...s, mode: inferMode(s) }))))
+      .catch(console.error)
     api.getAllStaff().then(setStaffList).catch(console.error)
     api.getUnitInvitations(unit.id).then(invitations => {
       setInvitedStaff(invitations.map((inv: any) => inv.staff))
@@ -60,28 +88,16 @@ export default function UnitDetailView({ unit, onBack }: Props) {
     try {
       const dayIndex = DAYS.indexOf(day) + 1
       const startTime = `2026-06-0${dayIndex}T${time}:00`
+      const finalLocation = mode === 'online' ? 'Online' : location
       await api.createSession(unit.id, {
         title: `${unit.code} ${duration} ${mode}`,
         startTime,
-        location: mode === 'online' ? 'Online' : location,
+        location: finalLocation,
       })
-      const updated = await api.getSessions(unit.id)
-      setSessions(updated)
+      const updated: any[] = await api.getSessions(unit.id)
+      setSessions(updated.map(s => ({ ...s, mode: inferMode(s) })))
       setShowSessionForm(false)
       setLocation('')
-    } catch (err) {
-      console.error(err)
-    }
-  }
-
-  const handleInvite = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    try {
-      await api.inviteStaff(unit.id, Number(selectedStaffId))
-      const invitations = await api.getUnitInvitations(unit.id)
-      setInvitedStaff(invitations.map((inv: any) => inv.staff))
-      setSelectedStaffId('')
-      setShowInviteForm(false)
     } catch (err) {
       console.error(err)
     }
@@ -97,6 +113,92 @@ export default function UnitDetailView({ unit, onBack }: Props) {
   }
 
   const uninvited = staffList.filter(s => !invitedStaff.find(i => i.id === s.id))
+
+  const filteredUninvited = uninvited.filter(s => {
+    const q = inviteSearch.trim().toLowerCase()
+    if (!q) return true
+    return s.fullName?.toLowerCase().includes(q) || s.email?.toLowerCase().includes(q)
+  })
+
+  const openInviteForm = () => {
+    setShowInviteForm(true)
+    setInviteSearch('')
+    setSelectedInviteIds(new Set())
+    setInviteMessage('')
+  }
+
+  const toggleInviteSelection = (id: number) => {
+    setSelectedInviteIds(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  // Shared by both "Invite Selected" and "Invite All" — invites each id
+  // one at a time against the existing single-invite endpoint, since
+  // there's no bulk-invite endpoint on the backend.
+  const inviteMany = async (ids: number[]) => {
+    if (ids.length === 0) return
+    setInviting(true)
+    setInviteMessage('')
+    let successCount = 0
+    for (const id of ids) {
+      try {
+        await api.inviteStaff(unit.id, id)
+        successCount++
+      } catch (err) {
+        console.error(err)
+      }
+    }
+    const invitations = await api.getUnitInvitations(unit.id).catch(() => [])
+    setInvitedStaff(invitations.map((inv: any) => inv.staff))
+    setSelectedInviteIds(new Set())
+    setInviting(false)
+    if (successCount < ids.length) {
+      setInviteMessage(`Invited ${successCount} of ${ids.length} — some may have already been invited or failed.`)
+    } else {
+      setShowInviteForm(false)
+      setInviteSearch('')
+    }
+  }
+
+  const handleInviteSelected = () => inviteMany([...selectedInviteIds])
+
+  const handleInviteAll = () => {
+    if (uninvited.length === 0) return
+    const ok = window.confirm(`Invite all ${uninvited.length} tutor(s) not yet on this unit?`)
+    if (!ok) return
+    inviteMany(uninvited.map(s => s.id))
+  }
+
+  // ── Session editing (local only) ──────────────────────────────────────
+  const openEditSession = (session: Session) => {
+    setEditingSession(session)
+    setEditTitle(session.title)
+    setEditLocation(session.location === 'Online' ? '' : session.location)
+    setEditMode(session.mode ?? inferMode(session))
+  }
+
+  const handleSaveSessionEdit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    if (!editingSession) return
+    // NOTE: there is no backend endpoint to update a session (only
+    // create/read exist), so this only changes what you see here right
+    // now — it will reset if you refresh the page or come back later. A
+    // real PUT/PATCH endpoint would be needed to make this persist.
+    setSessions(prev => prev.map(s => s.id === editingSession.id
+      ? {
+          ...s,
+          title: editTitle,
+          location: editMode === 'online' ? 'Online' : editLocation,
+          mode: editMode,
+        }
+      : s
+    ))
+    setEditingSession(null)
+  }
 
   return (
     <div className="unit-detail">
@@ -121,6 +223,13 @@ export default function UnitDetailView({ unit, onBack }: Props) {
           <button className="add-btn" onClick={() => setShowSessionForm(true)}>+ Add Session</button>
         </div>
 
+        {sessions.length > 0 && (
+          <p className="avail-range-hint" style={{ marginBottom: '12px' }}>
+            Editing a session updates it here only — there's no backend endpoint yet to save
+            session edits permanently, so changes reset on refresh.
+          </p>
+        )}
+
         {sessions.length === 0 && (
           <div className="empty-info">No sessions yet. Add sessions so tutors know what to indicate availability for.</div>
         )}
@@ -129,9 +238,10 @@ export default function UnitDetailView({ unit, onBack }: Props) {
           {sessions.map(session => (
             <div key={session.id} className="session-card">
               <div className="session-card-top">
-                <span className={`mode-badge ${session.location === 'Online' ? 'online' : 'on-campus'}`}>
-                  {session.location === 'Online' ? '🌐 Online' : '🏫 On-campus'}
+                <span className={`mode-badge ${session.mode ?? inferMode(session)}`}>
+                  {modeLabel(session.mode ?? inferMode(session))}
                 </span>
+                <button type="button" className="session-edit-btn" onClick={() => openEditSession(session)}>Edit</button>
               </div>
               <div className="session-day">{session.title}</div>
               <div className="session-time">{new Date(session.startTime).toLocaleString()}</div>
@@ -171,11 +281,11 @@ export default function UnitDetailView({ unit, onBack }: Props) {
               <div className="form-row-2">
                 <div className="form-field">
                   <label>Mode</label>
-                  <select value={mode} onChange={e => setMode(e.target.value)}>
-                    {MODES.map(m => <option key={m}>{m}</option>)}
+                  <select value={mode} onChange={e => setMode(e.target.value as Session['mode'])}>
+                    {MODES.map(m => <option key={m} value={m}>{m}</option>)}
                   </select>
                 </div>
-                {mode === 'on-campus' && (
+                {mode !== 'online' && (
                   <div className="form-field">
                     <label>Location</label>
                     <input type="text" placeholder="e.g. P Block P404"
@@ -192,6 +302,44 @@ export default function UnitDetailView({ unit, onBack }: Props) {
         </div>
       )}
 
+      {/* Edit Session Modal (local only) */}
+      {editingSession && (
+        <div className="modal-overlay" onClick={() => setEditingSession(null)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <h2>Edit Session</h2>
+            <p className="avail-range-hint" style={{ marginBottom: '12px' }}>
+              This updates the session here only — there's no backend endpoint yet to save it
+              permanently, so it resets if you refresh.
+            </p>
+            <form onSubmit={handleSaveSessionEdit} className="detail-form">
+              <div className="form-field">
+                <label>Session Type / Title</label>
+                <input type="text" value={editTitle} onChange={e => setEditTitle(e.target.value)} required />
+              </div>
+              <div className="form-row-2">
+                <div className="form-field">
+                  <label>Mode</label>
+                  <select value={editMode} onChange={e => setEditMode(e.target.value as Session['mode'])}>
+                    {MODES.map(m => <option key={m} value={m}>{m}</option>)}
+                  </select>
+                </div>
+                {editMode !== 'online' && (
+                  <div className="form-field">
+                    <label>Location</label>
+                    <input type="text" placeholder="e.g. P Block P404"
+                      value={editLocation} onChange={e => setEditLocation(e.target.value)} />
+                  </div>
+                )}
+              </div>
+              <div className="modal-actions">
+                <button type="button" className="cancel-btn" onClick={() => setEditingSession(null)}>Cancel</button>
+                <button type="submit" className="confirm-btn">Save Changes</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Tutors */}
       <div className="detail-section">
         <div className="section-header">
@@ -200,7 +348,7 @@ export default function UnitDetailView({ unit, onBack }: Props) {
             <p>{invitedStaff.length} invited</p>
           </div>
           {uninvited.length > 0 && (
-            <button className="add-btn" onClick={() => setShowInviteForm(true)}>+ Invite Tutor</button>
+            <button className="add-btn" onClick={openInviteForm}>+ Invite Tutors</button>
           )}
         </div>
 
@@ -229,27 +377,56 @@ export default function UnitDetailView({ unit, onBack }: Props) {
         </div>
       </div>
 
-      {/* Invite Modal */}
+      {/* Invite Tutors Modal — searchable multi-select */}
       {showInviteForm && (
-        <div className="modal-overlay" onClick={() => setShowInviteForm(false)}>
+        <div className="modal-overlay" onClick={() => !inviting && setShowInviteForm(false)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
-            <h2>Invite Tutor</h2>
-            <p className="modal-sub">Select a tutor to invite them to submit their availability.</p>
-            <form onSubmit={handleInvite} className="detail-form">
-              <div className="form-field">
-                <label>Select Tutor</label>
-                <select value={selectedStaffId} onChange={e => setSelectedStaffId(e.target.value)} required>
-                  <option value="">-- Choose a tutor --</option>
-                  {uninvited.map(s => (
-                    <option key={s.id} value={s.id}>{s.fullName} — {s.email}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="modal-actions">
-                <button type="button" className="cancel-btn" onClick={() => setShowInviteForm(false)}>Cancel</button>
-                <button type="submit" className="confirm-btn">Send Invite</button>
-              </div>
-            </form>
+            <h2>Invite Tutors</h2>
+            <p className="modal-sub">Search and select tutors to invite, or invite everyone not yet on this unit.</p>
+
+            <div className="chat-search-box" style={{ marginBottom: '14px' }}>
+              <input
+                type="text"
+                placeholder="Search by name or email..."
+                value={inviteSearch}
+                onChange={e => setInviteSearch(e.target.value)}
+              />
+            </div>
+
+            <div className="chat-member-checklist">
+              {filteredUninvited.length === 0 && (
+                <div className="chat-empty-hint">
+                  {uninvited.length === 0 ? 'Everyone is already invited.' : 'No tutors match your search.'}
+                </div>
+              )}
+              {filteredUninvited.map(s => {
+                const checked = selectedInviteIds.has(s.id)
+                return (
+                  <label key={s.id} className={`chat-member-row ${checked ? 'checked' : ''}`}>
+                    <input type="checkbox" checked={checked} onChange={() => toggleInviteSelection(s.id)} />
+                    <div className="tutor-avatar chat-avatar-sm">{(s.fullName || s.email)[0].toUpperCase()}</div>
+                    <div className="chat-list-item-info">
+                      <span className="chat-list-item-name">{s.fullName}</span>
+                      <span className="chat-list-item-sub">{s.email}</span>
+                    </div>
+                  </label>
+                )
+              })}
+            </div>
+
+            {inviteMessage && <p className="avail-error-message">{inviteMessage}</p>}
+
+            <div className="modal-actions">
+              <button type="button" className="cancel-btn" disabled={inviting} onClick={() => setShowInviteForm(false)}>
+                Cancel
+              </button>
+              <button type="button" className="cancel-btn" disabled={inviting || uninvited.length === 0} onClick={handleInviteAll}>
+                Invite All ({uninvited.length})
+              </button>
+              <button type="button" className="confirm-btn" disabled={inviting || selectedInviteIds.size === 0} onClick={handleInviteSelected}>
+                {inviting ? 'Inviting...' : `Invite Selected (${selectedInviteIds.size})`}
+              </button>
+            </div>
           </div>
         </div>
       )}

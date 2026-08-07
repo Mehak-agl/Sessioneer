@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { api } from "../../services/api";
-import CoordinatorSidebar from "../../components/CoordinatorSidebar";
+//import { api } from "../../services/api";
+import { coordinatorMockApi as api } from "../../services/coordinatorMockApi";
+import CoordinatorSidebar from "../../components/CooordinatorSidebar";
 
 interface Session {
   id: number;

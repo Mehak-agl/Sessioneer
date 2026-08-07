@@ -441,7 +441,9 @@ p {
 
 .coord-sidebar {
   width: 285px;
-  min-height: 100vh;
+  height: 100vh;
+  overflow-y: auto;
+  scrollbar-width: none;
   background: linear-gradient(180deg, #1f3550 0%, #132336 100%);
   color: white;
   padding: 24px;
@@ -508,6 +510,10 @@ p {
   margin: 4px 0 0;
   color: #c9d6df;
   font-size: 13px;
+}
+
+.coord-sidebar::-webkit-scrollbar {
+  display: none;
 }
 
 .coord-menu {
@@ -4246,28 +4252,217 @@ body.dark-theme .empty-state-warning {
   object-fit: cover;
 }
 
-.mode-badge.hybrid {
-  background: #ede9fe;
-  color: #6d28d9;
-}
-
-.session-card-top {
-  justify-content: space-between;
-}
-
-.session-edit-btn {
-  background: none;
+/* Teaching Preferences, scoped down slightly when it's inside the modal
+   rather than sitting on its own full page (less padding, no card shadow
+   since the modal itself already has one). */
+.avail-prefs-in-modal {
   border: none;
-  color: #0097b2;
-  font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
-  padding: 0;
+  border-top: 1.5px solid #d7eaf1;
+  border-radius: 0;
+  padding: 20px 0 0;
+  margin: 20px 0 0;
 }
 
-.session-edit-btn:hover {
-  opacity: 0.7;
+/* ── 18. Notifications page ──────────────────────────────────────────────── */
+
+.sidebar-notif-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  background: #ef4444;
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 10px;
+  margin-left: auto;
+  line-height: 1;
 }
+
+.notif-nav-link {
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
+}
+
+.notif-filter-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.notif-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border: 1.5px solid #d7eaf1;
+  border-radius: 20px;
+  background: white;
+  color: #1f3550;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.notif-tab:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.notif-tab.active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+.notif-tab-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  background: rgba(0, 0, 0, 0.12);
+  border-radius: 10px;
+  font-size: 11px;
+}
+
+.notif-tab.active .notif-tab-count {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.notif-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.notif-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  background: white;
+  border: 1.5px solid #d7eaf1;
+  border-radius: 16px;
+  padding: 18px 20px;
+  cursor: pointer;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.notif-item:hover {
+  box-shadow: 0 4px 16px rgba(0, 151, 178, 0.12);
+  border-color: var(--primary);
+}
+
+.notif-item.unread {
+  background: #f0fafd;
+  border-color: #b2e3ed;
+}
+
+.notif-icon {
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.notif-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.notif-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+  gap: 12px;
+}
+
+.notif-title {
+  font-family: var(--font-heading);
+  font-size: 15px;
+  font-weight: 700;
+  color: #1f3550;
+}
+
+.notif-time {
+  font-size: 12px;
+  color: #657985;
+  flex-shrink: 0;
+}
+
+.notif-message {
+  font-size: 14px;
+  color: #444;
+  line-height: 1.5;
+  margin-bottom: 10px;
+}
+
+.notif-footer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.notif-unread-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--primary);
+  flex-shrink: 0;
+}
+
+.notif-empty {
+  background: white;
+  border: 1.5px solid #d7eaf1;
+  border-radius: 16px;
+  padding: 48px;
+  text-align: center;
+  color: #657985;
+  font-size: 15px;
+}
+
+body.dark-theme .notif-item,
+body.dark-theme .notif-tab,
+body.dark-theme .notif-empty {
+  background: #182437;
+  border-color: #2a3b52;
+}
+
+body.dark-theme .notif-item.unread {
+  background: #1a2d42;
+  border-color: #1e4060;
+}
+
+body.dark-theme .notif-title {
+  color: #e0eaf0;
+}
+
+body.dark-theme .notif-message {
+  color: #b0c4d0;
+}
+
+body.dark-theme .notif-tab {
+  color: #b0c4d0;
+}
+
+body.dark-theme .notif-tab.active {
+  background: var(--primary);
+  color: white;
+}
+/* ── 19. Unit three-dot menu + year grouping (My Units page) ────────────── */
 
 .unit-menu-wrapper {
   position: relative;
@@ -4344,13 +4539,198 @@ body.dark-theme .empty-state-warning {
   margin: 0 0 14px;
 }
 
-/* Teaching Preferences, scoped down slightly when it's inside the modal
-   rather than sitting on its own full page (less padding, no card shadow
-   since the modal itself already has one). */
-.avail-prefs-in-modal {
+
+/* ── 20. Session edit button (Unit Detail page) ───────────────────────── */
+
+.session-edit-btn {
+  background: none;
   border: none;
-  border-top: 1.5px solid #d7eaf1;
-  border-radius: 0;
-  padding: 20px 0 0;
-  margin: 20px 0 0;
+  color: #0097b2;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0;
+}
+
+.session-edit-btn:hover {
+  opacity: 0.7;
+}
+
+
+/* ── 21. Scroll wheel time picker (Google-Maps-style "Leave at") ────────── */
+
+.time-wheel-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.time-wheel-picker label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1f3550;
+}
+
+.time-wheel-columns {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: #f8fcfd;
+  border: 1.5px solid #d7eaf1;
+  border-radius: 12px;
+  padding: 0 8px;
+}
+
+.time-wheel-colon {
+  font-weight: 700;
+  color: #1f3550;
+  font-size: 16px;
+}
+
+.wheel-column-wrapper {
+  position: relative;
+  width: 56px;
+}
+
+.wheel-column {
+  overflow-y: auto;
+  scroll-snap-type: y mandatory;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.wheel-column::-webkit-scrollbar {
+  display: none;
+}
+
+.wheel-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  scroll-snap-align: center;
+  font-size: 15px;
+  color: #99adb6;
+  cursor: pointer;
+  font-weight: 600;
+  transition: color 0.15s, font-size 0.15s;
+}
+
+.wheel-item-selected {
+  color: #0097b2;
+  font-size: 19px;
+  font-weight: 700;
+}
+
+.wheel-selection-window {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 40px;
+  transform: translateY(-50%);
+  border-top: 1.5px solid #0097b2;
+  border-bottom: 1.5px solid #0097b2;
+  pointer-events: none;
+}
+
+.time-wheel-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.duration-display input {
+  background: #f0fafc;
+  color: #0097b2;
+  font-weight: 700;
+  text-align: center;
+  cursor: default;
+}
+
+
+/* ── 22. Multi-session Add Session form ───────────────────────────────── */
+
+.add-session-modal {
+  max-width: 720px;
+  max-height: 88vh;
+  overflow-y: auto;
+}
+
+.add-session-disclosure {
+  margin-bottom: 18px;
+}
+
+.session-draft-block {
+  border: 1.5px solid #d7eaf1;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.session-draft-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.session-draft-header h3 {
+  margin: 0;
+  font-size: 15px;
+  color: #1f3550;
+}
+
+.add-another-session-btn {
+  width: 100%;
+  text-align: center;
+  margin-bottom: 14px;
+}
+
+.add-session-total {
+  text-align: right;
+  font-weight: 600;
+}
+
+.specific-dates-row {
+  display: flex;
+  gap: 10px;
+}
+
+.specific-dates-row input {
+  flex: 1;
+  padding: 11px 14px;
+  border: 1.5px solid #d7eaf1;
+  border-radius: 10px;
+  font-size: 14px;
+}
+
+.specific-dates-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.specific-date-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #e7f6fa;
+  color: #0097b2;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 10px;
+  border-radius: 999px;
+}
+
+.specific-date-chip button {
+  background: none;
+  border: none;
+  color: #0097b2;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  padding: 0;
 }

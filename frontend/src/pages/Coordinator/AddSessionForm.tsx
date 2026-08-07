@@ -10,6 +10,7 @@ import TimeWheelPicker, {
 
 interface Props {
   unitId: number
+  unitLabel?: string
   onClose: () => void
   onSessionsCreated: () => void
 }
@@ -111,7 +112,7 @@ function buildLocationString(draft: SessionDraft): string {
 
 const MAX_TOTAL_SESSIONS = 150
 
-export default function AddSessionForm({ unitId, onClose, onSessionsCreated }: Props) {
+export default function AddSessionForm({ unitId, unitLabel, onClose, onSessionsCreated }: Props) {
   const [drafts, setDrafts] = useState<SessionDraft[]>([makeBlankDraft()])
   const [submitting, setSubmitting] = useState(false)
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null)
@@ -204,31 +205,41 @@ export default function AddSessionForm({ unitId, onClose, onSessionsCreated }: P
   }
 
   return (
-    <div className="modal-overlay" onClick={() => !submitting && onClose()}>
-      <div className="modal add-session-modal" onClick={e => e.stopPropagation()}>
-        <h2>Add Session</h2>
-        <p className="avail-range-hint add-session-disclosure">
-          Note: only the class type, calculated start time, and location are saved per session created —
-          end time, duration, and schedule pattern are shown here for planning but aren't stored by the
-          backend yet, so they won't be visible again after you refresh.
-        </p>
+    <div className="add-session-page">
+      <div className="detail-header">
+        <button className="back-btn" onClick={() => !submitting && onClose()}>← Back to Manage</button>
+        <div className="detail-title">
+          <div>
+            <h1>Add Session</h1>
+            <p>{unitLabel ? `Creating session(s) for ${unitLabel}` : 'Create one or more sessions for this unit'}</p>
+          </div>
+        </div>
+      </div>
 
-        {drafts.map((draft, index) => {
-          const durationMins = wheelTimeDurationMinutes(draft.startTime, draft.endTime)
-          const occurrences = countOccurrences(draft)
+      <p className="avail-range-hint add-session-disclosure">
+        Note: only the class type, calculated start time, and location are saved per session created —
+        end time, duration, and schedule pattern are shown here for planning but aren't stored by the
+        backend yet, so they won't be visible again after you refresh.
+      </p>
 
-          return (
-            <div key={draft.localId} className="session-draft-block">
-              <div className="session-draft-header">
-                <h3>Session {index + 1}</h3>
-                {drafts.length > 1 && (
-                  <button type="button" className="session-edit-btn" onClick={() => removeSession(draft.localId)}>
-                    Remove
-                  </button>
-                )}
-              </div>
+      {drafts.map((draft, index) => {
+        const durationMins = wheelTimeDurationMinutes(draft.startTime, draft.endTime)
+        const occurrences = countOccurrences(draft)
 
-              {/* Time */}
+        return (
+          <div key={draft.localId} className="session-draft-block">
+            <div className="session-draft-header">
+              <h3><span className="session-number-badge">{index + 1}</span>Session {index + 1}</h3>
+              {drafts.length > 1 && (
+                <button type="button" className="session-edit-btn" onClick={() => removeSession(draft.localId)}>
+                  Remove
+                </button>
+              )}
+            </div>
+
+            {/* Time & class type */}
+            <div className="form-subsection">
+              <div className="form-subsection-title">Time &amp; Type</div>
               <div className="time-wheel-row">
                 <TimeWheelPicker
                   label="Start Time"
@@ -245,8 +256,6 @@ export default function AddSessionForm({ unitId, onClose, onSessionsCreated }: P
                   <input type="text" value={formatDurationMinutes(durationMins)} readOnly disabled />
                 </div>
               </div>
-
-              {/* Class type */}
               <div className="form-field">
                 <label>Class Type</label>
                 <select
@@ -256,49 +265,44 @@ export default function AddSessionForm({ unitId, onClose, onSessionsCreated }: P
                   {CLASS_TYPES.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
               </div>
+            </div>
 
-              {/* Location */}
+            {/* Location */}
+            <div className="form-subsection">
+              <div className="form-subsection-title">Location</div>
               <div className="form-field">
-                <label>Location</label>
-                <div className="avail-pill-row">
-                  <button
-                    type="button"
-                    className={`avail-pill ${draft.locationType === 'on-campus' ? 'selected' : ''}`}
-                    onClick={() => updateDraft(draft.localId, { locationType: 'on-campus' })}
-                  >
-                    🏫 On Campus
-                  </button>
-                  <button
-                    type="button"
-                    className={`avail-pill ${draft.locationType === 'online' ? 'selected' : ''}`}
-                    onClick={() => updateDraft(draft.localId, { locationType: 'online' })}
-                  >
-                    🌐 Online
-                  </button>
-                </div>
+                <label>Mode</label>
+                <select
+                  value={draft.locationType}
+                  onChange={e => updateDraft(draft.localId, { locationType: e.target.value as LocationType })}
+                >
+                  <option value="on-campus">🏫 On Campus</option>
+                  <option value="online">🌐 Online</option>
+                </select>
               </div>
 
               {draft.locationType === 'on-campus' && (
                 <>
-                  <div className="form-field">
-                    <div className="avail-pill-row">
+                  <div className="form-field" style={{ marginTop: 14 }}>
+                    <label>Campus</label>
+                    <div className="segmented-row">
                       <button
                         type="button"
-                        className={`avail-pill ${draft.campus === 'Gardens Point' ? 'selected' : ''}`}
+                        className={`segmented-btn ${draft.campus === 'Gardens Point' ? 'selected' : ''}`}
                         onClick={() => updateDraft(draft.localId, { campus: 'Gardens Point' })}
                       >
                         Gardens Point
                       </button>
                       <button
                         type="button"
-                        className={`avail-pill ${draft.campus === 'Kelvin Grove' ? 'selected' : ''}`}
+                        className={`segmented-btn ${draft.campus === 'Kelvin Grove' ? 'selected' : ''}`}
                         onClick={() => updateDraft(draft.localId, { campus: 'Kelvin Grove' })}
                       >
                         Kelvin Grove
                       </button>
                     </div>
                   </div>
-                  <div className="form-row-2">
+                  <div className="form-row-2" style={{ marginTop: 14 }}>
                     <div className="form-field">
                       <label>Block</label>
                       <input type="text" placeholder="e.g. P"
@@ -312,106 +316,110 @@ export default function AddSessionForm({ unitId, onClose, onSessionsCreated }: P
                   </div>
                 </>
               )}
+            </div>
 
-              {/* Schedule */}
-              <div className="form-field">
-                <label>Session Schedule</label>
-                <div className="avail-pill-row">
+            {/* Schedule */}
+            <div className="form-subsection">
+              <div className="form-subsection-title">Session Schedule</div>
+              <div className="schedule-box">
+                <div className="segmented-row">
                   <button
                     type="button"
-                    className={`avail-pill ${draft.scheduleType === 'entire-semester' ? 'selected' : ''}`}
+                    className={`segmented-btn ${draft.scheduleType === 'entire-semester' ? 'selected' : ''}`}
                     onClick={() => updateDraft(draft.localId, { scheduleType: 'entire-semester' })}
                   >
                     Entire Semester
                   </button>
                   <button
                     type="button"
-                    className={`avail-pill ${draft.scheduleType === 'mid-semester' ? 'selected' : ''}`}
+                    className={`segmented-btn ${draft.scheduleType === 'mid-semester' ? 'selected' : ''}`}
                     onClick={() => updateDraft(draft.localId, { scheduleType: 'mid-semester' })}
                   >
                     Mid-Semester Start
                   </button>
                   <button
                     type="button"
-                    className={`avail-pill ${draft.scheduleType === 'specific-dates' ? 'selected' : ''}`}
+                    className={`segmented-btn ${draft.scheduleType === 'specific-dates' ? 'selected' : ''}`}
                     onClick={() => updateDraft(draft.localId, { scheduleType: 'specific-dates' })}
                   >
                     Specific Date(s)
                   </button>
                 </div>
+
+                {(draft.scheduleType === 'entire-semester' || draft.scheduleType === 'mid-semester') && (
+                  <>
+                    <div className="form-row-3" style={{ marginTop: 16 }}>
+                      <div className="form-field">
+                        <label>Start Date</label>
+                        <input type="date" value={draft.startDate}
+                          onChange={e => updateDraft(draft.localId, { startDate: e.target.value })} />
+                      </div>
+                      <div className="form-field">
+                        <label>End Date</label>
+                        <input type="date" value={draft.endDate}
+                          onChange={e => updateDraft(draft.localId, { endDate: e.target.value })} />
+                      </div>
+                      <div className="form-field">
+                        <label>Day of Week</label>
+                        <select value={draft.dayOfWeek} onChange={e => updateDraft(draft.localId, { dayOfWeek: e.target.value })}>
+                          {DAYS.map(d => <option key={d}>{d}</option>)}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="form-field" style={{ marginTop: 16 }}>
+                      <label>Week Pattern</label>
+                      <div className="segmented-row">
+                        <button type="button" className={`segmented-btn ${draft.weekPattern === 'every' ? 'selected' : ''}`}
+                          onClick={() => updateDraft(draft.localId, { weekPattern: 'every' })}>Every Week</button>
+                        <button type="button" className={`segmented-btn ${draft.weekPattern === 'odd' ? 'selected' : ''}`}
+                          onClick={() => updateDraft(draft.localId, { weekPattern: 'odd' })}>Odd Weeks</button>
+                        <button type="button" className={`segmented-btn ${draft.weekPattern === 'even' ? 'selected' : ''}`}
+                          onClick={() => updateDraft(draft.localId, { weekPattern: 'even' })}>Even Weeks</button>
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {draft.scheduleType === 'specific-dates' && (
+                  <div className="form-field" style={{ marginTop: 16 }}>
+                    <label>Dates</label>
+                    <div className="specific-dates-row">
+                      <input type="date" value={draft.specificDateInput}
+                        onChange={e => updateDraft(draft.localId, { specificDateInput: e.target.value })} />
+                      <button type="button" className="cancel-btn" onClick={() => addSpecificDate(draft.localId)}>
+                        Add Date
+                      </button>
+                    </div>
+                    {draft.specificDates.length > 0 && (
+                      <div className="specific-dates-chips">
+                        {draft.specificDates.map(d => (
+                          <span key={d} className="specific-date-chip">
+                            {d}
+                            <button type="button" onClick={() => removeSpecificDate(draft.localId, d)}>×</button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <p className="avail-range-hint schedule-occurrence-hint">
+                  {occurrences > 0
+                    ? `This will create ${occurrences} session${occurrences !== 1 ? 's' : ''}`
+                    : 'Select a valid date range or at least one specific date'}
+                </p>
               </div>
-
-              {(draft.scheduleType === 'entire-semester' || draft.scheduleType === 'mid-semester') && (
-                <>
-                  <div className="form-row-3">
-                    <div className="form-field">
-                      <label>Start Date</label>
-                      <input type="date" value={draft.startDate}
-                        onChange={e => updateDraft(draft.localId, { startDate: e.target.value })} />
-                    </div>
-                    <div className="form-field">
-                      <label>End Date</label>
-                      <input type="date" value={draft.endDate}
-                        onChange={e => updateDraft(draft.localId, { endDate: e.target.value })} />
-                    </div>
-                    <div className="form-field">
-                      <label>Day of Week</label>
-                      <select value={draft.dayOfWeek} onChange={e => updateDraft(draft.localId, { dayOfWeek: e.target.value })}>
-                        {DAYS.map(d => <option key={d}>{d}</option>)}
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="form-field">
-                    <label>Week Pattern</label>
-                    <div className="avail-pill-row">
-                      <button type="button" className={`avail-pill ${draft.weekPattern === 'every' ? 'selected' : ''}`}
-                        onClick={() => updateDraft(draft.localId, { weekPattern: 'every' })}>Every Week</button>
-                      <button type="button" className={`avail-pill ${draft.weekPattern === 'odd' ? 'selected' : ''}`}
-                        onClick={() => updateDraft(draft.localId, { weekPattern: 'odd' })}>Odd Weeks</button>
-                      <button type="button" className={`avail-pill ${draft.weekPattern === 'even' ? 'selected' : ''}`}
-                        onClick={() => updateDraft(draft.localId, { weekPattern: 'even' })}>Even Weeks</button>
-                    </div>
-                  </div>
-                </>
-              )}
-
-              {draft.scheduleType === 'specific-dates' && (
-                <div className="form-field">
-                  <label>Dates</label>
-                  <div className="specific-dates-row">
-                    <input type="date" value={draft.specificDateInput}
-                      onChange={e => updateDraft(draft.localId, { specificDateInput: e.target.value })} />
-                    <button type="button" className="cancel-btn" onClick={() => addSpecificDate(draft.localId)}>
-                      Add Date
-                    </button>
-                  </div>
-                  {draft.specificDates.length > 0 && (
-                    <div className="specific-dates-chips">
-                      {draft.specificDates.map(d => (
-                        <span key={d} className="specific-date-chip">
-                          {d}
-                          <button type="button" onClick={() => removeSpecificDate(draft.localId, d)}>×</button>
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              <p className="avail-range-hint">
-                {occurrences > 0
-                  ? `This will create ${occurrences} session${occurrences !== 1 ? 's' : ''}`
-                  : 'Select a valid date range or at least one specific date'}
-              </p>
             </div>
-          )
-        })}
+          </div>
+        )
+      })}
 
-        <button type="button" className="add-btn add-another-session-btn" onClick={addAnotherSession}>
-          + Add Another Session
-        </button>
+      <button type="button" className="add-btn add-another-session-btn" onClick={addAnotherSession}>
+        + Add Another Session
+      </button>
 
+      <div className="add-session-footer">
         <p className="avail-range-hint add-session-total">
           Total across all sessions above: <strong>{totalOccurrences}</strong> entr{totalOccurrences !== 1 ? 'ies' : 'y'}
         </p>

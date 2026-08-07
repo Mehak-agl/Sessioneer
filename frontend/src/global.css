@@ -4562,11 +4562,11 @@ body.dark-theme .notif-tab.active {
 .time-wheel-picker {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .time-wheel-picker label {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   color: #1f3550;
 }
@@ -4574,22 +4574,22 @@ body.dark-theme .notif-tab.active {
 .time-wheel-columns {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
   background: #f8fcfd;
   border: 1.5px solid #d7eaf1;
-  border-radius: 12px;
-  padding: 0 8px;
+  border-radius: 10px;
+  padding: 0 6px;
 }
 
 .time-wheel-colon {
   font-weight: 700;
   color: #1f3550;
-  font-size: 16px;
+  font-size: 13px;
 }
 
 .wheel-column-wrapper {
   position: relative;
-  width: 56px;
+  width: 38px;
 }
 
 .wheel-column {
@@ -4608,7 +4608,7 @@ body.dark-theme .notif-tab.active {
   align-items: center;
   justify-content: center;
   scroll-snap-align: center;
-  font-size: 15px;
+  font-size: 12px;
   color: #99adb6;
   cursor: pointer;
   font-weight: 600;
@@ -4617,7 +4617,7 @@ body.dark-theme .notif-tab.active {
 
 .wheel-item-selected {
   color: #0097b2;
-  font-size: 19px;
+  font-size: 14px;
   font-weight: 700;
 }
 
@@ -4626,19 +4626,24 @@ body.dark-theme .notif-tab.active {
   top: 50%;
   left: 0;
   right: 0;
-  height: 40px;
+  height: 30px;
   transform: translateY(-50%);
   border-top: 1.5px solid #0097b2;
   border-bottom: 1.5px solid #0097b2;
   pointer-events: none;
+  border-radius: 6px;
 }
 
 .time-wheel-row {
   display: flex;
   align-items: flex-end;
-  gap: 20px;
+  gap: 16px;
   flex-wrap: wrap;
   margin-bottom: 18px;
+}
+
+.duration-display {
+  min-width: 96px;
 }
 
 .duration-display input {
@@ -4647,45 +4652,147 @@ body.dark-theme .notif-tab.active {
   font-weight: 700;
   text-align: center;
   cursor: default;
+  padding: 9px 10px;
+  font-size: 13px;
 }
 
 
-/* ── 22. Multi-session Add Session form ───────────────────────────────── */
+/* ── 22. Multi-session Add Session form (full-width page) ───────────────
+   Mirrors .unit-detail: this view takes over the whole .main-content
+   area beside the sidebar instead of opening as a centered modal, with
+   a .back-btn ("Back to Manage") matching the Manage page's own
+   "Back to My Units" button. */
 
-.add-session-modal {
-  max-width: 720px;
-  max-height: 88vh;
-  overflow-y: auto;
+.add-session-page {
+  padding: 0;
 }
 
 .add-session-disclosure {
-  margin-bottom: 18px;
+  margin-bottom: 24px;
 }
 
 .session-draft-block {
+  background: white;
   border: 1.5px solid #d7eaf1;
-  border-radius: 16px;
-  padding: 20px;
-  margin-bottom: 20px;
+  border-radius: 20px;
+  padding: 28px;
+  margin-bottom: 24px;
 }
 
 .session-draft-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 14px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1.5px solid #eef5f8;
 }
 
 .session-draft-header h3 {
   margin: 0;
-  font-size: 15px;
+  font-size: 16px;
+  font-family: 'Montserrat', sans-serif;
   color: #1f3550;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.session-number-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  background: #0097b2;
+  color: white;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* Groups a labeled cluster of fields (Time & Type / Location / Schedule)
+   within a session card, so the form reads as organized sections rather
+   than one long stack of inputs. */
+.form-subsection {
+  margin-bottom: 24px;
+}
+
+.form-subsection:last-child {
+  margin-bottom: 0;
+}
+
+.form-subsection-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+  color: #7c93a1;
+  margin-bottom: 12px;
+}
+
+/* Session Schedule gets its own soft-shaded container so it stands out
+   as a distinct, self-contained block within the session card. */
+.schedule-box {
+  background: #f8fcfd;
+  border: 1.5px solid #e5f1f5;
+  border-radius: 16px;
+  padding: 20px;
+}
+
+.schedule-occurrence-hint {
+  margin: 16px 0 0;
+}
+
+/* Segmented control — replaces free-floating pill rows for mutually
+   exclusive choices (campus, schedule type, week pattern) with a single
+   bordered strip, closer to a modern toggle group. */
+.segmented-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  background: white;
+  border: 1.5px solid #d7eaf1;
+  border-radius: 12px;
+  padding: 4px;
+}
+
+.segmented-btn {
+  flex: 1;
+  min-width: 120px;
+  background: none;
+  border: none;
+  border-radius: 9px;
+  padding: 9px 14px;
+  font-family: 'Lato', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: #657985;
+  cursor: pointer;
+  transition: 0.15s;
+  text-align: center;
+}
+
+.segmented-btn:hover { color: #0097b2; }
+
+.segmented-btn.selected {
+  background: #0097b2;
+  color: white;
+  box-shadow: 0 4px 10px rgba(0, 151, 178, 0.25);
 }
 
 .add-another-session-btn {
   width: 100%;
   text-align: center;
-  margin-bottom: 14px;
+  margin-bottom: 24px;
+}
+
+.add-session-footer {
+  background: white;
+  border: 1.5px solid #d7eaf1;
+  border-radius: 20px;
+  padding: 24px 28px;
 }
 
 .add-session-total {

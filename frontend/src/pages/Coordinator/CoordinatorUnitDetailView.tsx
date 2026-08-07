@@ -175,6 +175,21 @@ export default function UnitDetailView({ unit, onBack }: Props) {
     setEditingSession(null)
   }
 
+  // Add Session takes over the full main-content area (same as this
+  // detail view does relative to the units list), rather than opening
+  // as an overlay modal — so it opens full width beside the sidebar
+  // just like this Manage page does.
+  if (showSessionForm) {
+    return (
+      <AddSessionForm
+        unitId={unit.id}
+        unitLabel={`${unit.code} — ${unit.name}`}
+        onClose={() => setShowSessionForm(false)}
+        onSessionsCreated={loadSessions}
+      />
+    )
+  }
+
   return (
     <div className="unit-detail">
       <div className="detail-header">
@@ -226,16 +241,6 @@ export default function UnitDetailView({ unit, onBack }: Props) {
           ))}
         </div>
       </div>
-
-      {/* Add Session — full form (wheel time pickers, campus/block/room,
-          class type, schedule + week pattern, multi-session support) */}
-      {showSessionForm && (
-        <AddSessionForm
-          unitId={unit.id}
-          onClose={() => setShowSessionForm(false)}
-          onSessionsCreated={loadSessions}
-        />
-      )}
 
       {/* Edit Session Modal (local only) */}
       {editingSession && (

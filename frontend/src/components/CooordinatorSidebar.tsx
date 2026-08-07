@@ -50,11 +50,11 @@ function CoordinatorSidebar() {
 
       <nav className="coord-menu">
         <Link className={path === '/coordinator' ? 'active' : ''} to="/coordinator">Dashboard</Link>
-        <Link to="/coordinator">My Units</Link>
+        <Link className={path === '/coordinator/units' ? 'active' : ''} to="/coordinator/units">My Units</Link>
         <Link className={path === '/calendar' ? 'active' : ''} to="/calendar">Calendar</Link>
-        <Link to="/coordinator">Tutors</Link>
-        <Link to="/coordinator">Allocations</Link>
-        <Link to="/coordinator">Reports</Link>
+        <Link className={path === '/coordinator/tutors' ? 'active' : ''} to="/coordinator/tutors">Tutors</Link>
+        <Link className={path === '/coordinator/allocations' ? 'active' : ''} to="/coordinator/allocations">Allocations</Link>
+        <Link className={path === '/coordinator/reports' ? 'active' : ''} to="/coordinator/reports">Reports</Link>
         <Link to="/coordinator-notifications" className={`notif-nav-link${path === '/coordinator-notifications' ? ' active' : ''}`}>
           Notifications
           {unreadCount > 0 && (

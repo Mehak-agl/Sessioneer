@@ -1,8 +1,14 @@
 import { useEffect, useRef } from 'react'
 
-const ITEM_HEIGHT = 40
-const VISIBLE_COUNT = 5
+const ITEM_HEIGHT = 30
+const VISIBLE_COUNT = 3
 const PICKER_HEIGHT = ITEM_HEIGHT * VISIBLE_COUNT
+// Padding above/below the options so the first and last can still
+// scroll up into the centered selection window. Must equal half the
+// space either side of the middle (selected) row, i.e. however many
+// rows sit above/below it — NOT a fixed value, or the selected item
+// drifts out of the selection window when VISIBLE_COUNT changes.
+const WHEEL_PADDING = (ITEM_HEIGHT * (VISIBLE_COUNT - 1)) / 2
 
 interface WheelColumnProps {
   options: string[]
@@ -53,7 +59,7 @@ function WheelColumn({ options, value, onChange }: WheelColumnProps) {
       <div
         ref={containerRef}
         className="wheel-column"
-        style={{ height: PICKER_HEIGHT, paddingTop: ITEM_HEIGHT * 2, paddingBottom: ITEM_HEIGHT * 2 }}
+        style={{ height: PICKER_HEIGHT, paddingTop: WHEEL_PADDING, paddingBottom: WHEEL_PADDING }}
         onScroll={handleScroll}
       >
         {options.map((opt, i) => (

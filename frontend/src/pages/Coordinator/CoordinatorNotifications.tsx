@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import CoordinatorSidebar from '../../components/CoordinatorSidebar'
+import CoordinatorSidebar from '../../components/CooordinatorSidebar'
 import { MOCK_NOTIFICATIONS, NOTIF_READ_KEY, NOTIF_EVENT, type NotifType } from '../../data/notifications'
 
 const ICON: Record<NotifType, { symbol: string; bg: string }> = {

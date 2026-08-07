@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
-import { api } from "../../services/api";
-
+//import { api } from "../../services/api";
+import { coordinatorMockApi as api } from "../../services/coordinatorMockApi";
+import AddSessionForm from './AddSessionForm'
 
 interface Session {
   id: number;
@@ -12,7 +13,7 @@ interface Session {
   // so this exists purely to drive the badge/edit UI here. It's inferred
   // from location when a session first loads, and can be changed by the
   // local-only edit below.
-  mode?: 'on-campus' | 'online' | 'hybrid';
+  mode?: 'on-campus' | 'online';
 }
 
 interface Unit {
@@ -33,10 +34,7 @@ type Props = {
   onBack: () => void
 }
 
-const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
-const TIMES = ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00']
-const DURATIONS = ['1hr', '2hr', '3hr']
-const MODES: Session['mode'][] = ['on-campus', 'online', 'hybrid']
+const MODES: Session['mode'][] = ['on-campus', 'online']
 
 function inferMode(session: { location: string }): Session['mode'] {
   return session.location === 'Online' ? 'online' : 'on-campus'
@@ -44,7 +42,6 @@ function inferMode(session: { location: string }): Session['mode'] {
 
 function modeLabel(mode: Session['mode']) {
   if (mode === 'online') return '🌐 Online'
-  if (mode === 'hybrid') return '🔀 Hybrid'
   return '🏫 On-campus'
 }
 
@@ -53,12 +50,6 @@ export default function UnitDetailView({ unit, onBack }: Props) {
   const [staffList, setStaffList] = useState<StaffUser[]>([])
   const [showSessionForm, setShowSessionForm] = useState(false)
   const [invitedStaff, setInvitedStaff] = useState<StaffUser[]>([])
-
-  const [day, setDay] = useState('Monday')
-  const [time, setTime] = useState('09:00')
-  const [duration, setDuration] = useState('2hr')
-  const [mode, setMode] = useState<Session['mode']>('on-campus')
-  const [location, setLocation] = useState('')
 
   // ── Invite Tutors: searchable multi-select, Invite All / Invite Selected ──
   const [showInviteForm, setShowInviteForm] = useState(false)
@@ -73,35 +64,19 @@ export default function UnitDetailView({ unit, onBack }: Props) {
   const [editLocation, setEditLocation] = useState('')
   const [editMode, setEditMode] = useState<Session['mode']>('on-campus')
 
+  const loadSessions = async () => {
+    const data: any[] = await api.getSessions(unit.id)
+    setSessions(data.map(s => ({ ...s, mode: inferMode(s) })))
+  }
+
   useEffect(() => {
-    api.getSessions(unit.id)
-      .then((data: any[]) => setSessions(data.map(s => ({ ...s, mode: inferMode(s) }))))
-      .catch(console.error)
+    loadSessions().catch(console.error)
     api.getAllStaff().then(setStaffList).catch(console.error)
     api.getUnitInvitations(unit.id).then(invitations => {
       setInvitedStaff(invitations.map((inv: any) => inv.staff))
     }).catch(console.error)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [unit.id])
-
-  const handleAddSession = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    try {
-      const dayIndex = DAYS.indexOf(day) + 1
-      const startTime = `2026-06-0${dayIndex}T${time}:00`
-      const finalLocation = mode === 'online' ? 'Online' : location
-      await api.createSession(unit.id, {
-        title: `${unit.code} ${duration} ${mode}`,
-        startTime,
-        location: finalLocation,
-      })
-      const updated: any[] = await api.getSessions(unit.id)
-      setSessions(updated.map(s => ({ ...s, mode: inferMode(s) })))
-      setShowSessionForm(false)
-      setLocation('')
-    } catch (err) {
-      console.error(err)
-    }
-  }
 
   const handleRemoveStaff = async (id: number) => {
     try {
@@ -252,54 +227,14 @@ export default function UnitDetailView({ unit, onBack }: Props) {
         </div>
       </div>
 
-      {/* Add Session Modal */}
+      {/* Add Session — full form (wheel time pickers, campus/block/room,
+          class type, schedule + week pattern, multi-session support) */}
       {showSessionForm && (
-        <div className="modal-overlay" onClick={() => setShowSessionForm(false)}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
-            <h2>Add Session</h2>
-            <form onSubmit={handleAddSession} className="detail-form">
-              <div className="form-row-3">
-                <div className="form-field">
-                  <label>Day</label>
-                  <select value={day} onChange={e => setDay(e.target.value)}>
-                    {DAYS.map(d => <option key={d}>{d}</option>)}
-                  </select>
-                </div>
-                <div className="form-field">
-                  <label>Time</label>
-                  <select value={time} onChange={e => setTime(e.target.value)}>
-                    {TIMES.map(t => <option key={t}>{t}</option>)}
-                  </select>
-                </div>
-                <div className="form-field">
-                  <label>Duration</label>
-                  <select value={duration} onChange={e => setDuration(e.target.value)}>
-                    {DURATIONS.map(d => <option key={d}>{d}</option>)}
-                  </select>
-                </div>
-              </div>
-              <div className="form-row-2">
-                <div className="form-field">
-                  <label>Mode</label>
-                  <select value={mode} onChange={e => setMode(e.target.value as Session['mode'])}>
-                    {MODES.map(m => <option key={m} value={m}>{m}</option>)}
-                  </select>
-                </div>
-                {mode !== 'online' && (
-                  <div className="form-field">
-                    <label>Location</label>
-                    <input type="text" placeholder="e.g. P Block P404"
-                      value={location} onChange={e => setLocation(e.target.value)} />
-                  </div>
-                )}
-              </div>
-              <div className="modal-actions">
-                <button type="button" className="cancel-btn" onClick={() => setShowSessionForm(false)}>Cancel</button>
-                <button type="submit" className="confirm-btn">Add Session</button>
-              </div>
-            </form>
-          </div>
-        </div>
+        <AddSessionForm
+          unitId={unit.id}
+          onClose={() => setShowSessionForm(false)}
+          onSessionsCreated={loadSessions}
+        />
       )}
 
       {/* Edit Session Modal (local only) */}

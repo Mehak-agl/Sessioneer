@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import CoordinatorSidebar from '../../components/CoordinatorSidebar'
+import CoordinatorSidebar from '../../components/CooordinatorSidebar'
 
 
 

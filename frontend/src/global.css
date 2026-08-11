@@ -537,6 +537,54 @@ p {
   color: white;
 }
 
+.coord-profile.clickable {
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.coord-profile.clickable:hover,
+.coord-profile.clickable:focus-visible {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.coord-profile.clickable:focus-visible {
+  outline: 2px solid #0097b2;
+  outline-offset: 2px;
+}
+
+.coord-menu-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.12);
+  margin: 20px 0;
+}
+
+.coord-logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  background: none;
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  color: #f1c9c9;
+  padding: 14px 18px;
+  border-radius: 14px;
+  font-weight: bold;
+  font-size: 14px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.coord-logout-btn:hover {
+  background: #e53935;
+  border-color: #e53935;
+  color: white;
+}
+
+.coord-logout-icon {
+  font-size: 16px;
+}
+
 
 /* ── 4. Tutor / staff sidebar ─────────────────────────────────────────── */
 
@@ -1376,7 +1424,7 @@ p {
 
 .sessions-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
   gap: 14px;
 }
 
@@ -1454,6 +1502,12 @@ p {
   width: 100%;
   max-width: 500px;
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.15);
+}
+
+.edit-series-modal {
+  max-width: 640px;
+  max-height: 90vh;
+  overflow-y: auto;
 }
 
 .modal h2 {
@@ -1563,7 +1617,8 @@ p {
 .tutor-row {
   display: flex;
   align-items: center;
-  gap: 14px;
+  flex-wrap: wrap;
+  gap: 10px 14px;
   padding: 14px 18px;
   background: #f8fcfd;
   border: 1.5px solid #d7eaf1;
@@ -1620,6 +1675,8 @@ p {
 
 .status-badge.responded { background: #e0f5f9; color: #0097b2; }
 .status-badge.pending   { background: #fff8dc; color: #745a00; }
+.status-badge.allocated { background: #eef6ee; color: #2e7d32; }
+.status-badge.holiday   { background: #f3e8ff; color: #7c3aed; }
 
 .remove-tutor-btn {
   background: none;
@@ -1637,6 +1694,323 @@ p {
 .remove-tutor-btn:hover {
   border-color: #e53935;
   color: #e53935;
+}
+
+/* ── Simulate accept/decline (testing-only, Invited Tutors section) ────── */
+
+.simulate-accept-btn,
+.simulate-decline-btn {
+  background: none;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+  white-space: nowrap;
+}
+
+.simulate-accept-btn {
+  border: 1.5px dashed #2e7d32;
+  color: #2e7d32;
+}
+
+.simulate-accept-btn:hover {
+  background: #eef6ee;
+}
+
+.simulate-decline-btn {
+  border: 1.5px dashed #e53935;
+  color: #e53935;
+}
+
+.simulate-decline-btn:hover {
+  background: #fdecea;
+}
+
+.simulate-accept-btn:disabled,
+.simulate-decline-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* ── Availability submission countdown (Invited Tutors section) ───────── */
+
+.section-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.countdown-none-hint {
+  margin: 6px 0 0;
+  color: #97a6b0;
+  font-size: 12px;
+  font-style: italic;
+}
+
+.countdown-badge {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 1px;
+  margin-top: 8px;
+  padding: 6px 12px;
+  border-radius: 10px;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  width: fit-content;
+}
+
+.countdown-badge.normal  { background: #eef6ee; color: #2e7d32; }
+.countdown-badge.urgent  { background: #fff8dc; color: #745a00; }
+.countdown-badge.expired { background: #fee2e2; color: #dc2626; }
+
+.countdown-deadline-date {
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  font-size: 11px;
+  opacity: 0.8;
+}
+
+/* ── Recurring session grouping (Sessions section) ─────────────────────── */
+
+.session-group-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.session-group-card.expanded {
+  grid-column: 1 / -1;
+}
+
+.session-card-main {
+  padding: 18px 20px;
+}
+
+.session-card-main.clickable {
+  cursor: pointer;
+}
+
+.session-card-main .session-day {
+  margin-top: 2px;
+}
+
+.session-card-main .session-time {
+  margin-top: 4px;
+}
+
+.session-card-main .session-location {
+  margin-top: 6px;
+}
+
+.session-card-status-row {
+  margin-top: 8px;
+}
+
+.session-group-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #0097b2;
+  background: #e0f5f9;
+  padding: 5px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+  border: none;
+  font-family: inherit;
+  cursor: default;
+}
+
+button.session-group-count {
+  cursor: pointer;
+}
+
+.session-group-chevron {
+  display: inline-block;
+  font-size: 12px;
+  transition: transform 0.2s;
+}
+
+.session-group-chevron.open {
+  transform: rotate(180deg);
+}
+
+.session-group-range {
+  color: #657985 !important;
+  font-weight: 500 !important;
+}
+
+.session-group-body {
+  border-top: 1.5px solid #d7eaf1;
+  background: #fbfeff;
+  max-height: 340px;
+  overflow-y: auto;
+}
+
+.session-occurrence-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  row-gap: 6px;
+  column-gap: 16px;
+  padding: 12px 20px;
+  border-bottom: 1px solid #eef6f9;
+  font-size: 13px;
+  transition: background 0.15s;
+}
+
+.session-occurrence-row:hover {
+  background: #f0fafc;
+}
+
+.session-occurrence-row:last-child {
+  border-bottom: none;
+}
+
+.session-occurrence-date {
+  color: #1f3550;
+  font-weight: 600;
+  white-space: nowrap;
+  flex: 1 1 170px;
+}
+
+.session-occurrence-status {
+  flex-shrink: 0;
+}
+
+.session-occurrence-row .session-holiday-btn {
+  margin-left: auto;
+}
+
+.session-occurrence-row .session-edit-btn {
+  flex-shrink: 0;
+  margin-left: 14px;
+}
+
+/* ── Holiday marking (per dated occurrence) ─────────────────────────────── */
+
+.session-holiday-btn {
+  background: none;
+  border: 1.5px solid #d7eaf1;
+  color: #657985;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 5px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: 0.2s;
+}
+
+.session-holiday-btn:hover {
+  border-color: #7c3aed;
+  color: #7c3aed;
+}
+
+.session-holiday-btn.active {
+  background: #f3e8ff;
+  border-color: #f3e8ff;
+  color: #7c3aed;
+}
+
+.session-occurrence-date.holiday {
+  text-decoration: line-through;
+  color: #97a6b0;
+  font-weight: 500;
+}
+
+.session-card-top-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.session-group-holiday-hint {
+  display: inline-flex;
+  align-items: center;
+  color: #7c3aed;
+  margin-left: 2px;
+}
+
+/* ── Deleting sessions (single occurrence or whole recurring series) ───── */
+
+.session-delete-btn {
+  background: none;
+  border: none;
+  color: #e53935;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.session-delete-btn:hover {
+  opacity: 0.7;
+}
+
+.session-group-body-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 20px;
+  background: #f8fcfd;
+  border-bottom: 1.5px solid #d7eaf1;
+}
+
+.session-group-body-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.session-group-body-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #657985;
+}
+
+.session-edit-series-btn {
+  background: none;
+  border: 1.5px solid #b7e0e9;
+  color: #0097b2;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 5px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: 0.2s;
+}
+
+.session-edit-series-btn:hover {
+  background: #0097b2;
+  border-color: #0097b2;
+  color: white;
+}
+
+.session-delete-all-btn {
+  background: none;
+  border: 1.5px solid #f3c8c8;
+  color: #e53935;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 5px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: 0.2s;
+}
+
+.session-delete-all-btn:hover {
+  background: #e53935;
+  border-color: #e53935;
+  color: white;
 }
 
 
@@ -4210,6 +4584,63 @@ body.dark-theme .avail-modal {
   color: #e2e8f0;
 }
 
+body.dark-theme .session-group-body {
+  background: #101a29;
+  border-top-color: #2a3b52;
+}
+
+body.dark-theme .session-occurrence-row {
+  border-bottom-color: #2a3b52;
+}
+
+body.dark-theme .session-occurrence-date {
+  color: #f1f5f9;
+}
+
+body.dark-theme .session-group-body-header {
+  background: #101a29;
+  border-bottom-color: #2a3b52;
+}
+
+body.dark-theme .session-edit-series-btn {
+  border-color: #2a3b52;
+  color: #7fd7e8;
+}
+
+body.dark-theme .session-group-body-label {
+  color: #94a3b8;
+}
+
+body.dark-theme .allocation-candidate-btn {
+  background: #182437;
+  border-color: #2a3b52;
+  color: #e2e8f0;
+}
+
+body.dark-theme .allocation-candidate-btn:hover {
+  background: #10202a;
+  border-color: #0097b2;
+  color: #7fd7e8;
+}
+
+body.dark-theme .allocation-search-row strong {
+  color: #f1f5f9;
+}
+
+body.dark-theme .allocation-self-assign-btn {
+  background: #2a1d10;
+  border-color: #5c4324;
+  color: #f0b878;
+}
+
+body.dark-theme .allocation-self-assign-btn:hover {
+  background: #3a2716;
+}
+
+body.dark-theme .allocation-assigned.self .allocation-assigned-name {
+  color: #f0b878;
+}
+
 body.dark-theme .modal h2,
 body.dark-theme .chat-modal h2 {
   color: #f1f5f9;
@@ -4554,6 +4985,198 @@ body.dark-theme .notif-tab.active {
 
 .session-edit-btn:hover {
   opacity: 0.7;
+}
+
+
+/* ── 20b. Coordinator Allocations page ──────────────────────────────────── */
+
+.allocations-page {
+  max-width: 1100px;
+}
+
+.allocation-back-btn {
+  margin-bottom: 14px;
+}
+
+.allocation-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.allocation-assigned {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #d7eaf1;
+}
+
+.allocation-assigned.self {
+  border-top-color: #f3c8a0;
+}
+
+.allocation-assigned-name {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  color: #1f3550;
+}
+
+.allocation-assigned.self .allocation-assigned-name {
+  color: #b25e00;
+}
+
+.allocation-assigned-email {
+  font-size: 12px;
+  color: #657985;
+  margin: 2px 0 8px;
+}
+
+.allocation-self-assign-btn {
+  display: block;
+  width: 100%;
+  text-align: center;
+  background: #fff4e8;
+  border: 1.5px solid #f3c8a0;
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #b25e00;
+  cursor: pointer;
+  transition: 0.2s;
+  margin-bottom: 10px;
+}
+
+.allocation-self-assign-btn:hover {
+  background: #ffe9d1;
+}
+
+.allocation-self-assign-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.allocation-candidates {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #d7eaf1;
+}
+
+.allocation-candidates-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #657985;
+  margin: 0 0 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.allocation-candidates-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.allocation-candidate-btn {
+  text-align: left;
+  background: white;
+  border: 1.5px solid #d7eaf1;
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1f3550;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.allocation-candidate-btn:hover {
+  border-color: #0097b2;
+  background: #e0f5f9;
+  color: #0097b2;
+}
+
+.allocation-candidate-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.allocation-mixed-hint {
+  font-size: 12px;
+  color: #745a00;
+  background: #fff8dc;
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin: 12px 0 0;
+}
+
+.allocation-lecture-hint {
+  font-size: 11px;
+  color: #97a6b0;
+  font-style: italic;
+  margin: 6px 0 0;
+}
+
+.allocation-empty-hint {
+  font-size: 12px;
+  color: #97a6b0;
+  font-style: italic;
+  margin: 0 0 10px;
+}
+
+.allocation-candidates-footer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.allocation-search-btn {
+  background: none;
+  border: 1.5px dashed #0097b2;
+  color: #0097b2;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 8px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: 0.2s;
+  width: 100%;
+}
+
+.allocation-search-btn:hover {
+  background: #e0f5f9;
+}
+
+.allocation-search-results {
+  max-height: 320px;
+  overflow-y: auto;
+  margin: 14px 0;
+  border: 1px solid #d7eaf1;
+  border-radius: 12px;
+}
+
+.allocation-search-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #eef6f9;
+}
+
+.allocation-search-row:last-child {
+  border-bottom: none;
+}
+
+.allocation-search-row strong {
+  display: block;
+  font-size: 14px;
+  color: #1f3550;
+}
+
+.allocation-search-row span {
+  font-size: 12px;
+  color: #657985;
 }
 
 

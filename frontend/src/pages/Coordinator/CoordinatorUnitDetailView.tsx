@@ -1,7 +1,13 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 //import { api } from "../../services/api";
 import { coordinatorMockApi as api } from "../../services/coordinatorMockApi";
 import AddSessionForm from './AddSessionForm'
+import TimeWheelPicker, {
+  type WheelTime,
+  wheelTimeTo24h,
+  wheelTimeDurationMinutes,
+  formatDurationMinutes,
+} from '../../components/TimeWheelPicker'
 
 interface Session {
   id: number;
@@ -14,6 +20,10 @@ interface Session {
   // from location when a session first loads, and can be changed by the
   // local-only edit below.
   mode?: 'on-campus' | 'online';
+  // Client-side only — set when a coordinator marks this occurrence as a
+  // holiday (see toggleHoliday below), so unmarking it can restore
+  // whatever status it had before.
+  previousStatus?: string;
 }
 
 interface Unit {
@@ -29,12 +39,17 @@ interface StaffUser {
   email: string;
 }
 
+interface Invitation {
+  id: number;
+  unit: { id: number };
+  staff: StaffUser;
+  status: 'PENDING' | 'RESPONDED';
+}
+
 type Props = {
   unit: Unit
   onBack: () => void
 }
-
-const MODES: Session['mode'][] = ['on-campus', 'online']
 
 function inferMode(session: { location: string }): Session['mode'] {
   return session.location === 'Online' ? 'online' : 'on-campus'
@@ -45,11 +60,209 @@ function modeLabel(mode: Session['mode']) {
   return '🏫 On-campus'
 }
 
+function statusMeta(status: string): { label: string; icon: string; className: string } {
+  const s = status.toUpperCase()
+  if (s === 'HOLIDAY') return { label: 'Holiday', icon: '🏖', className: 'holiday' }
+  if (s === 'ALLOCATED') return { label: 'Allocated', icon: '✓', className: 'allocated' }
+  if (s === 'PENDING') return { label: 'Pending', icon: '⏳', className: 'pending' }
+  return { label: status, icon: '•', className: 'pending' }
+}
+
+// ── Recurring session grouping ────────────────────────────────────────
+// The backend only stores each occurrence as its own row (id, title,
+// startTime, location, status) — there's no "recurring series" concept
+// server-side. So sessions that share the same day of week, time,
+// location (which already encodes campus + room, see AddSessionForm's
+// buildLocationString) and class type (title) are grouped together here,
+// purely on the client, for display only.
+const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+
+interface SessionGroup {
+  key: string
+  title: string
+  location: string
+  mode: Session['mode']
+  dayOfWeek: number
+  minutesOfDay: number
+  timeLabel: string
+  sessions: Session[]
+}
+
+function groupSessions(sessions: Session[]): SessionGroup[] {
+  const map = new Map<string, SessionGroup>()
+  for (const s of sessions) {
+    const d = new Date(s.startTime)
+    const minutesOfDay = d.getHours() * 60 + d.getMinutes()
+    const key = [d.getDay(), minutesOfDay, s.location, s.title].join('|')
+    let group = map.get(key)
+    if (!group) {
+      group = {
+        key,
+        title: s.title,
+        location: s.location,
+        mode: s.mode ?? inferMode(s),
+        dayOfWeek: d.getDay(),
+        minutesOfDay,
+        timeLabel: d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }),
+        sessions: [],
+      }
+      map.set(key, group)
+    }
+    group.sessions.push(s)
+  }
+  const groups = Array.from(map.values())
+  for (const g of groups) {
+    g.sessions.sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime())
+  }
+  groups.sort((a, b) => a.dayOfWeek - b.dayOfWeek || a.minutesOfDay - b.minutesOfDay)
+  return groups
+}
+
+// ── Edit Series (local only) ────────────────────────────────────────────
+// Lets the coordinator change a whole recurring pattern at once — class
+// type, day/time, campus/block/room, and the date range it runs across —
+// rather than one field on one row. Mirrors the structured fields used
+// when a session is first created in AddSessionForm.tsx (duplicated
+// locally here since those helpers aren't exported from that file).
+// Saving regenerates the group's occurrence dates from scratch: dates
+// that still fall in the new range/day keep their existing id and status
+// (so an ALLOCATED or HOLIDAY date isn't silently reset), brand-new dates
+// are added as PENDING, and dropped dates are removed. Local only, same
+// as the rest of this file — there's no backend endpoint to persist any
+// of this, so it resets on refresh.
+type ClassType = 'Consultation' | 'Workshop' | 'Practical' | 'Tutorial' | 'Lecture'
+type Campus = 'Gardens Point' | 'Kelvin Grove'
+type LocationType = 'on-campus' | 'online'
+
+const CLASS_TYPES: ClassType[] = ['Consultation', 'Workshop', 'Practical', 'Tutorial', 'Lecture']
+const EDIT_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
+const EDIT_WEEKDAY_INDEX: Record<string, number> = { Monday: 1, Tuesday: 2, Wednesday: 3, Thursday: 4, Friday: 5 }
+
+function parseLocalDateStr(yyyyMmDd: string): Date | null {
+  if (!yyyyMmDd) return null
+  const [y, m, d] = yyyyMmDd.split('-').map(Number)
+  if (!y || !m || !d) return null
+  return new Date(y, m - 1, d)
+}
+
+function toDateInputValue(date: Date): string {
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, '0')
+  const d = String(date.getDate()).padStart(2, '0')
+  return `${y}-${m}-${d}`
+}
+
+function dateToWheelTime(date: Date): WheelTime {
+  let hour = date.getHours() % 12
+  if (hour === 0) hour = 12
+  const period: 'AM' | 'PM' = date.getHours() >= 12 ? 'PM' : 'AM'
+  return { hour: String(hour), minute: String(date.getMinutes()).padStart(2, '0'), period }
+}
+
+function formatEditDateTime(date: Date, wheelTime: WheelTime): string {
+  const { hour24, minute } = wheelTimeTo24h(wheelTime)
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, '0')
+  const d = String(date.getDate()).padStart(2, '0')
+  const hh = String(hour24).padStart(2, '0')
+  const mm = String(minute).padStart(2, '0')
+  return `${y}-${m}-${d}T${hh}:${mm}:00`
+}
+
+// Every real calendar date between start/end (inclusive) that falls on
+// the given weekday — same approach as AddSessionForm's generator, minus
+// the odd/even week pattern (edits always regenerate every week, kept
+// simple since the pattern isn't tracked on the group itself).
+function generateWeeklyDates(startDate: Date, endDate: Date, weekdayIndex: number): Date[] {
+  const dates: Date[] = []
+  const cursor = new Date(startDate)
+  while (cursor.getDay() !== weekdayIndex && cursor <= endDate) {
+    cursor.setDate(cursor.getDate() + 1)
+  }
+  while (cursor <= endDate) {
+    dates.push(new Date(cursor))
+    cursor.setDate(cursor.getDate() + 7)
+  }
+  return dates
+}
+
+function parseLocationString(location: string): { locationType: LocationType; campus: Campus; block: string; room: string } {
+  if (!location || location === 'Online') {
+    return { locationType: 'online', campus: 'Gardens Point', block: '', room: '' }
+  }
+  const sepIndex = location.indexOf(' - ')
+  if (sepIndex === -1) {
+    const campus: Campus = location === 'Kelvin Grove' ? 'Kelvin Grove' : 'Gardens Point'
+    return { locationType: 'on-campus', campus, block: '', room: '' }
+  }
+  const campus: Campus = location.slice(0, sepIndex) === 'Kelvin Grove' ? 'Kelvin Grove' : 'Gardens Point'
+  const detail = location.slice(sepIndex + 3)
+  let block = ''
+  let room = ''
+  for (const part of detail.split(',').map(p => p.trim())) {
+    if (part.startsWith('Block ')) block = part.slice('Block '.length)
+    else if (part.startsWith('Room ')) room = part.slice('Room '.length)
+  }
+  return { locationType: 'on-campus', campus, block, room }
+}
+
+function buildLocationStringFrom(locationType: LocationType, campus: Campus, block: string, room: string): string {
+  if (locationType === 'online') return 'Online'
+  const blockPart = block ? `Block ${block}` : ''
+  const roomPart = room ? `Room ${room}` : ''
+  const detail = [blockPart, roomPart].filter(Boolean).join(', ')
+  return detail ? `${campus} - ${detail}` : campus
+}
+
+// ── Availability submission countdown ──────────────────────────────────
+// Also client-side only — there's no deadline field on the backend's
+// invitation model yet, so the deadline the coordinator sets here is
+// stored per-unit in localStorage and only affects what's shown on this
+// screen. A real deadline would need a backend field on the invitation
+// (or unit) so tutors' own submission screens could enforce/show it too.
+function deadlineStorageKey(unitId: number) {
+  return `sessioneer:availDeadline:unit:${unitId}`
+}
+
+function loadDeadline(unitId: number): string {
+  try {
+    return localStorage.getItem(deadlineStorageKey(unitId)) ?? ''
+  } catch {
+    return ''
+  }
+}
+
+function formatCountdown(deadlineIso: string, now: number): { label: string; state: 'normal' | 'urgent' | 'expired' } {
+  const target = new Date(deadlineIso).getTime()
+  const diffMs = target - now
+  if (Number.isNaN(target)) return { label: '', state: 'normal' }
+  if (diffMs <= 0) return { label: 'Deadline passed', state: 'expired' }
+
+  const totalSeconds = Math.floor(diffMs / 1000)
+  const days = Math.floor(totalSeconds / 86400)
+  const hours = Math.floor((totalSeconds % 86400) / 3600)
+  const minutes = Math.floor((totalSeconds % 3600) / 60)
+  const seconds = totalSeconds % 60
+
+  let label: string
+  if (days > 0) label = `${days}d ${hours}h left`
+  else if (hours > 0) label = `${hours}h ${minutes}m left`
+  else if (minutes > 0) label = `${minutes}m ${seconds}s left`
+  else label = `${seconds}s left`
+
+  const state: 'normal' | 'urgent' = diffMs < 24 * 60 * 60 * 1000 ? 'urgent' : 'normal'
+  return { label, state }
+}
+
 export default function UnitDetailView({ unit, onBack }: Props) {
   const [sessions, setSessions] = useState<Session[]>([])
   const [staffList, setStaffList] = useState<StaffUser[]>([])
   const [showSessionForm, setShowSessionForm] = useState(false)
-  const [invitedStaff, setInvitedStaff] = useState<StaffUser[]>([])
+  const [invitations, setInvitations] = useState<Invitation[]>([])
+  // Local-only busy/error state for the "simulate accept/decline" testing
+  // controls below — see the note above them for why they exist.
+  const [simulatingId, setSimulatingId] = useState<number | null>(null)
+  const [simulateError, setSimulateError] = useState('')
 
   // ── Invite Tutors: searchable multi-select, Invite All / Invite Selected ──
   const [showInviteForm, setShowInviteForm] = useState(false)
@@ -58,11 +271,29 @@ export default function UnitDetailView({ unit, onBack }: Props) {
   const [inviting, setInviting] = useState(false)
   const [inviteMessage, setInviteMessage] = useState('')
 
-  // ── Editable sessions (local only — see note above Session type) ──────
-  const [editingSession, setEditingSession] = useState<Session | null>(null)
-  const [editTitle, setEditTitle] = useState('')
-  const [editLocation, setEditLocation] = useState('')
-  const [editMode, setEditMode] = useState<Session['mode']>('on-campus')
+  // ── Edit Series (local only — see note above helpers) ──────────────────
+  const [editingGroupKey, setEditingGroupKey] = useState<string | null>(null)
+  const [editClassType, setEditClassType] = useState<ClassType>('Tutorial')
+  const [editDayOfWeek, setEditDayOfWeek] = useState('Monday')
+  const [editStartTime, setEditStartTime] = useState<WheelTime>({ hour: '9', minute: '00', period: 'AM' })
+  const [editEndTime, setEditEndTime] = useState<WheelTime>({ hour: '10', minute: '00', period: 'AM' })
+  const [editLocationType, setEditLocationType] = useState<LocationType>('on-campus')
+  const [editCampus, setEditCampus] = useState<Campus>('Gardens Point')
+  const [editBlock, setEditBlock] = useState('')
+  const [editRoom, setEditRoom] = useState('')
+  const [editSeriesStartDate, setEditSeriesStartDate] = useState('')
+  const [editSeriesEndDate, setEditSeriesEndDate] = useState('')
+  const [editSeriesError, setEditSeriesError] = useState('')
+
+  // ── Group recurring sessions into a single expandable card ────────────
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set())
+  const sessionGroups = useMemo(() => groupSessions(sessions), [sessions])
+
+  // ── Availability submission countdown (local only, see note above) ────
+  const [deadline, setDeadline] = useState('')
+  const [now, setNow] = useState(() => Date.now())
+  const [showDeadlineModal, setShowDeadlineModal] = useState(false)
+  const [deadlineDraft, setDeadlineDraft] = useState('')
 
   const loadSessions = async () => {
     const data: any[] = await api.getSessions(unit.id)
@@ -72,22 +303,105 @@ export default function UnitDetailView({ unit, onBack }: Props) {
   useEffect(() => {
     loadSessions().catch(console.error)
     api.getAllStaff().then(setStaffList).catch(console.error)
-    api.getUnitInvitations(unit.id).then(invitations => {
-      setInvitedStaff(invitations.map((inv: any) => inv.staff))
-    }).catch(console.error)
+    api.getUnitInvitations(unit.id).then(setInvitations).catch(console.error)
+    setDeadline(loadDeadline(unit.id))
+    setExpandedGroups(new Set())
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [unit.id])
+
+  // Ticks once a second so the countdown badge stays live while this
+  // screen is open. Cheap no-op if there's no deadline set.
+  useEffect(() => {
+    if (!deadline) return
+    const id = setInterval(() => setNow(Date.now()), 1000)
+    return () => clearInterval(id)
+  }, [deadline])
 
   const handleRemoveStaff = async (id: number) => {
     try {
       await api.removeInvitation(unit.id, id)
-      setInvitedStaff(invitedStaff.filter(s => s.id !== id))
+      setInvitations(prev => prev.filter(inv => inv.staff.id !== id))
     } catch (err) {
       console.error(err)
     }
   }
 
-  const uninvited = staffList.filter(s => !invitedStaff.find(i => i.id === s.id))
+  // ── Simulate tutor accept/decline (testing only) ───────────────────────
+  // There's no tutor-facing flow wired into this mock, so these buttons
+  // let you flip an invitation's status by hand from the coordinator
+  // side, to see how the Invited Tutors list and the Allocation screen
+  // behave once a tutor has actually responded (or bowed out). Nothing
+  // here reflects a real tutor action — it's a stand-in for testing.
+  const handleSimulateAccept = async (staffId: number) => {
+    setSimulateError('')
+    setSimulatingId(staffId)
+    try {
+      await api.respondToInvitation(unit.id, staffId)
+      setInvitations(prev => prev.map(inv =>
+        inv.staff.id === staffId ? { ...inv, status: 'RESPONDED' } : inv
+      ))
+    } catch (err: any) {
+      console.error(err)
+      setSimulateError(err?.message || 'Could not simulate that response.')
+    } finally {
+      setSimulatingId(null)
+    }
+  }
+
+  const handleSimulateDecline = async (staffId: number) => {
+    setSimulateError('')
+    setSimulatingId(staffId)
+    try {
+      await api.declineInvitation(unit.id, staffId)
+      setInvitations(prev => prev.filter(inv => inv.staff.id !== staffId))
+    } catch (err: any) {
+      console.error(err)
+      setSimulateError(err?.message || 'Could not simulate that decline.')
+    } finally {
+      setSimulatingId(null)
+    }
+  }
+
+  const toggleGroup = (key: string) => {
+    setExpandedGroups(prev => {
+      const next = new Set(prev)
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
+      return next
+    })
+  }
+
+  const openDeadlineModal = () => {
+    setDeadlineDraft(deadline)
+    setShowDeadlineModal(true)
+  }
+
+  const handleSaveDeadline = () => {
+    if (!deadlineDraft) return
+    try {
+      localStorage.setItem(deadlineStorageKey(unit.id), deadlineDraft)
+    } catch (err) {
+      console.error(err)
+    }
+    setDeadline(deadlineDraft)
+    setNow(Date.now())
+    setShowDeadlineModal(false)
+  }
+
+  const handleClearDeadline = () => {
+    try {
+      localStorage.removeItem(deadlineStorageKey(unit.id))
+    } catch (err) {
+      console.error(err)
+    }
+    setDeadline('')
+    setShowDeadlineModal(false)
+  }
+
+  const countdown = deadline ? formatCountdown(deadline, now) : null
+
+  const invitedStaffIds = new Set(invitations.map(inv => inv.staff.id))
+  const uninvited = staffList.filter(s => !invitedStaffIds.has(s.id))
 
   const filteredUninvited = uninvited.filter(s => {
     const q = inviteSearch.trim().toLowerCase()
@@ -127,8 +441,8 @@ export default function UnitDetailView({ unit, onBack }: Props) {
         console.error(err)
       }
     }
-    const invitations = await api.getUnitInvitations(unit.id).catch(() => [])
-    setInvitedStaff(invitations.map((inv: any) => inv.staff))
+    const refreshedInvitations = await api.getUnitInvitations(unit.id).catch(() => [])
+    setInvitations(refreshedInvitations)
     setSelectedInviteIds(new Set())
     setInviting(false)
     if (successCount < ids.length) {
@@ -149,31 +463,122 @@ export default function UnitDetailView({ unit, onBack }: Props) {
   }
 
   // ── Session editing (local only) ──────────────────────────────────────
-  const openEditSession = (session: Session) => {
-    setEditingSession(session)
-    setEditTitle(session.title)
-    setEditLocation(session.location === 'Online' ? '' : session.location)
-    setEditMode(session.mode ?? inferMode(session))
+  const openEditGroup = (group: SessionGroup) => {
+    setEditSeriesError('')
+    setEditingGroupKey(group.key)
+
+    setEditClassType((CLASS_TYPES as string[]).includes(group.title) ? (group.title as ClassType) : 'Tutorial')
+
+    const dayName = DAY_NAMES[group.dayOfWeek]
+    setEditDayOfWeek(EDIT_DAYS.includes(dayName) ? dayName : 'Monday')
+
+    const firstDate = new Date(group.sessions[0].startTime)
+    const lastDate = new Date(group.sessions[group.sessions.length - 1].startTime)
+    setEditStartTime(dateToWheelTime(firstDate))
+    setEditEndTime(dateToWheelTime(new Date(firstDate.getTime() + 60 * 60 * 1000)))
+
+    const parsedLocation = parseLocationString(group.location)
+    setEditLocationType(parsedLocation.locationType)
+    setEditCampus(parsedLocation.campus)
+    setEditBlock(parsedLocation.block)
+    setEditRoom(parsedLocation.room)
+
+    setEditSeriesStartDate(toDateInputValue(firstDate))
+    setEditSeriesEndDate(toDateInputValue(lastDate))
   }
 
-  const handleSaveSessionEdit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    if (!editingSession) return
-    // NOTE: there is no backend endpoint to update a session (only
-    // create/read exist), so this only changes what you see here right
-    // now — it will reset if you refresh the page or come back later. A
-    // real PUT/PATCH endpoint would be needed to make this persist.
-    setSessions(prev => prev.map(s => s.id === editingSession.id
-      ? {
-          ...s,
-          title: editTitle,
-          location: editMode === 'online' ? 'Online' : editLocation,
-          mode: editMode,
-        }
-      : s
-    ))
-    setEditingSession(null)
+  // Marks (or unmarks) a single dated occurrence as a holiday — e.g. a
+  // public holiday or teaching-free day that falls on what would
+  // otherwise be a regular recurring slot. Local only, same as the rest
+  // of session editing: there's no backend status for this, so it just
+  // flips the status shown here and remembers what it was before so
+  // un-marking restores it. Only ever applies to that one date, not the
+  // whole recurring group.
+  const toggleHoliday = (session: Session) => {
+    setSessions(prev => prev.map(s => {
+      if (s.id !== session.id) return s
+      if (s.status === 'HOLIDAY') {
+        return { ...s, status: s.previousStatus ?? 'PENDING', previousStatus: undefined }
+      }
+      return { ...s, previousStatus: s.status, status: 'HOLIDAY' }
+    }))
   }
+
+  // Deletes a single dated occurrence, or every occurrence in a recurring
+  // group at once. Local only — same as edit/holiday above, there's no
+  // backend endpoint to delete a session yet (only create/read exist), so
+  // this just removes it from what's shown here; it comes back on refresh
+  // since it's never actually removed server-side.
+  const handleDeleteSession = (session: Session) => {
+    const ok = window.confirm(
+      `Delete the ${session.title} session on ${new Date(session.startTime).toLocaleDateString()}? This can't be undone.`
+    )
+    if (!ok) return
+    setSessions(prev => prev.filter(s => s.id !== session.id))
+  }
+
+  const handleDeleteGroup = (group: SessionGroup) => {
+    const ok = window.confirm(
+      `Delete all ${group.sessions.length} sessions in this recurring "${group.title}" (${DAY_NAMES[group.dayOfWeek]}s, ${group.timeLabel}) pattern? This can't be undone.`
+    )
+    if (!ok) return
+    const idsToDelete = new Set(group.sessions.map(s => s.id))
+    setSessions(prev => prev.filter(s => !idsToDelete.has(s.id)))
+    setExpandedGroups(prev => {
+      const next = new Set(prev)
+      next.delete(group.key)
+      return next
+    })
+  }
+
+  const editingGroup = sessionGroups.find(g => g.key === editingGroupKey) ?? null
+
+  const handleSaveGroupEdit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    if (!editingGroup) return
+    setEditSeriesError('')
+
+    const start = parseLocalDateStr(editSeriesStartDate)
+    const end = parseLocalDateStr(editSeriesEndDate)
+    if (!start || !end || end < start) {
+      setEditSeriesError('End date must be on or after the start date.')
+      return
+    }
+
+    const occurrenceDates = generateWeeklyDates(start, end, EDIT_WEEKDAY_INDEX[editDayOfWeek])
+    if (occurrenceDates.length === 0) {
+      setEditSeriesError(`No ${editDayOfWeek}s fall between those dates.`)
+      return
+    }
+
+    // NOTE: there is no backend endpoint to update sessions (only
+    // create/read exist), so this only changes what you see here right
+    // now — it will reset if you refresh the page or come back later.
+    const newLocation = buildLocationStringFrom(editLocationType, editCampus, editBlock, editRoom)
+    const newMode: Session['mode'] = editLocationType === 'online' ? 'online' : 'on-campus'
+    const oldIds = new Set(editingGroup.sessions.map(s => s.id))
+    // Dates that still fall in the new range/day keep their existing id,
+    // status and holiday history — so re-shaping a series doesn't wipe
+    // out an ALLOCATED or HOLIDAY mark on a date that's still in it.
+    const oldByDateKey = new Map(editingGroup.sessions.map(s => [new Date(s.startTime).toDateString(), s]))
+
+    const newSessions: Session[] = occurrenceDates.map((date, i) => {
+      const existing = oldByDateKey.get(date.toDateString())
+      return {
+        id: existing ? existing.id : -(Date.now() + i),
+        title: editClassType,
+        startTime: formatEditDateTime(date, editStartTime),
+        location: newLocation,
+        status: existing ? existing.status : 'PENDING',
+        mode: newMode,
+        previousStatus: existing?.previousStatus,
+      }
+    })
+
+    setSessions(prev => [...prev.filter(s => !oldIds.has(s.id)), ...newSessions])
+    setEditingGroupKey(null)
+  }
+
 
   // Add Session takes over the full main-content area (same as this
   // detail view does relative to the units list), rather than opening
@@ -208,15 +613,22 @@ export default function UnitDetailView({ unit, onBack }: Props) {
         <div className="section-header">
           <div>
             <h2>Sessions</h2>
-            <p>{sessions.length} session{sessions.length !== 1 ? 's' : ''} defined</p>
+            <p>
+              {sessions.length} session{sessions.length !== 1 ? 's' : ''} defined
+              {sessionGroups.length !== sessions.length &&
+                ` across ${sessionGroups.length} recurring pattern${sessionGroups.length !== 1 ? 's' : ''}`}
+            </p>
           </div>
           <button className="add-btn" onClick={() => setShowSessionForm(true)}>+ Add Session</button>
         </div>
 
         {sessions.length > 0 && (
           <p className="avail-range-hint" style={{ marginBottom: '12px' }}>
-            Editing a session updates it here only — there's no backend endpoint yet to save
-            session edits permanently, so changes reset on refresh.
+            Editing, deleting or marking a session as a holiday updates it here only — there's no
+            backend endpoint yet to save these permanently, so changes reset on refresh. Sessions
+            that repeat on the same day, time, location and class type are grouped into one card —
+            click a card to see, edit, delete or mark individual dates as a holiday, or delete the
+            whole series at once.
           </p>
         )}
 
@@ -225,54 +637,288 @@ export default function UnitDetailView({ unit, onBack }: Props) {
         )}
 
         <div className="sessions-grid">
-          {sessions.map(session => (
-            <div key={session.id} className="session-card">
-              <div className="session-card-top">
-                <span className={`mode-badge ${session.mode ?? inferMode(session)}`}>
-                  {modeLabel(session.mode ?? inferMode(session))}
-                </span>
-                <button type="button" className="session-edit-btn" onClick={() => openEditSession(session)}>Edit</button>
-              </div>
-              <div className="session-day">{session.title}</div>
-              <div className="session-time">{new Date(session.startTime).toLocaleString()}</div>
-              {session.location && <div className="session-location">{session.location}</div>}
-              <div className="session-time">{session.status}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Edit Session Modal (local only) */}
-      {editingSession && (
-        <div className="modal-overlay" onClick={() => setEditingSession(null)}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
-            <h2>Edit Session</h2>
-            <p className="avail-range-hint" style={{ marginBottom: '12px' }}>
-              This updates the session here only — there's no backend endpoint yet to save it
-              permanently, so it resets if you refresh.
-            </p>
-            <form onSubmit={handleSaveSessionEdit} className="detail-form">
-              <div className="form-field">
-                <label>Session Type / Title</label>
-                <input type="text" value={editTitle} onChange={e => setEditTitle(e.target.value)} required />
-              </div>
-              <div className="form-row-2">
-                <div className="form-field">
-                  <label>Mode</label>
-                  <select value={editMode} onChange={e => setEditMode(e.target.value as Session['mode'])}>
-                    {MODES.map(m => <option key={m} value={m}>{m}</option>)}
-                  </select>
+          {sessionGroups.map(group => {
+            const isMulti = group.sessions.length > 1
+            const isExpanded = isMulti && expandedGroups.has(group.key)
+            const single = group.sessions[0]
+            return (
+              <div key={group.key} className={`session-card session-group-card ${isExpanded ? 'expanded' : ''}`}>
+                <div
+                  className={`session-card-main ${isMulti ? 'clickable' : ''}`}
+                  role={isMulti ? 'button' : undefined}
+                  tabIndex={isMulti ? 0 : undefined}
+                  onClick={() => isMulti && toggleGroup(group.key)}
+                  onKeyDown={e => {
+                    if (isMulti && (e.key === 'Enter' || e.key === ' ')) {
+                      e.preventDefault()
+                      toggleGroup(group.key)
+                    }
+                  }}
+                >
+                  <div className="session-card-top">
+                    <span className={`mode-badge ${group.mode}`}>{modeLabel(group.mode)}</span>
+                    {isMulti ? (
+                      <span className="session-group-count">
+                        {group.sessions.length} sessions
+                        {group.sessions.some(s => s.status === 'HOLIDAY') && (
+                          <span className="session-group-holiday-hint">
+                            🏖 {group.sessions.filter(s => s.status === 'HOLIDAY').length}
+                          </span>
+                        )}
+                        <span className={`session-group-chevron ${isExpanded ? 'open' : ''}`}>▾</span>
+                      </span>
+                    ) : (
+                      <div className="session-card-top-actions">
+                        <button
+                          type="button"
+                          className={`session-holiday-btn ${single.status === 'HOLIDAY' ? 'active' : ''}`}
+                          onClick={e => { e.stopPropagation(); toggleHoliday(single) }}
+                        >
+                          {single.status === 'HOLIDAY' ? 'Unmark Holiday' : '🏖 Holiday'}
+                        </button>
+                        <button
+                          type="button"
+                          className="session-edit-btn"
+                          onClick={e => { e.stopPropagation(); openEditGroup(group) }}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          className="session-delete-btn"
+                          onClick={e => { e.stopPropagation(); handleDeleteSession(single) }}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  <div className="session-day">{group.title}</div>
+                  <div className="session-time">
+                    {DAY_NAMES[group.dayOfWeek]}s, {group.timeLabel}
+                  </div>
+                  {group.location && <div className="session-location">{group.location}</div>}
+                  {isMulti ? (
+                    <div className="session-time session-group-range">
+                      {new Date(group.sessions[0].startTime).toLocaleDateString()} –{' '}
+                      {new Date(group.sessions[group.sessions.length - 1].startTime).toLocaleDateString()}
+                    </div>
+                  ) : (
+                    <div className="session-card-status-row">
+                      {(() => {
+                        const meta = statusMeta(single.status)
+                        return (
+                          <span className={`status-badge ${meta.className}`}>
+                            {meta.icon} {meta.label}
+                          </span>
+                        )
+                      })()}
+                    </div>
+                  )}
                 </div>
-                {editMode !== 'online' && (
-                  <div className="form-field">
-                    <label>Location</label>
-                    <input type="text" placeholder="e.g. P Block P404"
-                      value={editLocation} onChange={e => setEditLocation(e.target.value)} />
+
+                {isExpanded && (
+                  <div className="session-group-body">
+                    <div className="session-group-body-header">
+                      <span className="session-group-body-label">
+                        {group.sessions.length} dated sessions in this series
+                      </span>
+                      <div className="session-group-body-header-actions">
+                        <button
+                          type="button"
+                          className="session-edit-series-btn"
+                          onClick={() => openEditGroup(group)}
+                        >
+                          ✏️ Edit Series
+                        </button>
+                        <button
+                          type="button"
+                          className="session-delete-all-btn"
+                          onClick={() => handleDeleteGroup(group)}
+                        >
+                          🗑 Delete All
+                        </button>
+                      </div>
+                    </div>
+                    {group.sessions.map(s => {
+                      const meta = statusMeta(s.status)
+                      return (
+                        <div key={s.id} className="session-occurrence-row">
+                          <span className={`session-occurrence-date ${s.status === 'HOLIDAY' ? 'holiday' : ''}`}>
+                            {new Date(s.startTime).toLocaleDateString(undefined, {
+                              weekday: 'short', day: 'numeric', month: 'short', year: 'numeric',
+                            })}
+                          </span>
+                          <span className={`status-badge ${meta.className} session-occurrence-status`}>
+                            {meta.icon} {meta.label}
+                          </span>
+                          <button
+                            type="button"
+                            className={`session-holiday-btn ${s.status === 'HOLIDAY' ? 'active' : ''}`}
+                            onClick={() => toggleHoliday(s)}
+                          >
+                            {s.status === 'HOLIDAY' ? 'Unmark Holiday' : '🏖 Mark Holiday'}
+                          </button>
+                          <button
+                            type="button"
+                            className="session-delete-btn"
+                            onClick={() => handleDeleteSession(s)}
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      )
+                    })}
                   </div>
                 )}
               </div>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Edit Series Modal (local only — see note above the helpers up top) */}
+      {editingGroup && (
+        <div className="modal-overlay" onClick={() => setEditingGroupKey(null)}>
+          <div className="modal edit-series-modal" onClick={e => e.stopPropagation()}>
+            <h2>Edit Series</h2>
+            <p className="avail-range-hint" style={{ marginBottom: '12px' }}>
+              This updates every session in this recurring pattern here only — there's no backend
+              endpoint yet to save it permanently, so it resets if you refresh. Dates that stay in
+              range keep their current allocation/holiday status; new dates start Pending.
+            </p>
+
+            <form onSubmit={handleSaveGroupEdit} className="detail-form">
+              {/* Time & class type */}
+              <div className="form-subsection">
+                <div className="form-subsection-title">Time &amp; Type</div>
+                <div className="time-wheel-row">
+                  <TimeWheelPicker label="Start Time" value={editStartTime} onChange={setEditStartTime} />
+                  <TimeWheelPicker label="End Time" value={editEndTime} onChange={setEditEndTime} />
+                  <div className="form-field duration-display">
+                    <label>Duration</label>
+                    <input
+                      type="text"
+                      value={formatDurationMinutes(wheelTimeDurationMinutes(editStartTime, editEndTime))}
+                      readOnly
+                      disabled
+                    />
+                  </div>
+                </div>
+                <div className="form-row-2" style={{ marginTop: 14 }}>
+                  <div className="form-field">
+                    <label>Class Type</label>
+                    <select value={editClassType} onChange={e => setEditClassType(e.target.value as ClassType)}>
+                      {CLASS_TYPES.map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                  </div>
+                  <div className="form-field">
+                    <label>Day of Week</label>
+                    <select value={editDayOfWeek} onChange={e => setEditDayOfWeek(e.target.value)}>
+                      {EDIT_DAYS.map(d => <option key={d}>{d}</option>)}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Location */}
+              <div className="form-subsection">
+                <div className="form-subsection-title">Location</div>
+                <div className="form-field">
+                  <label>Mode</label>
+                  <select
+                    value={editLocationType}
+                    onChange={e => setEditLocationType(e.target.value as LocationType)}
+                  >
+                    <option value="on-campus">🏫 On Campus</option>
+                    <option value="online">🌐 Online</option>
+                  </select>
+                </div>
+
+                {editLocationType === 'on-campus' && (
+                  <>
+                    <div className="form-field" style={{ marginTop: 14 }}>
+                      <label>Campus</label>
+                      <div className="segmented-row">
+                        <button
+                          type="button"
+                          className={`segmented-btn ${editCampus === 'Gardens Point' ? 'selected' : ''}`}
+                          onClick={() => setEditCampus('Gardens Point')}
+                        >
+                          Gardens Point
+                        </button>
+                        <button
+                          type="button"
+                          className={`segmented-btn ${editCampus === 'Kelvin Grove' ? 'selected' : ''}`}
+                          onClick={() => setEditCampus('Kelvin Grove')}
+                        >
+                          Kelvin Grove
+                        </button>
+                      </div>
+                    </div>
+                    <div className="form-row-2" style={{ marginTop: 14 }}>
+                      <div className="form-field">
+                        <label>Block</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. P"
+                          value={editBlock}
+                          onChange={e => setEditBlock(e.target.value)}
+                        />
+                      </div>
+                      <div className="form-field">
+                        <label>Room</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. P404"
+                          value={editRoom}
+                          onChange={e => setEditRoom(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* Date range */}
+              <div className="form-subsection">
+                <div className="form-subsection-title">Runs From</div>
+                <div className="form-row-2">
+                  <div className="form-field">
+                    <label>Starting Date</label>
+                    <input
+                      type="date"
+                      value={editSeriesStartDate}
+                      onChange={e => setEditSeriesStartDate(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="form-field">
+                    <label>Ending Date</label>
+                    <input
+                      type="date"
+                      value={editSeriesEndDate}
+                      onChange={e => setEditSeriesEndDate(e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
+                <p className="avail-range-hint schedule-occurrence-hint">
+                  Every {editDayOfWeek} from {editSeriesStartDate || '…'} to {editSeriesEndDate || '…'}
+                  {(() => {
+                    const start = parseLocalDateStr(editSeriesStartDate)
+                    const end = parseLocalDateStr(editSeriesEndDate)
+                    if (!start || !end || end < start) return ''
+                    const count = generateWeeklyDates(start, end, EDIT_WEEKDAY_INDEX[editDayOfWeek]).length
+                    return ` — ${count} session${count !== 1 ? 's' : ''}`
+                  })()}
+                </p>
+              </div>
+
+              {editSeriesError && <p className="avail-error-message">{editSeriesError}</p>}
+
               <div className="modal-actions">
-                <button type="button" className="cancel-btn" onClick={() => setEditingSession(null)}>Cancel</button>
+                <button type="button" className="cancel-btn" onClick={() => setEditingGroupKey(null)}>Cancel</button>
                 <button type="submit" className="confirm-btn">Save Changes</button>
               </div>
             </form>
@@ -285,23 +931,56 @@ export default function UnitDetailView({ unit, onBack }: Props) {
         <div className="section-header">
           <div>
             <h2>Invited Tutors</h2>
-            <p>{invitedStaff.length} invited</p>
+            <p>
+              {invitations.length} invited
+              {invitations.length > 0 &&
+                ` · ${invitations.filter(i => i.status === 'RESPONDED').length} responded`}
+            </p>
+            {countdown ? (
+              <div className={`countdown-badge ${countdown.state}`}>
+                <span>⏳ {countdown.label}</span>
+                <span className="countdown-deadline-date">
+                  Due {new Date(deadline).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}
+                </span>
+              </div>
+            ) : (
+              <p className="countdown-none-hint">No availability submission deadline set yet.</p>
+            )}
           </div>
-          {uninvited.length > 0 && (
-            <button className="add-btn" onClick={openInviteForm}>+ Invite Tutors</button>
-          )}
+          <div className="section-header-actions">
+            <button type="button" className="cancel-btn" onClick={openDeadlineModal}>
+              {deadline ? '⏱ Edit Deadline' : '⏱ Set Deadline'}
+            </button>
+            {uninvited.length > 0 && (
+              <button className="add-btn" onClick={openInviteForm}>+ Invite Tutors</button>
+            )}
+          </div>
         </div>
 
-        {invitedStaff.length === 0 && (
+        {invitations.length === 0 && (
           <div className="empty-info">No tutors invited yet. Invite tutors to collect their availability.</div>
         )}
 
+        {invitations.length > 0 && (
+          <p className="avail-range-hint" style={{ marginBottom: '12px' }}>
+            There's no real tutor-facing flow wired up in this test build yet, so invitations stay
+            "Pending" until you simulate a response below — that's a stand-in for a tutor actually
+            accepting/declining and submitting availability, purely so you can see how this list
+            and the Allocation screen react once someone has responded.
+          </p>
+        )}
+
+        {simulateError && <p className="avail-error-message" style={{ marginBottom: '12px' }}>{simulateError}</p>}
+
         <div className="tutors-list">
-          {invitedStaff.map(staff => {
+          {invitations.map(inv => {
+            const staff = inv.staff
             const name = staff.fullName || staff.email
             const initials = staff.fullName
               ? staff.fullName.split(' ').filter(Boolean).map(n => n[0]).join('').toUpperCase()
               : staff.email[0].toUpperCase()
+            const isResponded = inv.status === 'RESPONDED'
+            const isBusy = simulatingId === staff.id
             return (
               <div key={staff.id} className="tutor-row">
                 <div className="tutor-avatar">{initials}</div>
@@ -309,13 +988,74 @@ export default function UnitDetailView({ unit, onBack }: Props) {
                   <span className="tutor-name">{name}</span>
                   <span className="tutor-email">{staff.email}</span>
                 </div>
-                <span className="status-badge pending">⏳ Pending</span>
+                <span className={`status-badge ${isResponded ? 'responded' : 'pending'}`}>
+                  {isResponded ? '✓ Responded' : '⏳ Pending'}
+                </span>
+                {!isResponded && (
+                  <button
+                    type="button"
+                    className="simulate-accept-btn"
+                    disabled={isBusy}
+                    onClick={() => handleSimulateAccept(staff.id)}
+                    title="Testing only — simulates this tutor submitting availability"
+                  >
+                    {isBusy ? '...' : '✅ Simulate Accept'}
+                  </button>
+                )}
+                <button
+                  type="button"
+                  className="simulate-decline-btn"
+                  disabled={isBusy}
+                  onClick={() => handleSimulateDecline(staff.id)}
+                  title="Testing only — simulates this tutor declining the invitation"
+                >
+                  {isBusy ? '...' : '❌ Simulate Decline'}
+                </button>
                 <button className="remove-tutor-btn" onClick={() => handleRemoveStaff(staff.id)}>Remove</button>
               </div>
             )
           })}
         </div>
       </div>
+
+      {/* Availability Deadline Modal (local only, see note near loadDeadline) */}
+      {showDeadlineModal && (
+        <div className="modal-overlay" onClick={() => setShowDeadlineModal(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <h2>Availability Submission Deadline</h2>
+            <p className="modal-sub">
+              Set a cutoff for tutors to submit their availability for this unit. Once set,
+              a live countdown shows here so you know how much time is left.
+            </p>
+            <div className="form-field">
+              <label>Deadline</label>
+              <input
+                type="datetime-local"
+                value={deadlineDraft}
+                onChange={e => setDeadlineDraft(e.target.value)}
+              />
+            </div>
+            <div className="modal-actions">
+              {deadline && (
+                <button type="button" className="cancel-btn" onClick={handleClearDeadline}>
+                  Remove Deadline
+                </button>
+              )}
+              <button type="button" className="cancel-btn" onClick={() => setShowDeadlineModal(false)}>
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="confirm-btn"
+                disabled={!deadlineDraft}
+                onClick={handleSaveDeadline}
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Invite Tutors Modal — searchable multi-select */}
       {showInviteForm && (

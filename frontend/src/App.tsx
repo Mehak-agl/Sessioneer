@@ -3,6 +3,7 @@ import LoginPage from './pages/LoginPage'
 import SignupPage from './pages/SignupPage'
 import CoordinatorDashboard from './pages/Coordinator/CoordinatorDashboard'
 import CoordinatorUnitsPage from './pages/Coordinator/CoordinatorUnitsPage'
+import CoordinatorAllocations from './pages/Coordinator/CoordinatorAllocations'
 import CoordinatorCalendarPage from './pages/Coordinator/CoordinatorCalendarPage'
 import CoordinatorChat from './pages/Coordinator/CoordinatorChat'
 import CoordinatorProfile from './pages/Coordinator/CoordinatorProfile'
@@ -23,6 +24,7 @@ export default function App() {
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/coordinator" element={<CoordinatorDashboard />} />
         <Route path="/coordinator/units" element={<CoordinatorUnitsPage />} />
+        <Route path="/coordinator/allocations" element={<CoordinatorAllocations />} />
         <Route path="/coordinator-notifications" element={<CoordinatorNotifications />} />
         <Route path="/coordinator-chat" element={<CoordinatorChat />} />
         <Route path="/calendar" element={<CoordinatorCalendarPage />} />

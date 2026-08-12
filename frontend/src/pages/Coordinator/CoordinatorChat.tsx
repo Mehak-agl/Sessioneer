@@ -197,15 +197,19 @@ export default function CoordinatorChat() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [activeConversation?.messages.length])
 
-  useEffect(() => {
-    // Reset side-panel state whenever you switch conversations
+  // Reset side-panel state whenever you switch conversations, computed
+  // during render (React's recommended alternative to an effect for
+  // "adjust state when a prop changes") rather than as a post-commit effect.
+  const [prevConversationId, setPrevConversationId] = useState(activeConversationId)
+  if (activeConversationId !== prevConversationId) {
+    setPrevConversationId(activeConversationId)
     setShowGroupInfo(false)
     setShowAddMembers(false)
     setEditingName(false)
     setOpenMemberMenuId(null)
     setOpenMemberPermId(null)
     setOpenAdminPermId(null)
-  }, [activeConversationId])
+  }
 
   const openDM = (contactId: string) => {
     setActiveContactId(contactId)

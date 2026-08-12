@@ -102,12 +102,18 @@ export default function TutorMyUnits() {
   // unit session list.
   useEffect(() => {
     if (!selectedUnitId) return
-    setLoadingDetail(true)
-    const fetchAllocations = myStaffId ? api.getMyAllocations(myStaffId) : Promise.resolve([])
-    fetchAllocations
-      .catch(() => [])
-      .then(setAllocations)
-      .finally(() => setLoadingDetail(false))
+    async function loadAllocations() {
+      setLoadingDetail(true)
+      try {
+        const result = myStaffId ? await api.getMyAllocations(myStaffId) : []
+        setAllocations(result)
+      } catch {
+        setAllocations([])
+      } finally {
+        setLoadingDetail(false)
+      }
+    }
+    loadAllocations()
   }, [selectedUnitId, myStaffId])
 
   const mySessionsForUnit = allocations.filter(a => a.session?.unit?.id === selectedUnitId)

@@ -167,9 +167,14 @@ export default function TutorChat() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [activeConversation?.messages.length])
 
-  useEffect(() => {
+  // Reset side-panel state whenever you switch conversations, computed
+  // during render (React's recommended alternative to an effect for
+  // "adjust state when a prop changes") rather than as a post-commit effect.
+  const [prevConversationId, setPrevConversationId] = useState(activeConversationId)
+  if (activeConversationId !== prevConversationId) {
+    setPrevConversationId(activeConversationId)
     setShowGroupInfo(false)
-  }, [activeConversationId])
+  }
 
   const openDM = (contactId: string) => {
     setActiveContactId(contactId)

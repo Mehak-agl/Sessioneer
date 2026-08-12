@@ -42,8 +42,13 @@ function TutorCalendar() {
   const [units, setUnits] = useState<Unit[]>([]);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [unitFilter, setUnitFilter] = useState("all");
-  const [showAvailabilityModal, setShowAvailabilityModal] = useState(false);
-  const [initialAvailabilityUnitId, setInitialAvailabilityUnitId] = useState<number | null>(null);
+  const [showAvailabilityModal, setShowAvailabilityModal] = useState(
+    () => searchParams.get("availability") === "1"
+  );
+  const [initialAvailabilityUnitId] = useState<number | null>(() => {
+    const unitParam = searchParams.get("unit");
+    return unitParam ? Number(unitParam) : null;
+  });
 
   useEffect(() => {
     async function loadData() {
@@ -84,11 +89,11 @@ function TutorCalendar() {
     api.getMyAvailability().then(setAvailability).catch(console.error);
   };
 
+  // The modal-open state itself is seeded from the URL via lazy useState
+  // initializers above; this effect just cleans the query params out of
+  // the URL afterwards.
   useEffect(() => {
     if (searchParams.get("availability") === "1") {
-      const unitParam = searchParams.get("unit");
-      setInitialAvailabilityUnitId(unitParam ? Number(unitParam) : null);
-      setShowAvailabilityModal(true);
       searchParams.delete("availability");
       searchParams.delete("unit");
       setSearchParams(searchParams, { replace: true });

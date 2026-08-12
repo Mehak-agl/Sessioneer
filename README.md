@@ -77,3 +77,12 @@ The login page has two roles. Use these demo credentials:
 - `main` — stable, reviewed code only
 - Feature branches — name as `<your-name>-<feature>` (e.g. `anantha-login-page`)
 - Open a pull request to merge into `main`
+
+## Setup
+
+1. Clone the repo
+2. Copy `backend/src/main/resources/application.properties.example` to `application.properties` in the same folder
+3. Fill in your own values:
+   - `DB_PASSWORD` — your PostgreSQL password
+   - `JWT_SECRET` — any long random string
+4. Create PostgreSQL database named `sessioneer`

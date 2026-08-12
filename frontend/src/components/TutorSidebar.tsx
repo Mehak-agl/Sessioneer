@@ -1,9 +1,19 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 
 function StaffSidebar() {
-  const fullName = localStorage.getItem('sessioneer_name') || 'Staff';
-  const initials = fullName.split(' ').map((n: string) => n[0]).join('');
-  const photo = localStorage.getItem('sessioneer_photo');
+  const fullName = localStorage.getItem('sessioneer_name') || 'Staff'
+  const initials = fullName.split(' ').map((n: string) => n[0]).join('')
+  const photo = localStorage.getItem('sessioneer_photo')
+  const location = useLocation()
+  const navigate = useNavigate()
+  const path = location.pathname
+
+  const handleLogout = () => {
+    localStorage.removeItem('sessioneer_token')
+    localStorage.removeItem('sessioneer_role')
+    localStorage.removeItem('sessioneer_name')
+    navigate('/')
+  }
 
   return (
     <aside className="staff-sidebar">
@@ -15,7 +25,18 @@ function StaffSidebar() {
         </div>
       </div>
 
-      <div className="staff-profile">
+      <div
+        className="staff-profile clickable"
+        role="button"
+        tabIndex={0}
+        onClick={() => navigate('/staff-profile')}
+        onKeyDown={e => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            navigate('/staff-profile')
+          }
+        }}
+      >
         {photo ? (
           <img src={photo} alt={fullName} className="staff-avatar sidebar-avatar-photo" />
         ) : (
@@ -28,17 +49,23 @@ function StaffSidebar() {
       </div>
 
       <nav className="staff-menu">
-        <Link to="/staff">Dashboard</Link>
-        <Link to="/staff-units">My Units</Link>
-        <Link to="/staff-calendar">Calendar</Link>
-        <Link to="/staff">Contracts</Link>
-        <Link to="/staff">Notification</Link>
-        <Link to="/staff">Reports</Link>
-        <Link to="/staff-chat">Chat</Link>
-        <Link to="/staff-profile">Profile</Link>
+        <Link className={path === '/staff' ? 'active' : ''} to="/staff">Dashboard</Link>
+        <Link className={path === '/staff-units' ? 'active' : ''} to="/staff-units">My Units</Link>
+        <Link className={path === '/staff-calendar' ? 'active' : ''} to="/staff-calendar">Calendar</Link>
+        <Link className={path === '/staff-contracts' ? 'active' : ''} to="/staff-contracts">Contracts</Link>
+        <Link className={path === '/staff-notifications' ? 'active' : ''} to="/staff-notifications">Notifications</Link>
+        <Link className={path === '/staff-reports' ? 'active' : ''} to="/staff-reports">Reports</Link>
+        <Link className={path === '/staff-chat' ? 'active' : ''} to="/staff-chat">Chat</Link>
+        <Link className={path === '/staff-profile' ? 'active' : ''} to="/staff-profile">Profile</Link>
       </nav>
+
+      <div className="staff-menu-divider" />
+
+      <button type="button" className="staff-logout-btn" onClick={handleLogout}>
+        <span className="staff-logout-icon">⏻</span> Logout
+      </button>
     </aside>
-  );
+  )
 }
 
-export default StaffSidebar;
+export default StaffSidebar

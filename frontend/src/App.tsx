@@ -8,13 +8,17 @@ import CoordinatorCalendarPage from './pages/Coordinator/CoordinatorCalendarPage
 import CoordinatorChat from './pages/Coordinator/CoordinatorChat'
 import CoordinatorProfile from './pages/Coordinator/CoordinatorProfile'
 import CoordinatorNotifications from './pages/Coordinator/CoordinatorNotifications'
-
+import CoordinatorTutors from './pages/Coordinator/CoordinatorTutors'
+import CoordinatorReports from './pages/Coordinator/CoordinatorReports'
 
 import TutorDashboard from './pages/Tutor/TutorDashboard'
 import TutorMyUnits from './pages/Tutor/TutorMyUnits'
 import TutorCalendar from './pages/Tutor/TutorCalendar'
 import TutorChat from './pages/Tutor/TutorChat'
 import TutorProfile from './pages/Tutor/TutorProfile'
+import TutorContracts from './pages/Tutor/TutorContracts'
+import TutorNotifications from './pages/Tutor/TutorNotifications'
+import TutorReports from './pages/Tutor/TutorReports'
 
 export default function App() {
   return (
@@ -34,7 +38,12 @@ export default function App() {
         <Route path="/staff-units" element={<TutorMyUnits />} />
         <Route path="*" element={<Navigate to="/" replace />} />
         <Route path="/coordinator-profile" element={<CoordinatorProfile />} />
+        <Route path="/coordinator/tutors" element={<CoordinatorTutors />} />
+        <Route path="/coordinator/reports" element={<CoordinatorReports />} />
         <Route path="/staff-profile" element={<TutorProfile />} />
+        <Route path="/staff-contracts" element={<TutorContracts />} />
+        <Route path="/staff-notifications" element={<TutorNotifications />} />
+        <Route path="/staff-reports" element={<TutorReports />} />
       </Routes>
     </BrowserRouter>
   )

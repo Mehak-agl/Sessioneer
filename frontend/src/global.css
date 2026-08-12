@@ -5464,3 +5464,209 @@ body.dark-theme .notif-tab.active {
   line-height: 1;
   padding: 0;
 }
+
+/* ── 19. Staff sidebar extras (logout, clickable profile, divider) ──────── */
+
+.staff-profile.clickable {
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.staff-profile.clickable:hover,
+.staff-profile.clickable:focus-visible {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.staff-profile.clickable:focus-visible {
+  outline: 2px solid #0097b2;
+  outline-offset: 2px;
+}
+
+.staff-menu-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.12);
+  margin: 20px 0;
+}
+
+.staff-logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 18px;
+  background: transparent;
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  border-radius: 14px;
+  color: #d5e5ee;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.staff-logout-btn:hover {
+  background: #e53935;
+  border-color: #e53935;
+  color: white;
+}
+
+.staff-logout-icon {
+  font-size: 16px;
+}
+
+/* ── 20. Coming Soon pages ──────────────────────────────────────────────── */
+
+.coming-soon-card {
+  background: white;
+  border: 1.5px solid #d7eaf1;
+  border-radius: 20px;
+  padding: 64px 40px;
+  text-align: center;
+  max-width: 560px;
+  margin: 40px auto 0;
+}
+
+.coming-soon-icon {
+  font-size: 52px;
+  margin-bottom: 20px;
+}
+
+.coming-soon-card h2 {
+  font-family: var(--font-heading);
+  font-size: 24px;
+  color: #1f3550;
+  margin-bottom: 12px;
+}
+
+.coming-soon-card p {
+  font-size: 15px;
+  color: #657985;
+  line-height: 1.6;
+  margin-bottom: 10px;
+}
+
+.coming-soon-hint {
+  font-size: 13px !important;
+  color: #0097b2 !important;
+}
+
+/* ── 21. Coordinator Tutors page ─────────────────────────────────────────── */
+
+.tutor-search-input {
+  padding: 9px 16px;
+  border: 1.5px solid #d7eaf1;
+  border-radius: 10px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: #1f3550;
+  outline: none;
+  width: 260px;
+  transition: border-color 0.2s;
+}
+
+.tutor-search-input:focus {
+  border-color: var(--primary);
+}
+
+.tutors-loading,
+.tutors-empty {
+  color: #657985;
+  font-size: 14px;
+  padding: 24px 0;
+}
+
+.tutors-table {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.tutors-table-header {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  padding: 10px 16px;
+  font-family: var(--font-heading);
+  font-size: 12px;
+  font-weight: 700;
+  color: #657985;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1.5px solid #d7eaf1;
+}
+
+.tutors-table-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  padding: 14px 16px;
+  border-bottom: 1px solid #f0f7fa;
+  transition: background 0.15s;
+}
+
+.tutors-table-row:last-child {
+  border-bottom: none;
+}
+
+.tutors-table-row:hover {
+  background: #f6fcfd;
+}
+
+.tutors-avatar-name {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.tutors-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: white;
+  font-family: var(--font-heading);
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.tutors-name {
+  font-weight: 600;
+  color: #1f3550;
+  font-size: 14px;
+}
+
+.tutors-email {
+  font-size: 14px;
+  color: #657985;
+}
+
+body.dark-theme .coming-soon-card {
+  background: #182437;
+  border-color: #2a3b52;
+}
+
+body.dark-theme .coming-soon-card h2 {
+  color: #e0eaf0;
+}
+
+body.dark-theme .coming-soon-card p {
+  color: #94a3b8;
+}
+
+body.dark-theme .tutors-table-row:hover {
+  background: #1e2f44;
+}
+
+body.dark-theme .tutors-name {
+  color: #e0eaf0;
+}
+
+body.dark-theme .tutor-search-input {
+  background: #182437;
+  border-color: #2a3b52;
+  color: #e0eaf0;
+}

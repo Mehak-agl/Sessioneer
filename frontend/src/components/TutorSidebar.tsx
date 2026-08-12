@@ -54,7 +54,6 @@ function StaffSidebar() {
         <Link className={path === '/staff-calendar' ? 'active' : ''} to="/staff-calendar">Calendar</Link>
         <Link className={path === '/staff-contracts' ? 'active' : ''} to="/staff-contracts">Contracts</Link>
         <Link className={path === '/staff-notifications' ? 'active' : ''} to="/staff-notifications">Notifications</Link>
-        <Link className={path === '/staff-reports' ? 'active' : ''} to="/staff-reports">Reports</Link>
         <Link className={path === '/staff-chat' ? 'active' : ''} to="/staff-chat">Chat</Link>
         <Link className={path === '/staff-profile' ? 'active' : ''} to="/staff-profile">Profile</Link>
       </nav>

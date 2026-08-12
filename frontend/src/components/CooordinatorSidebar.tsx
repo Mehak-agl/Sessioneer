@@ -75,7 +75,6 @@ function CoordinatorSidebar() {
         <Link className={path === '/calendar' ? 'active' : ''} to="/calendar">Calendar</Link>
         <Link className={path === '/coordinator/tutors' ? 'active' : ''} to="/coordinator/tutors">Tutors</Link>
         <Link className={path === '/coordinator/allocations' ? 'active' : ''} to="/coordinator/allocations">Allocations</Link>
-        <Link className={path === '/coordinator/reports' ? 'active' : ''} to="/coordinator/reports">Reports</Link>
         <Link to="/coordinator-notifications" className={`notif-nav-link${path === '/coordinator-notifications' ? ' active' : ''}`}>
           Notifications
           {unreadCount > 0 && (

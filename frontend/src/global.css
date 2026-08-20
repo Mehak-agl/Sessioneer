@@ -4767,6 +4767,53 @@ body.dark-theme .empty-state-warning {
   background: rgba(255, 255, 255, 0.3);
 }
 
+.notif-type-tabs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.notif-type-label {
+  font-size: 13px;
+  color: #657985;
+  font-weight: 600;
+  flex-shrink: 0;
+  margin-right: 4px;
+}
+
+.notif-type-tab {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 14px;
+  border: 1.5px solid #d7eaf1;
+  border-radius: 16px;
+  background: white;
+  color: #1f3550;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.notif-type-tab:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.notif-type-tab.active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+.notif-type-tab.active .notif-tab-count {
+  background: rgba(255, 255, 255, 0.3);
+}
+
 .notif-list {
   display: flex;
   flex-direction: column;

@@ -55,6 +55,9 @@ export default function CoordinatorNotifications() {
   const [readIds, setReadIds] = useState<Set<string>>(loadReadIds)
   const [filter, setFilter] = useState<'all' | 'unread'>('all')
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all')
+  const [unitFilter, setUnitFilter] = useState<string>('all')
+
+  const allUnits = Array.from(new Set(MOCK_NOTIFICATIONS.map(n => n.unit))).sort()
 
   const markRead = (id: string) => {
     setReadIds(prev => {
@@ -78,7 +81,10 @@ export default function CoordinatorNotifications() {
     filter === 'unread' ? !readIds.has(n.id) : true
   )
 
-  const filtered = base.filter(n => matchesType(n.type, typeFilter))
+  const filtered = base.filter(n =>
+    matchesType(n.type, typeFilter) &&
+    (unitFilter === 'all' || n.unit === unitFilter)
+  )
 
   const typeCount = (key: TypeFilter) =>
     base.filter(n => matchesType(n.type, key)).length
@@ -129,6 +135,16 @@ export default function CoordinatorNotifications() {
               <span className="notif-tab-count">{typeCount(tab.key)}</span>
             </button>
           ))}
+          <select
+            className="notif-unit-select"
+            value={unitFilter}
+            onChange={e => setUnitFilter(e.target.value)}
+          >
+            <option value="all">All Units</option>
+            {allUnits.map(u => (
+              <option key={u} value={u}>{u}</option>
+            ))}
+          </select>
         </div>
 
         <div className="notif-list">

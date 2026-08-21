@@ -4814,6 +4814,27 @@ body.dark-theme .empty-state-warning {
   background: rgba(255, 255, 255, 0.3);
 }
 
+.notif-unit-select {
+  margin-left: auto;
+  padding: 6px 14px;
+  border: 1.5px solid #d7eaf1;
+  border-radius: 16px;
+  background: white;
+  color: #1f3550;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.notif-unit-select:hover,
+.notif-unit-select:focus {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
 .notif-list {
   display: flex;
   flex-direction: column;

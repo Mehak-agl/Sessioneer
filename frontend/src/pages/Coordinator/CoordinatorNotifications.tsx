@@ -56,8 +56,13 @@ export default function CoordinatorNotifications() {
   const [filter, setFilter] = useState<'all' | 'unread'>('all')
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all')
   const [unitFilter, setUnitFilter] = useState<string>('all')
+  const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set())
 
   const allUnits = Array.from(new Set(MOCK_NOTIFICATIONS.map(n => n.unit))).sort()
+
+  const deleteNotif = (id: string) => {
+    setDeletedIds(prev => new Set(prev).add(id))
+  }
 
   const markRead = (id: string) => {
     setReadIds(prev => {
@@ -69,15 +74,16 @@ export default function CoordinatorNotifications() {
   }
 
   const markAllRead = () => {
-    const all = new Set(MOCK_NOTIFICATIONS.map(n => n.id))
+    const all = new Set(live.map(n => n.id))
     setReadIds(all)
     saveReadIds(all)
   }
 
-  const unreadCount = MOCK_NOTIFICATIONS.filter(n => !readIds.has(n.id)).length
+  const live = MOCK_NOTIFICATIONS.filter(n => !deletedIds.has(n.id))
+  const unreadCount = live.filter(n => !readIds.has(n.id)).length
 
   // base = respects read filter; used for type tab counts
-  const base = MOCK_NOTIFICATIONS.filter(n =>
+  const base = live.filter(n =>
     filter === 'unread' ? !readIds.has(n.id) : true
   )
 
@@ -113,7 +119,7 @@ export default function CoordinatorNotifications() {
             className={`notif-tab${filter === 'all' ? ' active' : ''}`}
             onClick={() => setFilter('all')}
           >
-            All <span className="notif-tab-count">{MOCK_NOTIFICATIONS.length}</span>
+            All <span className="notif-tab-count">{live.length}</span>
           </button>
           <button
             className={`notif-tab${filter === 'unread' ? ' active' : ''}`}
@@ -168,7 +174,16 @@ export default function CoordinatorNotifications() {
                   <div className="notif-body">
                     <div className="notif-header-row">
                       <span className="notif-title">{n.title}</span>
-                      <span className="notif-time">{timeAgo(n.time)}</span>
+                      <div className="notif-header-actions">
+                        <span className="notif-time">{timeAgo(n.time)}</span>
+                        <button
+                          className="notif-delete-btn"
+                          onClick={e => { e.stopPropagation(); deleteNotif(n.id) }}
+                          title="Dismiss"
+                        >
+                          ✕
+                        </button>
+                      </div>
                     </div>
                     <p className="notif-message">{n.message}</p>
                     <div className="notif-footer">

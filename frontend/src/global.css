@@ -4841,6 +4841,17 @@ body.dark-theme .empty-state-warning {
   gap: 12px;
 }
 
+.notif-date-group {
+  font-family: var(--font-heading);
+  font-size: 11px;
+  font-weight: 700;
+  color: #8fa8b8;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  padding: 4px 2px 8px;
+  margin-top: 4px;
+}
+
 .notif-item {
   display: flex;
   align-items: flex-start;

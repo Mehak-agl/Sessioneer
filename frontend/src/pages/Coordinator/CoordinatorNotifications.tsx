@@ -27,6 +27,30 @@ const ICON: Record<NotifType, { symbol: string; bg: string }> = {
   allocation_rejected:  { symbol: '✕', bg: '#b91c1c' },
 }
 
+const GROUP_ORDER = ['Today', 'Yesterday', 'This Week', 'Earlier']
+
+function getDateGroup(iso: string): string {
+  const nowMidnight = new Date()
+  nowMidnight.setHours(0, 0, 0, 0)
+  const dMidnight = new Date(iso)
+  dMidnight.setHours(0, 0, 0, 0)
+  const diffDays = Math.round((nowMidnight.getTime() - dMidnight.getTime()) / 86400000)
+  if (diffDays === 0) return 'Today'
+  if (diffDays === 1) return 'Yesterday'
+  if (diffDays <= 7) return 'This Week'
+  return 'Earlier'
+}
+
+function groupNotifications(notifs: typeof MOCK_NOTIFICATIONS) {
+  const map: Record<string, typeof MOCK_NOTIFICATIONS> = {}
+  for (const n of notifs) {
+    const g = getDateGroup(n.time)
+    if (!map[g]) map[g] = []
+    map[g].push(n)
+  }
+  return GROUP_ORDER.filter(g => map[g]?.length).map(g => ({ label: g, items: map[g] }))
+}
+
 function timeAgo(iso: string): string {
   const mins = Math.floor((Date.now() - new Date(iso).getTime()) / 60000)
   if (mins < 1) return 'Just now'
@@ -159,41 +183,46 @@ export default function CoordinatorNotifications() {
               <p>No {filter === 'unread' ? 'unread ' : ''}notifications</p>
             </div>
           ) : (
-            filtered.map(n => {
-              const icon = ICON[n.type]
-              const isUnread = !readIds.has(n.id)
-              return (
-                <div
-                  key={n.id}
-                  className={`notif-item${isUnread ? ' unread' : ''}`}
-                  onClick={() => markRead(n.id)}
-                >
-                  <div className="notif-icon" style={{ background: icon.bg }}>
-                    {icon.symbol}
-                  </div>
-                  <div className="notif-body">
-                    <div className="notif-header-row">
-                      <span className="notif-title">{n.title}</span>
-                      <div className="notif-header-actions">
-                        <span className="notif-time">{timeAgo(n.time)}</span>
-                        <button
-                          className="notif-delete-btn"
-                          onClick={e => { e.stopPropagation(); deleteNotif(n.id) }}
-                          title="Dismiss"
-                        >
-                          ✕
-                        </button>
+            groupNotifications(filtered).map(group => (
+              <div key={group.label}>
+                <div className="notif-date-group">{group.label}</div>
+                {group.items.map(n => {
+                  const icon = ICON[n.type]
+                  const isUnread = !readIds.has(n.id)
+                  return (
+                    <div
+                      key={n.id}
+                      className={`notif-item${isUnread ? ' unread' : ''}`}
+                      onClick={() => markRead(n.id)}
+                    >
+                      <div className="notif-icon" style={{ background: icon.bg }}>
+                        {icon.symbol}
+                      </div>
+                      <div className="notif-body">
+                        <div className="notif-header-row">
+                          <span className="notif-title">{n.title}</span>
+                          <div className="notif-header-actions">
+                            <span className="notif-time">{timeAgo(n.time)}</span>
+                            <button
+                              className="notif-delete-btn"
+                              onClick={e => { e.stopPropagation(); deleteNotif(n.id) }}
+                              title="Dismiss"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        </div>
+                        <p className="notif-message">{n.message}</p>
+                        <div className="notif-footer">
+                          <span className="unit-code-badge">{n.unit}</span>
+                          {isUnread && <span className="notif-unread-dot" />}
+                        </div>
                       </div>
                     </div>
-                    <p className="notif-message">{n.message}</p>
-                    <div className="notif-footer">
-                      <span className="unit-code-badge">{n.unit}</span>
-                      {isUnread && <span className="notif-unread-dot" />}
-                    </div>
-                  </div>
-                </div>
-              )
-            })
+                  )
+                })}
+              </div>
+            ))
           )}
         </div>
       </main>

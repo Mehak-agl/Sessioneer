@@ -104,7 +104,6 @@ export default function CoordinatorTutors() {
               <p>Manage tutor accounts for your units</p>
             </div>
           </div>
-          <button className="add-btn" onClick={openModal}>+ Create Account</button>
         </header>
 
         <div className="detail-section">
@@ -113,15 +112,18 @@ export default function CoordinatorTutors() {
               <h2>Created Accounts</h2>
               <p>{tutors.length} tutor{tutors.length !== 1 ? 's' : ''} registered</p>
             </div>
-            {tutors.length > 0 && (
-              <input
-                className="tutor-search-input"
-                type="text"
-                placeholder="Search by name or email..."
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-              />
-            )}
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+              {tutors.length > 0 && (
+                <input
+                  className="tutor-search-input"
+                  type="text"
+                  placeholder="Search by name or email..."
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                />
+              )}
+              <button className="add-btn" onClick={openModal}>+ Create Account</button>
+            </div>
           </div>
 
           {tutors.length === 0 ? (
@@ -159,7 +161,7 @@ export default function CoordinatorTutors() {
 
       {showModal && (
         <div className="modal-overlay" onClick={closeModal}>
-          <div className="modal-box" onClick={e => e.stopPropagation()}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
             {createdCreds ? (
               <>
                 <div className="create-tutor-success-icon">✓</div>
@@ -190,9 +192,9 @@ export default function CoordinatorTutors() {
             ) : (
               <>
                 <h2>Create Tutor Account</h2>
-                <p className="modal-subtitle">Enter the tutor's details. A password will be auto-generated and emailed to them.</p>
-                <form onSubmit={handleCreate}>
-                  <div className="form-group">
+                <p className="modal-sub">Enter the tutor's details. A password will be auto-generated and emailed to them.</p>
+                <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  <div className="form-field">
                     <label>Full Name</label>
                     <input
                       type="text"
@@ -202,7 +204,7 @@ export default function CoordinatorTutors() {
                       required
                     />
                   </div>
-                  <div className="form-group">
+                  <div className="form-field">
                     <label>University Email</label>
                     <input
                       type="email"
@@ -214,10 +216,10 @@ export default function CoordinatorTutors() {
                   </div>
                   {modalError && <p className="signup-error">{modalError}</p>}
                   <div className="modal-actions">
+                    <button type="button" className="cancel-btn" onClick={closeModal}>Cancel</button>
                     <button type="submit" className="add-btn" disabled={creating}>
                       {creating ? 'Creating...' : 'Create & Send Email'}
                     </button>
-                    <button type="button" className="cancel-btn" onClick={closeModal}>Cancel</button>
                   </div>
                 </form>
               </>

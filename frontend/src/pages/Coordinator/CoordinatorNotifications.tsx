@@ -19,6 +19,14 @@ function matchesType(type: NotifType, filter: TypeFilter): boolean {
   return true
 }
 
+const TYPE_LABEL: Record<NotifType, string> = {
+  availability:         'Availability',
+  invitation_accepted:  'Invitation Accepted',
+  invitation_declined:  'Invitation Declined',
+  allocation_confirmed: 'Allocation Confirmed',
+  allocation_rejected:  'Allocation Rejected',
+}
+
 const ICON: Record<NotifType, { symbol: string; bg: string }> = {
   availability:         { symbol: '◷', bg: '#0097B2' },
   invitation_accepted:  { symbol: '✓', bg: '#16a34a' },
@@ -81,6 +89,7 @@ export default function CoordinatorNotifications() {
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all')
   const [unitFilter, setUnitFilter] = useState<string>('all')
   const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set())
+  const [expandedId, setExpandedId] = useState<string | null>(null)
 
   const allUnits = Array.from(new Set(MOCK_NOTIFICATIONS.map(n => n.unit))).sort()
 
@@ -192,8 +201,11 @@ export default function CoordinatorNotifications() {
                   return (
                     <div
                       key={n.id}
-                      className={`notif-item${isUnread ? ' unread' : ''}`}
-                      onClick={() => markRead(n.id)}
+                      className={`notif-item${isUnread ? ' unread' : ''}${expandedId === n.id ? ' expanded' : ''}`}
+                      onClick={() => {
+                        setExpandedId(prev => prev === n.id ? null : n.id)
+                        if (isUnread) markRead(n.id)
+                      }}
                     >
                       <div className="notif-icon" style={{ background: icon.bg }}>
                         {icon.symbol}
@@ -203,6 +215,7 @@ export default function CoordinatorNotifications() {
                           <span className="notif-title">{n.title}</span>
                           <div className="notif-header-actions">
                             <span className="notif-time">{timeAgo(n.time)}</span>
+                            <span className="notif-chevron">{expandedId === n.id ? '▲' : '▼'}</span>
                             <button
                               className="notif-delete-btn"
                               onClick={e => { e.stopPropagation(); deleteNotif(n.id) }}
@@ -212,11 +225,15 @@ export default function CoordinatorNotifications() {
                             </button>
                           </div>
                         </div>
-                        <p className="notif-message">{n.message}</p>
-                        <div className="notif-footer">
-                          <span className="unit-code-badge">{n.unit}</span>
-                          {isUnread && <span className="notif-unread-dot" />}
-                        </div>
+                        {expandedId === n.id && (
+                          <div className="notif-expanded">
+                            <p className="notif-message">{n.message}</p>
+                            <div className="notif-footer">
+                              <span className="unit-code-badge">{n.unit}</span>
+                              <span className="notif-type-badge">{TYPE_LABEL[n.type]}</span>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   )

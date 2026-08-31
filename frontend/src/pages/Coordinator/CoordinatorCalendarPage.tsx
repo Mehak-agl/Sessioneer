@@ -114,10 +114,6 @@ function CalendarPage() {
     }
   }
 
-  const allocated = filteredSessions.filter(s => s.status === "ALLOCATED").length;
-  const pending = filteredSessions.filter(s => s.status === "PENDING").length;
-  const conflict = filteredSessions.filter(s => s.status === "CONFLICT").length;
-
   const prevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
   const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
 
@@ -181,27 +177,6 @@ function CalendarPage() {
               Showing only sessions where you're personally allocated as teaching staff.
             </p>
           )}
-        </section>
-
-        <section className="calendar-summary">
-          <div className="summary-card allocated-card">
-            <h2>{allocated}</h2>
-            <p>Allocated Classes</p>
-          </div>
-          <div className="summary-card pending-card">
-            <h2>{pending}</h2>
-            <p>Pending Classes</p>
-          </div>
-          <div className="summary-card conflict-card">
-            <h2>{conflict}</h2>
-            <p>Conflicts</p>
-          </div>
-        </section>
-
-        <section className="legend">
-          <span><b className="dot allocated-dot"></b> Allocated</span>
-          <span><b className="dot pending-dot"></b> Pending</span>
-          <span><b className="dot conflict-dot"></b> Conflict</span>
         </section>
 
         <section className="month-calendar">

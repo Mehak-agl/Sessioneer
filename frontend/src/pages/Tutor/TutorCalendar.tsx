@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
-import { api } from "../../services/api";
+import { useSearchParams, useNavigate } from "react-router-dom";
+//import { api } from "../../services/api";
+import { tutorMockApi as api } from "../../services/tutorMockApi";
 import StaffSidebar from "../../components/TutorSidebar";
 import TutorAvailabilityModal from "./TutorAvailabilityModal";
 
@@ -37,6 +38,7 @@ const years = Array.from({ length: 1001 }, (_, i) => 2000 + i);
 
 function TutorCalendar() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [sessions, setSessions] = useState<Session[]>([]);
   const [availability, setAvailability] = useState<AvailabilitySlot[]>([]);
   const [units, setUnits] = useState<Unit[]>([]);
@@ -64,9 +66,11 @@ function TutorCalendar() {
         }
         setSessions(allSessions);
 
-        // Submitted availability — rendered separately from sessions below,
-        // as a thin strip rather than a full event block, so it's visually
-        // clear this is "I said I'm free" rather than "I'm actually teaching".
+        // Submitted availability. Slots that match a real scheduled class
+        // (same unit + exact start time) are shown by recoloring that
+        // class's own event below — these don't get a separate entry for
+        // those. Only availability with no matching class renders as its
+        // own entry (see extraAvailability further down).
         const myAvailability = await api.getMyAvailability();
         setAvailability(myAvailability);
       } catch (err) {
@@ -101,6 +105,9 @@ function TutorCalendar() {
   const currentUser = localStorage.getItem("sessioneer_name");
 
   const filteredSessions = sessions.filter((session) => {
+    // Holidays mean no class happens that day — shouldn't render as a
+    // scheduled event at all (it isn't one anymore).
+    if (session.status === "HOLIDAY") return false;
     if (unitFilter === "all") return true;
     if (unitFilter === "my") return session.tutorName === currentUser;
     if (unitFilter.startsWith("unit-")) {
@@ -120,6 +127,20 @@ function TutorCalendar() {
     return true;
   });
 
+  // Whether a scheduled class has a matching submitted availability slot —
+  // exact match on unit + start time. If so, the class itself renders in
+  // the "submitted" color instead of "invitation"; if not, an availability
+  // slot with no matching class (e.g. from the weekly grid, or "Add
+  // Additional Availability" on a date outside the scheduled classes) has
+  // nothing to attach to, so it's shown as its own calendar entry below.
+  const sessionKey = (unitId: number | undefined, startTime: string) => `${unitId}::${startTime}`;
+  const sessionKeySet = new Set(filteredSessions.map((s) => sessionKey(s.unitId, s.startTime)));
+  const submittedKeySet = new Set(filteredAvailability.map((a) => sessionKey(a.unit.id, a.startTime)));
+
+  const extraAvailability = filteredAvailability.filter(
+    (slot) => !sessionKeySet.has(sessionKey(slot.unit.id, slot.startTime))
+  );
+
   const firstDay = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
 
@@ -138,8 +159,11 @@ function TutorCalendar() {
     }
   }
 
+  // Only the availability slots with no matching scheduled class — the
+  // ones that DO match are represented by the class event itself above,
+  // so they aren't duplicated here.
   const availabilityByDay: Record<string, AvailabilitySlot[]> = {};
-  for (const slot of filteredAvailability) {
+  for (const slot of extraAvailability) {
     const d = new Date(slot.startTime);
     if (d.getFullYear() === year && d.getMonth() === month) {
       const day = String(d.getDate());
@@ -147,10 +171,6 @@ function TutorCalendar() {
       availabilityByDay[day].push(slot);
     }
   }
-
-  const allocated = filteredSessions.filter((s) => s.status === "ALLOCATED").length;
-  const pending = filteredSessions.filter((s) => s.status === "PENDING").length;
-  const conflict = filteredSessions.filter((s) => s.status === "CONFLICT").length;
 
   const prevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
   const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
@@ -161,6 +181,28 @@ function TutorCalendar() {
 
   const handleYearChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setCurrentDate(new Date(Number(e.target.value), month, 1));
+  };
+
+  // Clicking a scheduled class takes you to that unit's page (Scheduled
+  // Classes section), where the actual class lives and can be managed.
+  const goToUnit = (unitId?: number) => {
+    if (unitId == null) return;
+    navigate(`/staff-units?unit=${unitId}`);
+  };
+
+  // Clicking an availability entry that has no matching class: if it's
+  // for a unit you're invited to, that unit's page is still the most
+  // relevant place to manage it (Add Additional Availability lives
+  // there); otherwise fall back to opening the Availability modal
+  // directly, since there's no unit page for it to land on.
+  const goToAvailabilityEntry = (slot: AvailabilitySlot) => {
+    const belongsToKnownUnit = units.some((u) => u.id === slot.unit.id);
+    if (belongsToKnownUnit) {
+      navigate(`/staff-units?unit=${slot.unit.id}`);
+    } else {
+      setInitialAvailabilityUnitId(slot.unit.id);
+      setShowAvailabilityModal(true);
+    }
   };
 
   return (
@@ -219,28 +261,6 @@ function TutorCalendar() {
             </div>
           </div>
 
-          <section className="calendar-summary inside-calendar">
-            <div className="summary-card allocated-card">
-              <h2>{allocated}</h2>
-              <p>Allocated Classes</p>
-            </div>
-            <div className="summary-card pending-card">
-              <h2>{pending}</h2>
-              <p>Pending Classes</p>
-            </div>
-            <div className="summary-card conflict-card">
-              <h2>{conflict}</h2>
-              <p>Conflicts</p>
-            </div>
-          </section>
-
-          <section className="legend">
-            <span><b className="dot allocated-dot"></b> Allocated</span>
-            <span><b className="dot pending-dot"></b> Pending</span>
-            <span><b className="dot conflict-dot"></b> Conflict</span>
-            <span><b className="dot availability-dot"></b> Your Availability</span>
-          </section>
-
           <div className="weekdays">
             <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div>
             <div>Thu</div><div>Fri</div><div>Sat</div>
@@ -253,26 +273,48 @@ function TutorCalendar() {
                   <>
                     <div className="day-number">{day}</div>
 
-                    {eventsByDay[day]?.map((session, i) => (
-                      <div className={`class-event ${session.status.toLowerCase()}`} key={`s-${i}`}>
-                        <strong>
-                          {new Date(session.startTime).toLocaleTimeString([], {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </strong>
-                        <span>{session.title}</span>
-                        {session.unitName && <small>{session.unitName}</small>}
-                      </div>
-                    ))}
+                    {eventsByDay[day]?.map((session, i) => {
+                      const submitted = submittedKeySet.has(sessionKey(session.unitId, session.startTime));
+                      return (
+                        <div
+                          className={`class-event ${submitted ? "submitted" : "invitation"}`}
+                          key={`s-${i}`}
+                          role="button"
+                          tabIndex={0}
+                          onClick={() => goToUnit(session.unitId)}
+                          onKeyDown={(e) => { if (e.key === "Enter") goToUnit(session.unitId); }}
+                        >
+                          <strong>
+                            {new Date(session.startTime).toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </strong>
+                          <span>{session.title}</span>
+                          {session.unitName && <small>{session.unitName}</small>}
+                          <small className="class-event-tag">
+                            {submitted ? "Availability submitted" : "Invitation received"}
+                          </small>
+                        </div>
+                      );
+                    })}
 
                     {availabilityByDay[day]?.map((slot, i) => (
-                      <div className="availability-strip" key={`a-${i}`} title="Your submitted availability">
-                        {new Date(slot.startTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                        {"–"}
-                        {new Date(slot.endTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                        {" · "}
-                        {slot.unit.code}
+                      <div
+                        className="class-event extra-availability"
+                        key={`a-${i}`}
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => goToAvailabilityEntry(slot)}
+                        onKeyDown={(e) => { if (e.key === "Enter") goToAvailabilityEntry(slot); }}
+                      >
+                        <strong>
+                          {new Date(slot.startTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                          {"–"}
+                          {new Date(slot.endTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                        </strong>
+                        <span>{slot.unit.code} — {slot.unit.name}</span>
+                        <small className="class-event-tag">Additional availability</small>
                       </div>
                     ))}
                   </>

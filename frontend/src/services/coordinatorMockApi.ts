@@ -18,8 +18,18 @@ interface MockSession {
   id: number
   title: string
   startTime: string
+  // Real duration now flows through from AddSessionForm (see the note
+  // there) instead of every consumer having to assume a flat 1 hour.
+  // Optional so old callers/tests that don't pass it still type-check.
+  endTime?: string
   location: string
   status: string
+  // Staff ids who've flagged themselves as unable to teach this specific
+  // dated session — the display surface the coordinator side was
+  // missing entirely. There's still no real link to the Tutor mock's own
+  // "Mark I'm Unavailable" (see markStaffUnavailableForSession below for
+  // why), so this only ever gets populated by that simulate action.
+  unavailableStaffIds?: number[]
 }
 
 interface MockStaff {
@@ -83,7 +93,7 @@ export const coordinatorMockApi = {
     return mockSessionsByUnit[unitId] ?? []
   },
 
-  createSession: async (unitId: number, data: { title: string; startTime: string; location: string }) => {
+  createSession: async (unitId: number, data: { title: string; startTime: string; endTime?: string; location: string }) => {
     console.log('[MOCK] createSession', unitId, data)
     const newSession: MockSession = { id: nextSessionId++, ...data, status: 'PENDING' }
     mockSessionsByUnit[unitId] = [...(mockSessionsByUnit[unitId] ?? []), newSession]
@@ -151,6 +161,30 @@ export const coordinatorMockApi = {
       inv => inv.staff.id !== staffId
     )
     return {}
+  },
+
+  // Flags (or unflags) a specific tutor as unable to teach one dated
+  // session — gives the coordinator side an actual place to see "this
+  // tutor said they can't do this date", which previously had nowhere to
+  // render at all. NOTE: this is NOT wired to the Tutor mock's own
+  // unavailableSessionIds (see tutorMockApi.ts's "Mark I'm Unavailable")
+  // — the two mocks still don't share a store, so a tutor marking
+  // themself unavailable over there never reaches here automatically.
+  // This exists so the coordinator can simulate that signal by hand and
+  // see how it looks once there's a real shared backend to wire it to.
+  markStaffUnavailableForSession: async (sessionId: number, staffId: number, unavailable: boolean) => {
+    console.log('[MOCK] markStaffUnavailableForSession', { sessionId, staffId, unavailable })
+    for (const sessions of Object.values(mockSessionsByUnit)) {
+      const session = sessions.find(s => s.id === sessionId)
+      if (session) {
+        const current = new Set(session.unavailableStaffIds ?? [])
+        if (unavailable) current.add(staffId)
+        else current.delete(staffId)
+        session.unavailableStaffIds = Array.from(current)
+        return session
+      }
+    }
+    throw new Error('Session not found')
   },
 
   // ── Allocations (used by Calendar page + export) ──────────────────

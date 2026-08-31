@@ -20,6 +20,10 @@ interface Session {
   id: number;
   title: string;
   startTime: string;
+  // Real duration, now actually persisted end-to-end (see the note on
+  // MockSession.endTime in coordinatorMockApi.ts) — optional so older
+  // sessions created before this existed still type-check.
+  endTime?: string;
   location: string;
   status: string;
   mode?: 'on-campus' | 'online';
@@ -76,6 +80,7 @@ interface SessionGroup {
   dayOfWeek: number
   minutesOfDay: number
   timeLabel: string
+  endTimeLabel?: string
   sessions: Session[]
 }
 
@@ -95,6 +100,9 @@ function groupSessions(sessions: Session[]): SessionGroup[] {
         dayOfWeek: d.getDay(),
         minutesOfDay,
         timeLabel: d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }),
+        endTimeLabel: s.endTime
+          ? new Date(s.endTime).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+          : undefined,
         sessions: [],
       }
       map.set(key, group)
@@ -107,6 +115,50 @@ function groupSessions(sessions: Session[]): SessionGroup[] {
   }
   groups.sort((a, b) => a.dayOfWeek - b.dayOfWeek || a.minutesOfDay - b.minutesOfDay)
   return groups
+}
+
+// ── Auto-allocation ──────────────────────────────────────────────────────
+// Mock weekly availability per tutor (days 1=Mon … 5=Fri).
+// Deterministic on staffId so results are consistent across renders.
+const AVAIL_PATTERNS = [
+  [1, 2, 3, 4, 5],
+  [1, 3, 5],
+  [2, 4],
+  [1, 2, 4],
+  [3, 4, 5],
+  [1, 2, 3],
+]
+
+function tutorAvailDays(staffId: number): number[] {
+  return AVAIL_PATTERNS[Math.abs(staffId) % AVAIL_PATTERNS.length]
+}
+
+interface DraftEntry {
+  group: SessionGroup
+  tutor: StaffUser | null
+  matchType: 'availability' | 'load-balanced' | 'none'
+  accepted: boolean
+}
+
+function buildDraft(groups: SessionGroup[], tutors: StaffUser[]): DraftEntry[] {
+  if (tutors.length === 0) {
+    return groups.map(g => ({ group: g, tutor: null, matchType: 'none', accepted: true }))
+  }
+  const load = new Map<number, number>()
+  tutors.forEach(t => load.set(t.id, 0))
+
+  return groups.map(group => {
+    const availableToday = tutors.filter(t => tutorAvailDays(t.id).includes(group.dayOfWeek))
+    const pool = availableToday.length > 0 ? availableToday : tutors
+    const best = pool.reduce((a, b) => (load.get(a.id) ?? 0) <= (load.get(b.id) ?? 0) ? a : b)
+    load.set(best.id, (load.get(best.id) ?? 0) + 1)
+    return {
+      group,
+      tutor: best,
+      matchType: availableToday.includes(best) ? 'availability' : 'load-balanced',
+      accepted: true,
+    }
+  })
 }
 
 // Coordinator-facing allocation screen: pick a unit → see its sessions,
@@ -146,6 +198,11 @@ export default function CoordinatorAllocations() {
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set())
   const [allocateError, setAllocateError] = useState('')
   const [allocatingKey, setAllocatingKey] = useState<string | null>(null)
+
+  // Auto-allocation draft
+  const [showDraft, setShowDraft] = useState(false)
+  const [draftEntries, setDraftEntries] = useState<DraftEntry[]>([])
+  const [applyingDraft, setApplyingDraft] = useState(false)
 
   // Search-and-request modal (for groups with no responded tutors yet)
   const [searchGroup, setSearchGroup] = useState<SessionGroup | null>(null)
@@ -260,6 +317,35 @@ export default function CoordinatorAllocations() {
     }
   }
 
+  const openDraft = () => {
+    setDraftEntries(buildDraft(sessionGroups, respondedTutors))
+    setShowDraft(true)
+  }
+
+  const toggleDraftAccept = (idx: number) => {
+    setDraftEntries(prev => prev.map((e, i) => i === idx ? { ...e, accepted: !e.accepted } : e))
+  }
+
+  const applyDraft = async () => {
+    setApplyingDraft(true)
+    try {
+      for (const entry of draftEntries) {
+        if (!entry.accepted || !entry.tutor) continue
+        const results = await Promise.all(
+          entry.group.sessions.map(s => api.allocate({ sessionId: s.id, staffId: entry.tutor!.id }))
+        )
+        const ids = new Set(entry.group.sessions.map(s => s.id))
+        setAllocations(prev => [...prev.filter(a => !ids.has(a.session.id)), ...results])
+        setSessions(prev => prev.map(s => ids.has(s.id) ? { ...s, status: 'ALLOCATED' } : s))
+      }
+      setShowDraft(false)
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setApplyingDraft(false)
+    }
+  }
+
   const openSearch = (group: SessionGroup) => {
     setSearchGroup(group)
     setSearchQuery('')
@@ -361,6 +447,11 @@ export default function CoordinatorAllocations() {
                     submitted availability for this unit
                   </p>
                 </div>
+                {sessionGroups.length > 0 && (
+                  <button type="button" className="auto-allocate-btn" onClick={openDraft}>
+                    Auto Allocate
+                  </button>
+                )}
               </div>
 
               <p className="avail-range-hint" style={{ marginBottom: '16px' }}>
@@ -421,7 +512,10 @@ export default function CoordinatorAllocations() {
                           )}
                         </div>
                         <div className="session-day">{group.title}</div>
-                        <div className="session-time">{DAY_NAMES[group.dayOfWeek]}s, {group.timeLabel}</div>
+                        <div className="session-time">
+                          {DAY_NAMES[group.dayOfWeek]}s, {group.timeLabel}
+                          {group.endTimeLabel && ` – ${group.endTimeLabel}`}
+                        </div>
                         {group.location && <div className="session-location">{group.location}</div>}
                         {isMulti && (
                           <div className="session-time session-group-range">
@@ -550,6 +644,105 @@ export default function CoordinatorAllocations() {
         </div>
       </main>
 
+      {/* Auto-allocation draft modal */}
+      {showDraft && (
+        <div className="modal-overlay" onClick={() => !applyingDraft && setShowDraft(false)}>
+          <div className="modal auto-alloc-modal" onClick={e => e.stopPropagation()}>
+            <h2>Smart Draft Allocation</h2>
+            <p className="modal-sub">
+              The system matched tutors to sessions based on their availability and workload.
+              Review and toggle each suggestion before applying.
+            </p>
+
+            {respondedTutors.length === 0 ? (
+              <div className="auto-alloc-empty">
+                <p>No tutors have submitted availability for this unit yet.</p>
+                <p>Invite tutors and ask them to submit availability first.</p>
+              </div>
+            ) : (
+              <>
+                <div className="auto-alloc-stats">
+                  <span className="auto-alloc-stat matched">
+                    {draftEntries.filter(e => e.tutor && e.accepted).length} matched
+                  </span>
+                  <span className="auto-alloc-stat skipped">
+                    {draftEntries.filter(e => !e.accepted).length} skipped
+                  </span>
+                  {draftEntries.some(e => !e.tutor) && (
+                    <span className="auto-alloc-stat unmatched">
+                      {draftEntries.filter(e => !e.tutor).length} unmatched
+                    </span>
+                  )}
+                </div>
+
+                <div className="auto-alloc-list">
+                  {draftEntries.map((entry, idx) => (
+                    <div
+                      key={entry.group.key}
+                      className={`auto-alloc-row ${!entry.accepted ? 'skipped' : ''} ${!entry.tutor ? 'unmatched' : ''}`}
+                    >
+                      <div className="auto-alloc-session">
+                        <span className="auto-alloc-session-title">{entry.group.title}</span>
+                        <span className="auto-alloc-session-time">
+                          {DAY_NAMES[entry.group.dayOfWeek]}s · {entry.group.timeLabel}
+                        </span>
+                        <span className="auto-alloc-session-count">
+                          {entry.group.sessions.length} session{entry.group.sessions.length !== 1 ? 's' : ''}
+                        </span>
+                      </div>
+
+                      <span className="auto-alloc-arrow">→</span>
+
+                      <div className="auto-alloc-tutor">
+                        {entry.tutor ? (
+                          <>
+                            <span className="auto-alloc-tutor-name">{entry.tutor.fullName}</span>
+                            <span className={`auto-alloc-match-badge ${entry.matchType}`}>
+                              {entry.matchType === 'availability' ? 'Availability match' : 'Load balanced'}
+                            </span>
+                          </>
+                        ) : (
+                          <span className="auto-alloc-no-match">No tutor available</span>
+                        )}
+                      </div>
+
+                      {entry.tutor && (
+                        <button
+                          type="button"
+                          className={`auto-alloc-toggle ${entry.accepted ? 'accepted' : 'rejected'}`}
+                          onClick={() => toggleDraftAccept(idx)}
+                        >
+                          {entry.accepted ? 'Include' : 'Skip'}
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+
+            <div className="modal-actions">
+              {respondedTutors.length > 0 && (
+                <button
+                  type="button"
+                  className="confirm-btn"
+                  disabled={applyingDraft || draftEntries.every(e => !e.accepted || !e.tutor)}
+                  onClick={applyDraft}
+                >
+                  {applyingDraft
+                    ? 'Applying...'
+                    : `Apply ${draftEntries.filter(e => e.accepted && e.tutor).length} Allocation${draftEntries.filter(e => e.accepted && e.tutor).length !== 1 ? 's' : ''}`
+                  }
+                </button>
+              )}
+              <button type="button" className="cancel-btn" disabled={applyingDraft} onClick={() => setShowDraft(false)}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Search & Request modal — for groups with no responded tutors */}
       {searchGroup && (
         <div className="modal-overlay" onClick={closeSearch}>
@@ -622,3 +815,4 @@ export default function CoordinatorAllocations() {
     </div>
   )
 }
+

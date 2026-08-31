@@ -178,10 +178,6 @@ export default function CoordinatorTutors() {
                     <span className="create-tutor-cred-label">Email</span>
                     <span className="create-tutor-cred-value">{createdCreds.email}</span>
                   </div>
-                  <div className="create-tutor-cred-row">
-                    <span className="create-tutor-cred-label">Password</span>
-                    <span className="create-tutor-cred-value create-tutor-cred-password">{createdCreds.password}</span>
-                  </div>
                 </div>
                 <p className="create-tutor-note">The tutor can change their password after first login.</p>
                 <div className="modal-actions">

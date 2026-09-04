@@ -80,9 +80,11 @@ The login page has two roles. Use these demo credentials:
 
 ## Setup
 
+The app uses a shared [Neon](https://neon.tech) Postgres database in the cloud — no local Postgres install needed.
+
 1. Clone the repo
-2. Copy `backend/src/main/resources/application.properties.example` to `application.properties` in the same folder
-3. Fill in your own values:
-   - `DB_PASSWORD` — your PostgreSQL password
+2. Copy `backend/src/main/resources/application.properties.example` to `application.properties` in the same folder (already set up to read from env vars — no edits needed)
+3. Copy `backend/.env.example` to `backend/.env` and fill in your own values:
+   - `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` — from the Neon project dashboard → Connection Details
    - `JWT_SECRET` — any long random string
-4. Create PostgreSQL database named `sessioneer`
+4. `backend/.env` is gitignored — never commit it

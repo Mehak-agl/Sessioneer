@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
+import { api } from '../services/api'
 
 type Role = 'coordinator' | 'staff'
 
-const MOCK_USERS = {
-  staff: { email: 'staff@qut.edu.au', password: 'staff123' },
-}
+const MOCK_USERS = [
+  { email: 'coordinator@qut.edu.au', password: 'admin123', role: 'COORDINATOR', fullName: 'Sarah Chen' },
+  { email: 'staff@qut.edu.au',       password: 'staff123',  role: 'STAFF',       fullName: 'Alex Thompson' },
+]
 
 export default function LoginPage() {
   const navigate = useNavigate()
@@ -18,42 +20,23 @@ export default function LoginPage() {
     e.preventDefault()
     setError('')
 
-    if (role === 'coordinator') {
-      try {
-        const response = await fetch('http://localhost:8080/api/coordinators/login', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            email,
-            password,
-          }),
-        })
-
-        const data = await response.json()
-
-        if (data.success) {
-          localStorage.setItem('sessioneer_role', 'coordinator')
-          localStorage.setItem('sessioneer_user', JSON.stringify(data.coordinator))
-          navigate('/coordinator')
-        } else {
-          setError(data.message || 'Invalid email or password.')
-        }
-      } catch {
-        setError('Could not connect to backend. Make sure Spring Boot is running.')
+    try {
+      const res = await api.login({ email, password })
+      localStorage.setItem('sessioneer_token', res.token)
+      localStorage.setItem('sessioneer_role', res.role.toLowerCase())
+      localStorage.setItem('sessioneer_name', res.fullName)
+      navigate(res.role === 'COORDINATOR' ? '/coordinator' : '/staff')
+    } catch {
+      // Fall back to mock auth when backend is not running
+      const mock = MOCK_USERS.find(u => u.email === email && u.password === password)
+      if (mock) {
+        localStorage.setItem('sessioneer_token', 'mock-token')
+        localStorage.setItem('sessioneer_role', mock.role.toLowerCase())
+        localStorage.setItem('sessioneer_name', mock.fullName)
+        navigate(mock.role === 'COORDINATOR' ? '/coordinator' : '/staff')
+      } else {
+        setError('Invalid email or password.')
       }
-
-      return
-    }
-
-    const expected = MOCK_USERS.staff
-
-    if (email === expected.email && password === expected.password) {
-      localStorage.setItem('sessioneer_role', 'staff')
-      navigate('/staff')
-    } else {
-      setError('Invalid email or password.')
     }
   }
 
@@ -131,13 +114,6 @@ export default function LoginPage() {
 
             <button type="submit" className="login-btn">Sign In</button>
           </form>
-
-          <div className="login-hint">
-            <strong>Demo credentials</strong>
-            <p>Coordinator: use account saved in PostgreSQL</p>
-            <p>Staff: staff@qut.edu.au / staff123</p>
-            <p className="login-hint-note">Coordinator login is connected to backend database.</p>
-          </div>
 
           <p className="login-signup-link">
             Don't have an account? <Link to="/signup">Sign up</Link>

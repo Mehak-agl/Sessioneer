@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { api } from '../../services/api'
 
 interface UnitOption {
@@ -61,15 +61,10 @@ export default function TutorAvailabilityModal({ units, initialUnitId, onClose }
   const activeSlots = activeUnitId != null ? (slotsByUnit[activeUnitId] ?? new Set<string>()) : new Set<string>()
   const activePrefs = activeUnitId != null ? (prefsByUnit[activeUnitId] ?? DEFAULT_PREFS) : DEFAULT_PREFS
 
-  // Reset the confirm/message state whenever the selected unit changes,
-  // computed during render (React's recommended alternative to an effect
-  // for "adjust state when a prop changes") rather than as a post-commit effect.
-  const [prevActiveUnitId, setPrevActiveUnitId] = useState(activeUnitId)
-  if (activeUnitId !== prevActiveUnitId) {
-    setPrevActiveUnitId(activeUnitId)
+  useEffect(() => {
     setConfirmed(false)
     setMessage('')
-  }
+  }, [activeUnitId])
 
   const setActiveSlots = (updater: (prev: Set<string>) => Set<string>) => {
     if (activeUnitId == null) return

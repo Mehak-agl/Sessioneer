@@ -1,5 +1,9 @@
 const BASE_URL = 'http://localhost:8080/api'
 
+// Fixed id used to tag a coordinator's self-assignment to a session
+// (as opposed to a real staff member's id, which starts at 1).
+export const SELF_ASSIGN_STAFF_ID = -1
+
 function getToken() {
   return localStorage.getItem('sessioneer_token')
 }
@@ -43,4 +47,11 @@ export const api = {
   getUnitInvitations: (unitId: number) => request('GET', `/units/${unitId}/invitations`),
   getMyInvitations: () => request('GET', '/invitations/me'),
   removeInvitation: (unitId: number, staffId: number) => request('DELETE', `/units/${unitId}/invite/${staffId}`),
+  acceptInvitation: (unitId: number) => request('POST', `/units/${unitId}/invitations/accept`),
+  respondToInvitation: (unitId: number, staffId: number) => request('POST', `/units/${unitId}/invite/${staffId}/respond`),
+  declineInvitation: (unitId: number, staffId: number) => request('DELETE', `/units/${unitId}/invite/${staffId}`),
+  markStaffUnavailableForSession: (sessionId: number, staffId: number, unavailable: boolean) =>
+    request('POST', `/sessions/${sessionId}/unavailable/${staffId}`, { unavailable }),
+  selfAssign: (data: { sessionId: number; coordinatorName: string; coordinatorEmail?: string }) =>
+    request('POST', '/allocations/self-assign', data),
 }

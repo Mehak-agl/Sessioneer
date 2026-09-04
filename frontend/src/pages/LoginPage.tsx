@@ -68,11 +68,8 @@ export default function LoginPage() {
           </div>
 
           <div className="role-selector">
-            <button
-              className={`role-btn ${role === 'coordinator' ? 'active' : ''}`}
-              onClick={() => { setRole('coordinator'); setError('') }}
-              type="button"
-            >
+            <button className={`role-btn ${role === 'coordinator' ? 'active' : ''}`}
+              onClick={() => { setRole('coordinator'); setError('') }} type="button">
               Unit Coordinator
             </button>
 
@@ -88,26 +85,14 @@ export default function LoginPage() {
           <form className="login-form" onSubmit={handleLogin}>
             <div className="form-group">
               <label htmlFor="email">Email</label>
-              <input
-                id="email"
-                type="email"
-                placeholder="Enter your email address"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                required
-              />
+              <input id="email" type="email" placeholder="Enter your email address"
+                value={email} onChange={e => setEmail(e.target.value)} required />
             </div>
 
             <div className="form-group">
               <label htmlFor="password">Password</label>
-              <input
-                id="password"
-                type="password"
-                placeholder="Enter your password"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                required
-              />
+              <input id="password" type="password" placeholder="Enter your password"
+                value={password} onChange={e => setPassword(e.target.value)} required />
             </div>
 
             {error && <p className="login-error">{error}</p>}

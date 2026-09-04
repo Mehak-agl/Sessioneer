@@ -17,29 +17,14 @@ export default function SignupPage() {
   const handleSignup = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setError('')
-
-    if (password !== confirmPassword) {
-      setError('Passwords do not match.')
-      return
-    }
-
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters.')
-      return
-    }
+    if (password !== confirmPassword) { setError('Passwords do not match.'); return }
+    if (password.length < 6) { setError('Password must be at least 6 characters.'); return }
 
     try {
-      const res = await api.signup({
-        fullName,
-        email,
-        password,
-        role,
-      })
-
+      const res = await api.signup({ fullName, email, password, role })
       localStorage.setItem('sessioneer_token', res.token)
       localStorage.setItem('sessioneer_role', res.role.toLowerCase())
       localStorage.setItem('sessioneer_name', res.fullName)
-
       navigate(res.role === 'COORDINATOR' ? '/coordinator' : '/staff')
     } catch {
       setError('Signup failed. Email may already be registered.')
@@ -73,18 +58,12 @@ export default function SignupPage() {
           </div>
 
           <div className="role-selector">
-            <button
-              className={`role-btn ${role === 'coordinator' ? 'active' : ''}`}
-              onClick={() => { setRole('coordinator'); setError('') }}
-              type="button"
-            >
+            <button className={`role-btn ${role === 'coordinator' ? 'active' : ''}`}
+              onClick={() => { setRole('coordinator'); setError('') }} type="button">
               Unit Coordinator
             </button>
-            <button
-              className={`role-btn ${role === 'staff' ? 'active' : ''}`}
-              onClick={() => { setRole('staff'); setError('') }}
-              type="button"
-            >
+            <button className={`role-btn ${role === 'staff' ? 'active' : ''}`}
+              onClick={() => { setRole('staff'); setError('') }} type="button">
               Sessional Staff
             </button>
           </div>
@@ -92,51 +71,27 @@ export default function SignupPage() {
           <form className="signup-form" onSubmit={handleSignup}>
             <div className="form-group">
               <label htmlFor="fullName">Full Name</label>
-              <input
-                id="fullName"
-                type="text"
-                placeholder="Enter your full name"
-                value={fullName}
-                onChange={e => setFullName(e.target.value)}
-                required
-              />
+              <input id="fullName" type="text" placeholder="Enter your full name"
+                value={fullName} onChange={e => setFullName(e.target.value)} required />
             </div>
 
             <div className="form-group">
               <label htmlFor="email">Email</label>
-              <input
-                id="email"
-                type="email"
-                placeholder="Enter your email address"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                required
-              />
+              <input id="email" type="email" placeholder="Enter your email address"
+                value={email} onChange={e => setEmail(e.target.value)} required />
             </div>
 
             <div className="form-row">
               <div className="form-group">
                 <label htmlFor="password">Password</label>
-                <input
-                  id="password"
-                  type="password"
-                  placeholder="Min. 6 characters"
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  required
-                />
+                <input id="password" type="password" placeholder="Min. 6 characters"
+                  value={password} onChange={e => setPassword(e.target.value)} required />
               </div>
 
               <div className="form-group">
                 <label htmlFor="confirmPassword">Confirm Password</label>
-                <input
-                  id="confirmPassword"
-                  type="password"
-                  placeholder="Re-enter password"
-                  value={confirmPassword}
-                  onChange={e => setConfirmPassword(e.target.value)}
-                  required
-                />
+                <input id="confirmPassword" type="password" placeholder="Re-enter password"
+                  value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required />
               </div>
             </div>
 

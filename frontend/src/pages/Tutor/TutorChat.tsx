@@ -11,6 +11,12 @@ type ChatContact = {
 
 type AttachmentType = 'photo' | 'file' | 'document'
 
+// Sent → this mock's version of "delivered" (no real backend to
+// distinguish the two); Read → the other side has opened the
+// conversation. Purely a client-side simulation (see appendMessage)
+// since there's no real read-receipt channel here.
+type MessageStatus = 'sent' | 'read'
+
 type ChatMessage = {
   id: string
   senderId: string
@@ -18,6 +24,7 @@ type ChatMessage = {
   text: string
   timestamp: string
   attachment?: { type: AttachmentType; name: string }
+  status?: MessageStatus
 }
 
 type DMConversation = {
@@ -113,6 +120,21 @@ function formatTime(ts: string) {
   return new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 }
 
+// How long a message you sent stays "Sent" before this mock marks it as
+// "Read" — stands in for a real read-receipt event from the other side.
+const SEEN_DELAY_MS = 2000
+
+// WhatsApp-style double tick: gray/white for sent, teal-highlighted for
+// seen. Only ever rendered next to messages the current user sent.
+function MessageTicks({ status }: { status?: MessageStatus }) {
+  const read = status === 'read'
+  return (
+    <span className={`chat-ticks ${read ? 'chat-ticks-read' : ''}`} title={read ? 'Seen' : 'Sent'}>
+      ✓✓
+    </span>
+  )
+}
+
 export default function TutorChat() {
   const [conversations, setConversations] = useState<Conversation[]>(MOCK_GROUPS)
   const [activeContactId, setActiveContactId] = useState<string | null>(null)
@@ -184,7 +206,9 @@ export default function TutorChat() {
   }
 
   const appendMessage = (message: ChatMessage) => {
+    let conversationId: string | null = null
     if (activeConversation) {
+      conversationId = activeConversation.id
       setConversations(prev =>
         prev.map(c => (c.id === activeConversation.id ? { ...c, messages: [...c.messages, message] } : c))
       )
@@ -195,8 +219,25 @@ export default function TutorChat() {
         contact: activeContactFromSearch,
         messages: [message],
       }
+      conversationId = newDM.id
       setConversations(prev => [newDM, ...prev])
       setActiveConversationId(newDM.id)
+    }
+
+    // Simulate the other side reading it — there's no real read-receipt
+    // backend behind this chat, so "seen" is just a timed flip of this
+    // one message's status from sent -> read, purely for display.
+    if (message.senderId === CURRENT_USER_ID && conversationId) {
+      const cid = conversationId
+      setTimeout(() => {
+        setConversations(prev =>
+          prev.map(c =>
+            c.id === cid
+              ? { ...c, messages: c.messages.map(m => (m.id === message.id ? { ...m, status: 'read' } : m)) }
+              : c
+          )
+        )
+      }, SEEN_DELAY_MS)
     }
   }
 
@@ -210,6 +251,7 @@ export default function TutorChat() {
       senderName: CURRENT_USER_NAME,
       text,
       timestamp: new Date().toISOString(),
+      status: 'sent',
     })
     setDraft('')
   }
@@ -234,6 +276,7 @@ export default function TutorChat() {
       text: '',
       timestamp: new Date().toISOString(),
       attachment: { type, name },
+      status: 'sent',
     })
   }
 
@@ -365,7 +408,10 @@ export default function TutorChat() {
                         ) : (
                           <span>{msg.text}</span>
                         )}
-                        <span className="chat-bubble-time">{formatTime(msg.timestamp)}</span>
+                        <span className="chat-bubble-meta">
+                          <span className="chat-bubble-time">{formatTime(msg.timestamp)}</span>
+                          {msg.senderId === CURRENT_USER_ID && <MessageTicks status={msg.status} />}
+                        </span>
                       </div>
                     </div>
                   ))}

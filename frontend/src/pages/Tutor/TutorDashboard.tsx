@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 //import { api } from "../../services/api";
-import { tutorMockApi as api } from "../../services/tutorMockApi";
+import { api } from "../../services/api";
 import StaffSidebar from "../../components/TutorSidebar"
 import { getDaysLeftInAvailabilityWindow } from "../../constants/availability"
 

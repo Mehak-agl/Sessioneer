@@ -4,7 +4,7 @@ import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 //import { api } from "../../services/api";
-import { coordinatorMockApi as api } from "../../services/coordinatorMockApi";
+import { api } from "../../services/api";
 import MyUnitsView from "./CoordinatorMyUnitsView";
 import UnitDetailView from "./CoordinatorUnitDetailView";
 import CoordinatorSidebar from "../../components/CooordinatorSidebar";

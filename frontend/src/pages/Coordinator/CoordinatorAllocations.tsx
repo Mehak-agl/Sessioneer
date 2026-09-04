@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-//import { api } from "../../services/api";
-import { coordinatorMockApi as api, SELF_ASSIGN_STAFF_ID } from "../../services/coordinatorMockApi";
+import { api, SELF_ASSIGN_STAFF_ID } from "../../services/api";
 import CoordinatorSidebar from '../../components/CooordinatorSidebar'
 
 interface Unit {
@@ -20,8 +19,7 @@ interface Session {
   id: number;
   title: string;
   startTime: string;
-  // Real duration, now actually persisted end-to-end (see the note on
-  // MockSession.endTime in coordinatorMockApi.ts) — optional so older
+  // Real duration, now actually persisted end-to-end — optional so older
   // sessions created before this existed still type-check.
   endTime?: string;
   location: string;

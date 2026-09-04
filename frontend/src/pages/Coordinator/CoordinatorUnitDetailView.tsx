@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 //import { api } from "../../services/api";
-import { coordinatorMockApi as api } from "../../services/coordinatorMockApi";
+import { api } from "../../services/api";
 import AddSessionForm from './AddSessionForm'
 import TimeWheelPicker, {
   type WheelTime,
@@ -13,8 +13,7 @@ interface Session {
   id: number;
   title: string;
   startTime: string;
-  // Real duration, now actually persisted end-to-end (see the note on
-  // MockSession.endTime in coordinatorMockApi.ts) — optional so older
+  // Real duration, now actually persisted end-to-end — optional so older
   // sessions created before this existed still type-check and fall back
   // to the 1-hour assumption below.
   endTime?: string;
@@ -30,8 +29,7 @@ interface Session {
   // whatever status it had before.
   previousStatus?: string;
   // Staff ids flagged as unable to teach this date (see
-  // handleToggleStaffUnavailable below and the note on
-  // markStaffUnavailableForSession in coordinatorMockApi.ts).
+  // handleToggleStaffUnavailable below).
   unavailableStaffIds?: number[];
 }
 

@@ -1,8 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 //import { api } from '../../services/api'
-import { tutorMockApi as api } from '../../services/tutorMockApi'
+import { api } from '../../services/api'
 import StaffSidebar from '../../components/TutorSidebar'
+import TimeWheelPicker, {
+  type WheelTime,
+  wheelTimeTo24h,
+  wheelTimeDurationMinutes,
+  formatDurationMinutes,
+} from '../../components/TimeWheelPicker'
 
 // ── Types ───────────────────────────────────────────────────────────────
 // These match what the backend actually sends back today. Some fields
@@ -118,6 +124,51 @@ function rangesOverlap(aStart: Date, aEnd: Date, bStart: Date, bEnd: Date) {
   return aStart < bEnd && bStart < aEnd
 }
 
+function toDateInputValue(date: Date): string {
+  return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`
+}
+
+// ── Add Additional Availability: schedule options ─────────────────────────
+// Mirrors the Coordinator's own "Add Session" schedule section exactly
+// (AddSessionForm.tsx) — same three schedule types, same Mon–Fri day
+// list, same Every/Odd/Even week pattern — so a tutor offers recurring
+// availability the same way a coordinator schedules a class.
+type ScheduleType = 'entire-semester' | 'mid-semester' | 'specific-dates'
+type WeekPattern = 'every' | 'odd' | 'even'
+
+const ADD_AVAILABILITY_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
+const ADD_AVAILABILITY_DAY_INDEX: Record<string, number> = {
+  Monday: 1, Tuesday: 2, Wednesday: 3, Thursday: 4, Friday: 5,
+}
+
+function parseLocalDate(yyyyMmDd: string): Date | null {
+  if (!yyyyMmDd) return null
+  const [y, m, d] = yyyyMmDd.split('-').map(Number)
+  if (!y || !m || !d) return null
+  return new Date(y, m - 1, d)
+}
+
+// Every real calendar date between start/end (inclusive) that falls on
+// the given weekday, filtered by odd/even/every week-of-range pattern —
+// identical logic to the Coordinator's generateOccurrenceDates
+// (AddSessionForm.tsx), so "Odd Weeks"/"Even Weeks" line up the same way
+// for a tutor's recurring availability as they do for a scheduled class.
+function generateOccurrenceDates(startDate: Date, endDate: Date, weekdayIndex: number, pattern: WeekPattern): Date[] {
+  const dates: Date[] = []
+  const cursor = new Date(startDate)
+  while (cursor.getDay() !== weekdayIndex && cursor <= endDate) {
+    cursor.setDate(cursor.getDate() + 1)
+  }
+  let weekNumber = 1
+  while (cursor <= endDate) {
+    const keep = pattern === 'every' || (pattern === 'odd' && weekNumber % 2 === 1) || (pattern === 'even' && weekNumber % 2 === 0)
+    if (keep) dates.push(new Date(cursor))
+    cursor.setDate(cursor.getDate() + 7)
+    weekNumber += 1
+  }
+  return dates
+}
+
 // ── Scheduled Classes: grouping into recurring patterns ─────────────────
 // Coordinators create one session per date, but they represent a single
 // recurring class (same class type, campus, room, day and time each
@@ -138,9 +189,25 @@ interface ScheduleGroup {
   dayOfWeek: number
   minutesOfDay: number
   timeLabel: string
+  // Only set when the sessions actually have an endTime (see the note on
+  // SessionInfo.endTime up top) — shown as "10:00 AM – 11:00 AM · 1 hour"
+  // instead of just the start time when available.
+  endTimeLabel?: string
+  durationLabel?: string
   sessions: SessionInfo[]           // every date, including holidays
   teachingSessions: SessionInfo[]   // excludes holiday-marked dates
   holidaySessions: SessionInfo[]
+}
+
+function formatDurationLabel(startTime: string, endTime: string): string {
+  const minutes = Math.round((new Date(endTime).getTime() - new Date(startTime).getTime()) / 60000)
+  if (minutes <= 0) return ''
+  const hours = Math.floor(minutes / 60)
+  const mins = minutes % 60
+  const parts: string[] = []
+  if (hours > 0) parts.push(`${hours} hour${hours !== 1 ? 's' : ''}`)
+  if (mins > 0) parts.push(`${mins} min`)
+  return parts.join(' ')
 }
 
 function groupScheduledSessions(sessions: SessionInfo[]): ScheduleGroup[] {
@@ -159,6 +226,10 @@ function groupScheduledSessions(sessions: SessionInfo[]): ScheduleGroup[] {
         dayOfWeek: d.getDay(),
         minutesOfDay,
         timeLabel: d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }),
+        endTimeLabel: s.endTime
+          ? new Date(s.endTime).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+          : undefined,
+        durationLabel: s.endTime ? formatDurationLabel(s.startTime, s.endTime) : undefined,
         sessions: [],
         teachingSessions: [],
         holidaySessions: [],
@@ -183,6 +254,30 @@ function groupScheduledSessions(sessions: SessionInfo[]): ScheduleGroup[] {
 // MOCK DATA — there is no Announcement entity/endpoint in the backend yet.
 // This is hardcoded so the section has something to show. Swap this out
 // once a real endpoint exists.
+// Rough Semester 2, 2026 window — there's no real "semester start/end"
+// field on the backend's Unit entity yet (same gap as the O-Week
+// deadline placeholder in constants/availability.ts), so this is an
+// approximation used only to classify a unit's actual scheduled session
+// dates into one of three labels below. It's derived from real session
+// data, just measured against a placeholder semester boundary.
+const SEMESTER_START = new Date('2026-08-03')
+const SEMESTER_END = new Date('2026-11-02')
+const SEMESTER_MIDPOINT = new Date((SEMESTER_START.getTime() + SEMESTER_END.getTime()) / 2)
+
+function computeTeachingPeriodLabel(sessions: SessionInfo[]): string {
+  if (sessions.length === 0) return '—'
+  const times = sessions.map(s => new Date(s.startTime).getTime())
+  const first = Math.min(...times)
+  const last = Math.max(...times)
+  const toleranceMs = 10 * 24 * 60 * 60 * 1000 // ~10 days either side
+  const startsAtSemesterStart = first <= SEMESTER_START.getTime() + toleranceMs
+  const endsAtSemesterEnd = last >= SEMESTER_END.getTime() - toleranceMs
+  if (startsAtSemesterStart && endsAtSemesterEnd) return 'Entire Semester'
+  if (first > SEMESTER_MIDPOINT.getTime()) return 'From Mid-Semester'
+  if (last < SEMESTER_MIDPOINT.getTime()) return 'To Mid-Semester'
+  return 'Entire Semester'
+}
+
 const MOCK_ANNOUNCEMENTS = [
   { title: 'Room change for Week 3', body: 'Tuesday lab moves to B Block B204 due to a booking clash.', date: '2026-07-14' },
   { title: 'Marking guide uploaded', body: 'Check the shared drive for the updated marking rubric.', date: '2026-07-10' },
@@ -220,9 +315,20 @@ export default function TutorMyUnits() {
 
   // ── Add Additional Availability ─────────────────────────────────────────
   const [showAddAvailability, setShowAddAvailability] = useState(false)
-  const [addDate, setAddDate] = useState('')
-  const [addStartTime, setAddStartTime] = useState('')
-  const [addEndTime, setAddEndTime] = useState('')
+  // Schedule section — mirrors the Coordinator's Add Session form exactly:
+  // Entire Semester / Mid-Semester Start / Specific Date(s), a date range +
+  // multi-select days of the week, and an Every/Odd/Even week pattern.
+  const [addScheduleType, setAddScheduleType] = useState<ScheduleType>('entire-semester')
+  const [addStartDate, setAddStartDate] = useState('')
+  const [addEndDate, setAddEndDate] = useState('')
+  const [addDays, setAddDays] = useState<Set<string>>(new Set())
+  const [addWeekPattern, setAddWeekPattern] = useState<WeekPattern>('every')
+  const [addSpecificDates, setAddSpecificDates] = useState<string[]>([])
+  const [addSpecificDateInput, setAddSpecificDateInput] = useState('')
+  // Time — same wheel picker the Coordinator uses to schedule a class,
+  // instead of a plain <input type="time">.
+  const [addStartTime, setAddStartTime] = useState<WheelTime>({ hour: '9', minute: '00', period: 'AM' })
+  const [addEndTime, setAddEndTime] = useState<WheelTime>({ hour: '10', minute: '00', period: 'AM' })
   const [addMode, setAddMode] = useState<LocationType>('on-campus')
   const [addCampus, setAddCampus] = useState<Campus>('Gardens Point')
   const [addNotes, setAddNotes] = useState('')
@@ -432,9 +538,69 @@ export default function TutorMyUnits() {
     }
   }
 
+  const toggleAddDay = (day: string) => {
+    setAddDays(prev => {
+      const next = new Set(prev)
+      if (next.has(day)) next.delete(day)
+      else next.add(day)
+      return next
+    })
+  }
+
+  // Specific-dates chip list — same add/remove pattern as the
+  // Coordinator's Add Session form.
+  const addAddSpecificDate = () => {
+    if (!addSpecificDateInput) return
+    setAddSpecificDates(prev => (prev.includes(addSpecificDateInput) ? prev : [...prev, addSpecificDateInput].sort()))
+    setAddSpecificDateInput('')
+  }
+
+  const removeAddSpecificDate = (date: string) => {
+    setAddSpecificDates(prev => prev.filter(d => d !== date))
+  }
+
+  // Duration of a single occurrence, from the time wheels.
+  const addDurationMins = wheelTimeDurationMinutes(addStartTime, addEndTime)
+
+  // "How much time per week is this actually offering" — only meaningful
+  // for the two recurring schedule types (a set of weekdays repeating
+  // across a date range); a specific date isn't a weekly commitment, so
+  // that case shows nothing rather than a misleading number.
+  const addWeeklyDurationMins =
+    addScheduleType !== 'specific-dates' && addDurationMins != null
+      ? addDurationMins * addDays.size
+      : null
+
+  // Every real occurrence date this form would submit, given the current
+  // schedule type — same generation the Coordinator's Add Session form
+  // uses for its own live count.
+  const computeAddOccurrenceDates = (): Date[] => {
+    if (addScheduleType === 'specific-dates') {
+      return addSpecificDates.map(d => parseLocalDate(d)).filter((d): d is Date => d !== null)
+    }
+    const start = parseLocalDate(addStartDate)
+    const end = parseLocalDate(addEndDate)
+    if (!start || !end || end < start || addDays.size === 0) return []
+    return Array.from(addDays).flatMap(day =>
+      generateOccurrenceDates(start, end, ADD_AVAILABILITY_DAY_INDEX[day], addWeekPattern)
+    )
+  }
+
+  const addOccurrenceCount = useMemo(
+    () => computeAddOccurrenceDates(),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [addScheduleType, addStartDate, addEndDate, addDays, addWeekPattern, addSpecificDates]
+  ).length
+
   const validateAddAvailabilityForm = () => {
-    if (!addDate || !addStartTime || !addEndTime) return 'Please fill in the date, start time and end time.'
-    if (addEndTime <= addStartTime) return 'End time must be after the start time.'
+    if (addDurationMins == null) return 'End time must be after the start time.'
+    if (addScheduleType === 'specific-dates') {
+      if (addSpecificDates.length === 0) return 'Add at least one specific date.'
+    } else {
+      if (!addStartDate || !addEndDate) return 'Please fill in a start and end date.'
+      if (parseLocalDate(addEndDate)! < parseLocalDate(addStartDate)!) return 'End date must be on or after the start date.'
+      if (addDays.size === 0) return 'Choose at least one day of the week.'
+    }
     return ''
   }
 
@@ -447,36 +613,52 @@ export default function TutorMyUnits() {
     setAddSuccess('')
     setSubmittingAdd(scope)
 
-    const startTime = `${addDate}T${addStartTime}:00`
-    const endTime = `${addDate}T${addEndTime}:00`
     const targetUnits = scope === 'unit' ? [selectedInvitation.unit] : invitations.map(inv => inv.unit)
+    const dates = computeAddOccurrenceDates()
+    const { hour24: startHour24, minute: startMinute } = wheelTimeTo24h(addStartTime)
+    const { hour24: endHour24, minute: endMinute } = wheelTimeTo24h(addEndTime)
+    const startTimeStr = `${pad2(startHour24)}:${pad2(startMinute)}`
+    const endTimeStr = `${pad2(endHour24)}:${pad2(endMinute)}`
 
     try {
-      await Promise.all(targetUnits.map(u => api.submitAvailability({ unitId: u.id, startTime, endTime })))
+      await Promise.all(
+        targetUnits.flatMap(u => dates.map(d => {
+          const dateStr = toDateInputValue(d)
+          return api.submitAvailability({
+            unitId: u.id,
+            startTime: `${dateStr}T${startTimeStr}:00`,
+            endTime: `${dateStr}T${endTimeStr}:00`,
+          })
+        }))
+      )
       const fresh = await api.getMyAvailability().catch(() => availability)
       setAvailability(fresh)
 
-      const newEntries: AdditionalAvailabilityEntry[] = targetUnits.map(u => ({
-        id: `${Date.now()}-${u.id}`,
+      const newEntries: AdditionalAvailabilityEntry[] = targetUnits.flatMap(u => dates.map(d => ({
+        id: `${Date.now()}-${u.id}-${d.getTime()}`,
         unitId: u.id,
         unitCode: u.code,
-        date: addDate,
-        startTime: addStartTime,
-        endTime: addEndTime,
+        date: toDateInputValue(d),
+        startTime: startTimeStr,
+        endTime: endTimeStr,
         mode: addMode,
         campus: addMode === 'on-campus' ? addCampus : undefined,
         notes: addNotes.trim(),
-      }))
+      })))
       setAdditionalEntries(prev => [...newEntries, ...prev])
 
+      const dateCount = dates.length
       setAddSuccess(
         scope === 'unit'
-          ? `Added for ${selectedInvitation.unit.code}.`
-          : `Added for all ${targetUnits.length} of your units.`
+          ? `Added ${dateCount} date${dateCount !== 1 ? 's' : ''} for ${selectedInvitation.unit.code}.`
+          : `Added ${dateCount} date${dateCount !== 1 ? 's' : ''} for all ${targetUnits.length} of your units.`
       )
-      setAddDate('')
-      setAddStartTime('')
-      setAddEndTime('')
+      setAddDays(new Set())
+      setAddStartDate('')
+      setAddEndDate('')
+      setAddWeekPattern('every')
+      setAddSpecificDates([])
+      setAddSpecificDateInput('')
       setAddNotes('')
     } catch (err: any) {
       console.error(err)
@@ -489,9 +671,8 @@ export default function TutorMyUnits() {
   const [acceptError, setAcceptError] = useState('')
 
   // FIX: this used to just flip local component state, so it didn't
-  // survive navigating away and back or refreshing — see the note on
-  // acceptInvitation in tutorMockApi.ts. Now it's a real, durable action:
-  // the invitation flips to RESPONDED immediately, same as the coordinator
+  // survive navigating away and back or refreshing. Now it's a real,
+  // durable action: the invitation flips to RESPONDED immediately, same as the coordinator
   // sees it as "Responded" — acceptedUnitIds stays as an optimistic local
   // overlay so the UI unlocks instantly without waiting on the call.
   const handleAccept = async (unitId: number) => {
@@ -605,12 +786,10 @@ export default function TutorMyUnits() {
                     </div>
                   </div>
                   <p><strong>Coordinator:</strong> {selectedInvitation.unit.coordinator?.fullName ?? '—'}</p>
-                  {/* FAKE — teachingWeeks/description don't exist in the backend yet */}
-                  <p><strong>Teaching weeks:</strong> Weeks 1–13 (placeholder)</p>
-                  <p style={{ marginTop: '8px', color: '#657985' }}>
-                    Placeholder description — this unit covers core concepts across the semester,
-                    delivered through weekly tutorials and labs. (Not real data yet.)
-                  </p>
+                  {/* Derived from this unit's real scheduled session dates —
+                      see the note above computeTeachingPeriodLabel for the
+                      semester-boundary placeholder it's measured against. */}
+                  <p><strong>Teaching period:</strong> {computeTeachingPeriodLabel(unitSessions)}</p>
                 </div>
 
                 {/* Invitation response */}
@@ -747,6 +926,8 @@ export default function TutorMyUnits() {
                               <div className="session-day">{group.title}</div>
                               <div className="session-time">
                                 {DAY_NAMES[group.dayOfWeek]}s, {group.timeLabel}
+                                {group.endTimeLabel && ` – ${group.endTimeLabel}`}
+                                {group.durationLabel && ` · ${group.durationLabel}`}
                               </div>
                               {group.location && <div className="session-location">{group.location}</div>}
                               <div className="session-time session-group-range">
@@ -941,29 +1122,133 @@ export default function TutorMyUnits() {
 
                     {showAddAvailability && (
                       <div className="detail-form">
-                        <div className="form-row-2">
-                          <div className="form-field">
-                            <label>Date</label>
-                            <input type="date" value={addDate} onChange={e => setAddDate(e.target.value)} />
+                        {/* Time — same wheel picker the Coordinator uses to
+                            schedule a class, with the same live duration
+                            readout, plus a per-week total below. */}
+                        <div className="form-subsection">
+                          <div className="form-subsection-title">Time</div>
+                          <div className="time-wheel-row">
+                            <TimeWheelPicker label="Start Time" value={addStartTime} onChange={setAddStartTime} />
+                            <TimeWheelPicker label="End Time" value={addEndTime} onChange={setAddEndTime} />
+                            <div className="form-field duration-display">
+                              <label>Duration</label>
+                              <input type="text" value={formatDurationMinutes(addDurationMins)} readOnly disabled />
+                            </div>
                           </div>
-                          <div className="form-field">
-                            <label>Mode</label>
-                            <select value={addMode} onChange={e => setAddMode(e.target.value as LocationType)}>
-                              <option value="on-campus">🏫 On Campus</option>
-                              <option value="online">🌐 Online</option>
-                            </select>
+                          {addWeeklyDurationMins != null && (
+                            <p className="avail-range-hint" style={{ marginTop: '-8px' }}>
+                              You're offering <strong>{formatDurationMinutes(addWeeklyDurationMins)}</strong> per
+                              week ({addDays.size} day{addDays.size !== 1 ? 's' : ''} × {formatDurationMinutes(addDurationMins)}).
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Schedule — mirrors the Coordinator's own Add
+                            Session schedule section exactly. */}
+                        <div className="form-subsection">
+                          <div className="form-subsection-title">Schedule</div>
+                          <div className="schedule-box">
+                            <div className="segmented-row">
+                              <button
+                                type="button"
+                                className={`segmented-btn ${addScheduleType === 'entire-semester' ? 'selected' : ''}`}
+                                onClick={() => setAddScheduleType('entire-semester')}
+                              >
+                                Entire Semester
+                              </button>
+                              <button
+                                type="button"
+                                className={`segmented-btn ${addScheduleType === 'mid-semester' ? 'selected' : ''}`}
+                                onClick={() => setAddScheduleType('mid-semester')}
+                              >
+                                Mid-Semester Start
+                              </button>
+                              <button
+                                type="button"
+                                className={`segmented-btn ${addScheduleType === 'specific-dates' ? 'selected' : ''}`}
+                                onClick={() => setAddScheduleType('specific-dates')}
+                              >
+                                Specific Date(s)
+                              </button>
+                            </div>
+
+                            {(addScheduleType === 'entire-semester' || addScheduleType === 'mid-semester') && (
+                              <>
+                                <div className="form-row-2" style={{ marginTop: 16 }}>
+                                  <div className="form-field">
+                                    <label>Start Date</label>
+                                    <input type="date" value={addStartDate} onChange={e => setAddStartDate(e.target.value)} />
+                                  </div>
+                                  <div className="form-field">
+                                    <label>End Date</label>
+                                    <input type="date" value={addEndDate} onChange={e => setAddEndDate(e.target.value)} />
+                                  </div>
+                                </div>
+
+                                <div className="form-field" style={{ marginTop: 16 }}>
+                                  <label>Day of Week</label>
+                                  <div className="myunits-add-days-row">
+                                    {ADD_AVAILABILITY_DAYS.map(day => (
+                                      <button
+                                        key={day}
+                                        type="button"
+                                        className={`segmented-btn ${addDays.has(day) ? 'selected' : ''}`}
+                                        onClick={() => toggleAddDay(day)}
+                                      >
+                                        {day.slice(0, 3)}
+                                      </button>
+                                    ))}
+                                  </div>
+                                </div>
+
+                                <div className="form-field" style={{ marginTop: 16 }}>
+                                  <label>Week Pattern</label>
+                                  <div className="segmented-row">
+                                    <button type="button" className={`segmented-btn ${addWeekPattern === 'every' ? 'selected' : ''}`}
+                                      onClick={() => setAddWeekPattern('every')}>Every Week</button>
+                                    <button type="button" className={`segmented-btn ${addWeekPattern === 'odd' ? 'selected' : ''}`}
+                                      onClick={() => setAddWeekPattern('odd')}>Odd Weeks</button>
+                                    <button type="button" className={`segmented-btn ${addWeekPattern === 'even' ? 'selected' : ''}`}
+                                      onClick={() => setAddWeekPattern('even')}>Even Weeks</button>
+                                  </div>
+                                </div>
+                              </>
+                            )}
+
+                            {addScheduleType === 'specific-dates' && (
+                              <div className="form-field" style={{ marginTop: 16 }}>
+                                <label>Dates</label>
+                                <div className="specific-dates-row">
+                                  <input type="date" value={addSpecificDateInput} onChange={e => setAddSpecificDateInput(e.target.value)} />
+                                  <button type="button" className="cancel-btn" onClick={addAddSpecificDate}>Add Date</button>
+                                </div>
+                                {addSpecificDates.length > 0 && (
+                                  <div className="specific-dates-chips">
+                                    {addSpecificDates.map(d => (
+                                      <span key={d} className="specific-date-chip">
+                                        {d}
+                                        <button type="button" onClick={() => removeAddSpecificDate(d)}>×</button>
+                                      </span>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            )}
+
+                            <p className="avail-range-hint schedule-occurrence-hint">
+                              {addOccurrenceCount > 0
+                                ? `This will offer ${addOccurrenceCount} date${addOccurrenceCount !== 1 ? 's' : ''}`
+                                : 'Select a valid date range or at least one specific date'}
+                            </p>
                           </div>
                         </div>
 
-                        <div className="form-row-2">
-                          <div className="form-field">
-                            <label>Start Time</label>
-                            <input type="time" value={addStartTime} onChange={e => setAddStartTime(e.target.value)} />
-                          </div>
-                          <div className="form-field">
-                            <label>End Time</label>
-                            <input type="time" value={addEndTime} onChange={e => setAddEndTime(e.target.value)} />
-                          </div>
+                        <div className="form-field">
+                          <label>Mode</label>
+                          <select value={addMode} onChange={e => setAddMode(e.target.value as LocationType)}>
+                            <option value="on-campus">🏫 On Campus</option>
+                            <option value="online">🌐 Online</option>
+                          </select>
                         </div>
 
                         {addMode === 'on-campus' && (

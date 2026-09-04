@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { coordinatorMockApi as api } from '../../services/coordinatorMockApi'
+import { api } from '../../services/api'
 import CoordinatorSidebar from '../../components/CooordinatorSidebar'
 import MyUnitsView from './CoordinatorMyUnitsView'
 import UnitDetailView from './CoordinatorUnitDetailView'

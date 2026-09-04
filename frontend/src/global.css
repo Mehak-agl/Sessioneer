@@ -1,27 +1,27 @@
 /* ==========================================================================
-   GLOBAL.CSS â€” merged from all page-level .css files
+   GLOBAL.CSS Ã¢â‚¬â€ merged from all page-level .css files
    ==========================================================================
    See chat for the full list of conflicts found + how they were resolved.
    Quick summary of the non-obvious decisions (search these tags below):
      [CONFLICT: body/*]        one canonical body/reset block, not one per page
      [CONFLICT: calendar]      coordinator + tutor calendar used the same
-                                class names with different values â€” merged
+                                class names with different values Ã¢â‚¬â€ merged
                                 using the coordinator version (more complete)
-     [CONFLICT: modal h2]      margin-bottom 8px vs 24px â€” kept 24px
-     [CONFLICT: empty-state]   two different designs under the same name â€”
+     [CONFLICT: modal h2]      margin-bottom 8px vs 24px Ã¢â‚¬â€ kept 24px
+     [CONFLICT: empty-state]   two different designs under the same name Ã¢â‚¬â€
                                 renamed the tutor-dashboard one
    ========================================================================== */
 
-/* â”€â”€ 1. Root variables + base reset [CONFLICT: body/*] â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+/* Ã¢â€â‚¬Ã¢â€â‚¬ 1. Root variables + base reset [CONFLICT: body/*] Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
    index.css, CoordinatorCalendarPage.css, CoordinatorDashboard.css, and
    TutorCalendar.css EACH declared their own `body { ... }` / `* { ... }`.
    Only the LAST one in the file would have actually applied, silently,
-   to the WHOLE app (not just that page) â€” different font-family (Arial
+   to the WHOLE app (not just that page) Ã¢â‚¬â€ different font-family (Arial
    vs Lato) and background depending on import order. Keeping exactly one
    copy here, taken from index.css since it's the real app-wide stylesheet.
    Each page's own background color is still applied via its wrapper div
    (.dashboard-page, .calendar-page, .login-wrapper, etc.) further down,
-   so nothing changes visually â€” this just makes it not order-dependent. */
+   so nothing changes visually Ã¢â‚¬â€ this just makes it not order-dependent. */
 
 :root {
   --primary: #0097B2;
@@ -65,9 +65,9 @@ p {
 }
 
 
-/* â”€â”€ 2. Login + Signup (shared brand panel, role selector, form fields) â”€â”€
+/* Ã¢â€â‚¬Ã¢â€â‚¬ 2. Login + Signup (shared brand panel, role selector, form fields) Ã¢â€â‚¬Ã¢â€â‚¬
    These two files declared identical rules for .brand-*, .role-selector,
-   .role-btn, .form-group â€” deduped cleanly, no conflicts, just merged. */
+   .role-btn, .form-group Ã¢â‚¬â€ deduped cleanly, no conflicts, just merged. */
 
 .login-wrapper,
 .signup-wrapper {
@@ -165,7 +165,7 @@ p {
 }
 
 .brand-features li::before {
-  content: 'âœ“';
+  content: 'Ã¢Å“â€œ';
   font-size: 13px;
   color: #378ADD;
   font-weight: 700;
@@ -548,7 +548,7 @@ p {
 }
 
 
-/* â”€â”€ 3. Coordinator sidebar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ 3. Coordinator sidebar Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
 
 .coord-sidebar {
   width: 285px;
@@ -697,7 +697,7 @@ p {
 }
 
 
-/* â”€â”€ 4. Tutor / staff sidebar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ 4. Tutor / staff sidebar Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
 
 .staff-sidebar {
   width: 285px;
@@ -792,11 +792,11 @@ p {
 }
 
 
-/* â”€â”€ 5. Coordinator dashboard shell (also reused by MyUnitsView) â”€â”€â”€â”€â”€â”€â”€â”€â”€
+/* Ã¢â€â‚¬Ã¢â€â‚¬ 5. Coordinator dashboard shell (also reused by MyUnitsView) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
    NOTE: .sidebar / .sidebar-logo / .profile / .menu below look like
    leftovers from before CoordinatorSidebar.tsx was split into its own
    component (which now uses .coord-sidebar instead). They don't appear
-   to be used anywhere anymore â€” left in as dead weight rather than
+   to be used anywhere anymore Ã¢â‚¬â€ left in as dead weight rather than
    deleted, since removing them isn't a CSS-merge decision to make
    silently. Safe to delete later once you confirm nothing references
    them. */
@@ -1194,14 +1194,14 @@ p {
 }
 
 
-/* â”€â”€ 6. Tutor / staff dashboard [CONFLICT: empty-state] â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+/* Ã¢â€â‚¬Ã¢â€â‚¬ 6. Tutor / staff dashboard [CONFLICT: empty-state] Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
    StaffDashboard.css had its own `.empty-state` (yellow warning box) that
    is a DIFFERENT design from MyUnitsView's `.empty-state` (dashed grey
-   call-to-action box, in section 8 below). They mean different things â€”
-   "here's a warning" vs "click here to create something" â€” so merging
+   call-to-action box, in section 8 below). They mean different things Ã¢â‚¬â€
+   "here's a warning" vs "click here to create something" Ã¢â‚¬â€ so merging
    them under one name would visibly break one of the two pages. Renamed
    this one to `.empty-state-warning`. You'll need to update the tutor
-   dashboard .tsx â€” see the "exact changes" list in chat. */
+   dashboard .tsx Ã¢â‚¬â€ see the "exact changes" list in chat. */
 
 .staff-dashboard-page {
   display: flex;
@@ -1413,7 +1413,7 @@ p {
   cursor: pointer;
 }
 
-/* renamed from .empty-state â€” see conflict note above */
+/* renamed from .empty-state Ã¢â‚¬â€ see conflict note above */
 .empty-state-warning {
   background: #fff8dc;
   color: #745a00;
@@ -1423,7 +1423,7 @@ p {
 }
 
 
-/* â”€â”€ 7. Coordinator unit detail view â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ 7. Coordinator unit detail view Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
 
 .unit-detail {
   padding: 0;
@@ -1622,10 +1622,10 @@ body.dark-theme .session-group-select-all-checkbox {
   margin-top: 4px;
 }
 
-/* â”€â”€ shared modal styling [CONFLICT: modal h2] â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+/* Ã¢â€â‚¬Ã¢â€â‚¬ shared modal styling [CONFLICT: modal h2] Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
    .modal h2 had margin-bottom: 8px here (unit detail modal, which is
    always followed by a .modal-sub subtitle) vs margin-bottom: 24px in
-   MyUnitsView (which has no subtitle). Kept 24px â€” for the unit-detail
+   MyUnitsView (which has no subtitle). Kept 24px Ã¢â‚¬â€ for the unit-detail
    modal this just adds ~16px more space above .modal-sub, which reads
    fine; nothing overlaps or breaks. */
 
@@ -1841,7 +1841,7 @@ body.dark-theme .session-group-select-all-checkbox {
   color: #e53935;
 }
 
-/* â”€â”€ Simulate accept/decline (testing-only, Invited Tutors section) â”€â”€â”€â”€â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ Simulate accept/decline (testing-only, Invited Tutors section) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
 
 .simulate-accept-btn,
 .simulate-decline-btn {
@@ -1879,7 +1879,7 @@ body.dark-theme .session-group-select-all-checkbox {
   cursor: default;
 }
 
-/* â”€â”€ Availability submission countdown (Invited Tutors section) â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ Availability submission countdown (Invited Tutors section) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
 
 .section-header-actions {
   display: flex;
@@ -1918,7 +1918,7 @@ body.dark-theme .session-group-select-all-checkbox {
   opacity: 0.8;
 }
 
-/* â”€â”€ Recurring session grouping (Sessions section) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ Recurring session grouping (Sessions section) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
 
 .session-group-card {
   padding: 0;
@@ -2035,7 +2035,7 @@ button.session-group-count {
   margin-left: 14px;
 }
 
-/* â”€â”€ Holiday marking (per dated occurrence) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ Holiday marking (per dated occurrence) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
 
 .session-holiday-btn {
   background: none;
@@ -2081,7 +2081,7 @@ button.session-group-count {
   margin-left: 2px;
 }
 
-/* â”€â”€ Deleting sessions (single occurrence or whole recurring series) â”€â”€â”€â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ Deleting sessions (single occurrence or whole recurring series) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
 
 .session-delete-btn {
   background: none;
@@ -2199,7 +2199,7 @@ body.dark-theme .status-badge.unavailable {
 }
 
 
-/* â”€â”€ 8. My Units view [CONFLICT: modal h2 â€” see note in section 7] â”€â”€â”€â”€â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ 8. My Units view [CONFLICT: modal h2 Ã¢â‚¬â€ see note in section 7] Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
 
 .my-units {
   padding: 0;
@@ -2262,7 +2262,7 @@ body.dark-theme .status-badge.unavailable {
   gap: 16px;
 }
 
-/* NOTE: this is the "no units yet" call-to-action style â€” different from
+/* NOTE: this is the "no units yet" call-to-action style Ã¢â‚¬â€ different from
    .empty-state-warning in section 6, kept as its original name/design. */
 .empty-state {
   text-align: center;
@@ -2347,7 +2347,7 @@ body.dark-theme .status-badge.unavailable {
 }
 
 
-/* â”€â”€ 9. Calendar (coordinator + tutor) [CONFLICT: calendar] â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+/* Ã¢â€â‚¬Ã¢â€â‚¬ 9. Calendar (coordinator + tutor) [CONFLICT: calendar] Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
    Both calendar pages used the exact same class names with different
    values (padding, border-radius, whether events show a colored left
    border + text color, whether the legend is a styled bar, etc).
@@ -2595,7 +2595,7 @@ body.dark-theme .status-badge.unavailable {
 }
 
 /* Thin yellow strip showing the tutor's own submitted availability for a
-   day â€” deliberately much slimmer than .class-event (which represents an
+   day Ã¢â‚¬â€ deliberately much slimmer than .class-event (which represents an
    actual scheduled session), so the two are never visually confused. */
 .availability-strip {
   margin-top: 6px;
@@ -2745,7 +2745,7 @@ body.dark-theme .status-badge.unavailable {
   }
 }
 
-/* Leftover sidebar wrapper class from an earlier calendar layout â€”
+/* Leftover sidebar wrapper class from an earlier calendar layout Ã¢â‚¬â€
    referenced in the media query above but not currently used by any
    element; harmless, left in rather than silently deleting it. */
 .calendar-sidebar {
@@ -2813,10 +2813,10 @@ body.dark-theme .status-badge.unavailable {
 }
 
 
-/* â”€â”€ 10. Chat (coordinator + tutor â€” identical, deduped cleanly) â”€â”€â”€â”€â”€â”€â”€â”€â”€
+/* Ã¢â€â‚¬Ã¢â€â‚¬ 10. Chat (coordinator + tutor Ã¢â‚¬â€ identical, deduped cleanly) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
    These two files were the same rule-for-rule, no conflicts. TutorChat.css
    just had one extra block (.chat-permission-notice) that CoordinatorChat
-   didn't need â€” included below, harmless either way. */
+   didn't need Ã¢â‚¬â€ included below, harmless either way. */
 
 .chat-page {
   display: flex;
@@ -3029,6 +3029,32 @@ body.dark-theme .status-badge.unavailable {
   font-size: 10px;
   opacity: 0.7;
   align-self: flex-end;
+}
+
+.chat-bubble-meta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  align-self: flex-end;
+}
+
+.chat-bubble-meta .chat-bubble-time {
+  align-self: auto;
+}
+
+/* WhatsApp-style double tick read receipt â€” gray/translucent while just
+   "Sent", brightened to teal once the mock marks the message "Read"
+   (see SEEN_DELAY_MS in CoordinatorChat.tsx / TutorChat.tsx). Only ever
+   shown on bubbles the current user sent. */
+.chat-ticks {
+  font-size: 12px;
+  line-height: 1;
+  letter-spacing: -2px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.chat-ticks-read {
+  color: #6fe6ff;
 }
 
 .chat-input-row {
@@ -3541,7 +3567,7 @@ body.dark-theme .status-badge.unavailable {
 }
 
 
-/* â”€â”€ 11. Tutor availability view â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ 11. Tutor availability view Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
 
 .tutor-availability {
   padding: 0;
@@ -4185,7 +4211,7 @@ body.dark-theme .status-badge.unavailable {
 }
 
 
-/* â”€â”€ 12. Tutor "My Units" page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+/* Ã¢â€â‚¬Ã¢â€â‚¬ 12. Tutor "My Units" page Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
    New for this page only. Reuses a lot of existing classes directly:
    .chat-search-box / .chat-lists-scroll / .chat-empty-hint / .chat-window-empty
    (from the chat page's list panel), .unit-code-badge (from MyUnitsView),
@@ -4319,7 +4345,7 @@ body.dark-theme .status-badge.unavailable {
 }
 
 
-/* â”€â”€ 13. Tutor availability modal (opened from Calendar) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+/* Ã¢â€â‚¬Ã¢â€â‚¬ 13. Tutor availability modal (opened from Calendar) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
    Reuses .modal-overlay / .modal / .form-field / .modal-actions /
    .cancel-btn / .confirm-btn from section 7, and .avail-grid / .avail-cell
    / .avail-day-header etc from section 11 (same grid styling as the old
@@ -4363,7 +4389,7 @@ body.dark-theme .status-badge.unavailable {
   font-size: 13px;
 }
 
-/* was missing before â€” the modal was reusing .avail-saved-message (green)
+/* was missing before Ã¢â‚¬â€ the modal was reusing .avail-saved-message (green)
    for error text too, which is why "Something went wrong" showed in green.
    Errors now use this instead. */
 .avail-error-message {
@@ -4380,10 +4406,10 @@ body.dark-theme .status-badge.unavailable {
 }
 
 
-/* â”€â”€ 14. QUT Tutor Directory â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+/* Ã¢â€â‚¬Ã¢â€â‚¬ 14. QUT Tutor Directory Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
    Reuses .tutors-list / .tutor-row / .tutor-avatar / .tutor-info /
    .tutor-name / .tutor-email from section 7 (coordinator's invited-tutors
-   list) directly â€” only the teaching-info row below each tutor is new. */
+   list) directly Ã¢â‚¬â€ only the teaching-info row below each tutor is new. */
 
 .directory-tutor-row {
   align-items: flex-start;
@@ -4409,9 +4435,9 @@ body.dark-theme .status-badge.unavailable {
 }
 
 
-/* â”€â”€ 15. Coordinator Calendar filter tabs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+/* Ã¢â€â‚¬Ã¢â€â‚¬ 15. Coordinator Calendar filter tabs Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
    Reuses .avail-pill-row / .avail-pill (section 11) for the three filter
-   buttons, and .unit-filter-box (section 9) for the unit dropdown â€” only
+   buttons, and .unit-filter-box (section 9) for the unit dropdown Ã¢â‚¬â€ only
    the wrapping layout below is new. */
 
 .calendar-filter-tabs {
@@ -4440,9 +4466,9 @@ body.dark-theme .status-badge.unavailable {
 }
 
 
-/* â”€â”€ 16. Chat: Admin & Member Permission management â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+/* Ã¢â€â‚¬Ã¢â€â‚¬ 16. Chat: Admin & Member Permission management Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
    Reuses .group-permission-row (already defined in section 10) for every
-   checkbox row â€” only the expand/collapse wrappers below are new. */
+   checkbox row Ã¢â‚¬â€ only the expand/collapse wrappers below are new. */
 
 .perm-section-hint {
   padding: 0 0 8px;
@@ -4538,7 +4564,7 @@ body.dark-theme .status-badge.unavailable {
 }
 
 
-/* â”€â”€ 17. Profile pages (Coordinator + Tutor) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+/* Ã¢â€â‚¬Ã¢â€â‚¬ 17. Profile pages (Coordinator + Tutor) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
    Reuses .detail-section / .section-header / .add-btn / .form-field /
    .form-row-2 / .detail-form / .confirm-btn from section 7, and
    .avail-saved-message / .avail-error-message from section 11/13. Only
@@ -4681,10 +4707,10 @@ body.dark-theme .status-badge.unavailable {
 }
 
 
-/* â”€â”€ 18. Dark theme â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+/* Ã¢â€â‚¬Ã¢â€â‚¬ 18. Dark theme Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
    Applied via a `dark-theme` class toggled on <body> from the Profile
    pages. This is a first pass covering the main page backgrounds, cards,
-   modals, and form inputs across the app â€” not every single element has
+   modals, and form inputs across the app Ã¢â‚¬â€ not every single element has
    been hand-checked, so if something looks off in dark mode on a page
    not listed here, it just needs its own override added below. */
 
@@ -4879,7 +4905,7 @@ body.dark-theme .empty-state-warning {
   margin: 20px 0 0;
 }
 
-/* â”€â”€ 18. Notifications page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ 18. Notifications page Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
 
 .sidebar-notif-badge {
   display: inline-flex;
@@ -5220,7 +5246,7 @@ body.dark-theme .notif-tab.active {
   background: var(--primary);
   color: white;
 }
-/* â”€â”€ 19. Unit three-dot menu + year grouping (My Units page) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ 19. Unit three-dot menu + year grouping (My Units page) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
 
 .unit-menu-wrapper {
   position: relative;
@@ -5298,7 +5324,7 @@ body.dark-theme .notif-tab.active {
 }
 
 
-/* â”€â”€ 20. Session edit button (Unit Detail page) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ 20. Session edit button (Unit Detail page) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
 
 .session-edit-btn {
   background: none;
@@ -5315,7 +5341,7 @@ body.dark-theme .notif-tab.active {
 }
 
 
-/* â”€â”€ 20b. Coordinator Allocations page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ 20b. Coordinator Allocations page Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
 
 .allocations-page {
   max-width: 1100px;
@@ -5507,7 +5533,7 @@ body.dark-theme .notif-tab.active {
 }
 
 
-/* â”€â”€ 21. Scroll wheel time picker (Google-Maps-style "Leave at") â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ 21. Scroll wheel time picker (Google-Maps-style "Leave at") Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
 
 .time-wheel-picker {
   display: flex;
@@ -5607,7 +5633,7 @@ body.dark-theme .notif-tab.active {
 }
 
 
-/* â”€â”€ 22. Multi-session Add Session form (full-width page) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+/* Ã¢â€â‚¬Ã¢â€â‚¬ 22. Multi-session Add Session form (full-width page) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
    Mirrors .unit-detail: this view takes over the whole .main-content
    area beside the sidebar instead of opening as a centered modal, with
    a .back-btn ("Back to Manage") matching the Manage page's own
@@ -5695,7 +5721,7 @@ body.dark-theme .notif-tab.active {
   margin: 16px 0 0;
 }
 
-/* Segmented control â€” replaces free-floating pill rows for mutually
+/* Segmented control Ã¢â‚¬â€ replaces free-floating pill rows for mutually
    exclusive choices (campus, schedule type, week pattern) with a single
    bordered strip, closer to a modern toggle group. */
 .segmented-row {
@@ -5750,6 +5776,21 @@ body.dark-theme .notif-tab.active {
   font-weight: 600;
 }
 
+/* Day-of-week multi-select for the Tutor's "Add Additional Availability"
+   schedule (unlike the Coordinator's single-day dropdown, a tutor can
+   offer several weekdays at once) â€” reuses .segmented-btn's look but
+   wraps freely instead of forcing an even-width bordered strip. */
+.myunits-add-days-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.myunits-add-days-row .segmented-btn {
+  flex: initial;
+  min-width: 64px;
+}
+
 .specific-dates-row {
   display: flex;
   gap: 10px;
@@ -5792,7 +5833,7 @@ body.dark-theme .notif-tab.active {
   padding: 0;
 }
 
-/* â”€â”€ 19. Staff sidebar extras (logout, clickable profile, divider) â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ 19. Staff sidebar extras (logout, clickable profile, divider) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
 
 .staff-profile.clickable {
   cursor: pointer;
@@ -5842,7 +5883,7 @@ body.dark-theme .notif-tab.active {
   font-size: 16px;
 }
 
-/* â”€â”€ 20. Coming Soon pages â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ 20. Coming Soon pages Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
 
 .coming-soon-card {
   background: white;
@@ -5878,7 +5919,7 @@ body.dark-theme .notif-tab.active {
   color: #0097b2 !important;
 }
 
-/* â”€â”€ 21. Coordinator Tutors page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ 21. Coordinator Tutors page Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
 
 .tutor-search-input {
   padding: 9px 16px;
@@ -6036,7 +6077,7 @@ body.dark-theme .tutor-search-input {
   color: #e0eaf0;
 }
 
-/* â”€â”€ 22. Auto Allocate â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ 22. Auto Allocate Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
 
 .auto-allocate-btn {
   display: flex;
@@ -6252,7 +6293,7 @@ body.dark-theme .auto-alloc-tutor-name {
 
 /* ===== Merged in from Sessioneer (mock-data tutor pages: Calendar, MyUnits, AvailabilityModal) ===== */
 
-/* Tutor calendar's own color scheme â€” invitation received / availability
+/* Tutor calendar's own color scheme Ã¢â‚¬â€ invitation received / availability
    submitted for that class / additional availability outside any
    scheduled class. Separate from allocated/pending/conflict above, which
    the coordinator calendar still uses. */
@@ -6282,10 +6323,10 @@ body.dark-theme .auto-alloc-tutor-name {
   opacity: 0.85;
 }
 
-/* â”€â”€ Scheduled Classes (select-to-submit) & Add Additional Availability â”€â”€
+/* Ã¢â€â‚¬Ã¢â€â‚¬ Scheduled Classes (select-to-submit) & Add Additional Availability Ã¢â€â‚¬Ã¢â€â‚¬
    The cards themselves reuse the coordinator's own .session-card /
-   .session-group-card / .session-group-body classes (Coordinator â€º
-   Sessions) so they look identical on both sides â€” nothing new to style
+   .session-group-card / .session-group-body classes (Coordinator Ã¢â‚¬Âº
+   Sessions) so they look identical on both sides Ã¢â‚¬â€ nothing new to style
    for the card shell itself, just the per-date row content below. */
 
 .myunits-class-list {
@@ -6296,7 +6337,7 @@ body.dark-theme .auto-alloc-tutor-name {
 
 /* When the list sits inside a .session-group-body (Scheduled Classes,
    expanded card) instead of standing alone in a .detail-section, the
-   card body already supplies its own border/background/scroll â€” so the
+   card body already supplies its own border/background/scroll Ã¢â‚¬â€ so the
    rows go edge-to-edge with no gap, same as the coordinator's own
    .session-occurrence-row list. */
 .myunits-class-list-in-card {

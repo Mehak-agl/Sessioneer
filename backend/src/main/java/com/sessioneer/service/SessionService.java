@@ -28,6 +28,7 @@ public class SessionService {
         Session session = new Session();
         session.setTitle(request.getTitle());
         session.setStartTime(request.getStartTime());
+        session.setEndTime(request.getEndTime());
         session.setLocation(request.getLocation());
         session.setStatus(SessionStatus.PENDING);
         session.setUnit(unit);
@@ -37,5 +38,18 @@ public class SessionService {
 
     public List<Session> getSessionsByUnit(Long unitId) {
         return sessionRepository.findByUnitId(unitId);
+    }
+
+    public Session setStaffUnavailable(Long sessionId, Long staffId, boolean unavailable) {
+        Session session = sessionRepository.findById(sessionId)
+                .orElseThrow(() -> new RuntimeException("Session not found"));
+
+        if (unavailable) {
+            session.getUnavailableStaffIds().add(staffId);
+        } else {
+            session.getUnavailableStaffIds().remove(staffId);
+        }
+
+        return sessionRepository.save(session);
     }
 }

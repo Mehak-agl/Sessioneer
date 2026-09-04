@@ -1,6 +1,7 @@
 package com.sessioneer.service;
 
 import com.sessioneer.dto.AllocationRequest;
+import com.sessioneer.dto.SelfAssignRequest;
 import com.sessioneer.model.Allocation;
 import com.sessioneer.model.AllocationStatus;
 import com.sessioneer.model.Session;
@@ -9,6 +10,7 @@ import com.sessioneer.model.User;
 import com.sessioneer.repository.AllocationRepository;
 import com.sessioneer.repository.SessionRepository;
 import com.sessioneer.repository.UserRepository;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -41,6 +43,25 @@ public class AllocationService {
         Allocation allocation = new Allocation();
         allocation.setSession(session);
         allocation.setStaff(staff);
+        allocation.setStatus(AllocationStatus.PROPOSED);
+
+        return allocationRepository.save(allocation);
+    }
+
+    public Allocation selfAssign(SelfAssignRequest request) {
+        Session session = sessionRepository.findById(request.getSessionId())
+                .orElseThrow(() -> new RuntimeException("Session not found"));
+
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        User coordinator = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        session.setStatus(SessionStatus.ALLOCATED);
+        sessionRepository.save(session);
+
+        Allocation allocation = new Allocation();
+        allocation.setSession(session);
+        allocation.setStaff(coordinator);
         allocation.setStatus(AllocationStatus.PROPOSED);
 
         return allocationRepository.save(allocation);

@@ -1,6 +1,7 @@
 package com.sessioneer.controller;
 
 import com.sessioneer.dto.AllocationRequest;
+import com.sessioneer.dto.SelfAssignRequest;
 import com.sessioneer.model.Allocation;
 import com.sessioneer.service.AllocationService;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +23,11 @@ public class AllocationController {
     @PostMapping
     public ResponseEntity<Allocation> allocate(@RequestBody AllocationRequest request) {
         return ResponseEntity.ok(allocationService.allocate(request));
+    }
+
+    @PostMapping("/self-assign")
+    public ResponseEntity<Allocation> selfAssign(@RequestBody SelfAssignRequest request) {
+        return ResponseEntity.ok(allocationService.selfAssign(request));
     }
 
     @GetMapping("/unit/{unitId}")

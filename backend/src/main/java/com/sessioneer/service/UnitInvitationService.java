@@ -54,4 +54,18 @@ public class UnitInvitationService {
         invitationRepository.findByUnitIdAndStaffId(unitId, staffId)
                 .ifPresent(invitationRepository::delete);
     }
+
+    public UnitInvitation respondToInvitation(Long unitId, Long staffId) {
+        UnitInvitation invitation = invitationRepository.findByUnitIdAndStaffId(unitId, staffId)
+                .orElseThrow(() -> new RuntimeException("Invitation not found"));
+        invitation.setStatus(InvitationStatus.RESPONDED);
+        return invitationRepository.save(invitation);
+    }
+
+    public UnitInvitation acceptInvitation(Long unitId) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        User staff = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        return respondToInvitation(unitId, staff.getId());
+    }
 }

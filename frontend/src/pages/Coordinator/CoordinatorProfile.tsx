@@ -17,7 +17,6 @@ export default function CoordinatorProfile() {
   const initials = fullName.split(' ').filter(Boolean).map(n => n[0]).join('').toUpperCase()
 
   const [photo, setPhoto] = useState<string | null>(() => localStorage.getItem(PHOTO_STORAGE_KEY))
-  const [resumeName, setResumeName] = useState<string | null>(null)
   const [theme, setTheme] = useState<Theme>(() => (localStorage.getItem(THEME_STORAGE_KEY) as Theme) || 'light')
 
   const [currentPassword, setCurrentPassword] = useState('')
@@ -27,7 +26,6 @@ export default function CoordinatorProfile() {
   const [passwordMessageType, setPasswordMessageType] = useState<'success' | 'error'>('success')
 
   const photoInputRef = useRef<HTMLInputElement>(null)
-  const resumeInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     applyTheme(theme)
@@ -47,15 +45,6 @@ export default function CoordinatorProfile() {
       localStorage.setItem(PHOTO_STORAGE_KEY, dataUrl)
     }
     reader.readAsDataURL(file)
-  }
-
-  const handleResumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    // Only the file name is kept — there's no backend endpoint to actually
-    // upload/store the resume file yet, and browsers can't persist raw
-    // file contents across a refresh without one. This resets on reload.
-    setResumeName(file.name)
   }
 
   const toggleTheme = () => {
@@ -108,7 +97,7 @@ export default function CoordinatorProfile() {
             <img src="/logo.png" alt="Page logo" />
             <div>
               <h1>Profile</h1>
-              <p>Manage your profile, resume, and account settings</p>
+              <p>Manage your profile and account settings</p>
             </div>
           </div>
         </header>
@@ -134,31 +123,6 @@ export default function CoordinatorProfile() {
 
           <h2 className="profile-name">{fullName}</h2>
           <span className="profile-position-badge">Coordinator</span>
-        </section>
-
-        <section className="detail-section">
-          <div className="section-header">
-            <div>
-              <h2>Resume</h2>
-              <p>Upload or update your resume</p>
-            </div>
-          </div>
-
-          <div className="resume-row">
-            <span className="resume-filename">
-              {resumeName ? resumeName : 'No resume uploaded yet'}
-            </span>
-            <button className="add-btn" onClick={() => resumeInputRef.current?.click()}>
-              {resumeName ? 'Replace resume' : 'Upload resume'}
-            </button>
-            <input
-              ref={resumeInputRef}
-              type="file"
-              accept=".pdf,.doc,.docx"
-              style={{ display: 'none' }}
-              onChange={handleResumeChange}
-            />
-          </div>
         </section>
 
         <section className="detail-section">

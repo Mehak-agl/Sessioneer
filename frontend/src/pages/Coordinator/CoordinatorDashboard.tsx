@@ -34,6 +34,8 @@ function CoordinatorDashboard() {
   const [view, setView] = useState<View>(initialView)
   const [selectedUnit, setSelectedUnit] = useState<Unit | null>(null)
   const [pendingCount, setPendingCount] = useState(0)
+  const [pendingByUnit, setPendingByUnit] = useState<{ unit: Unit; count: number }[]>([])
+  const [showPendingBreakdown, setShowPendingBreakdown] = useState(false)
   const [showImportModal, setShowImportModal] = useState(false)
   const [importRows, setImportRows] = useState<{ name: string; email: string }[]>([])
   const [importStatus, setImportStatus] = useState<{ email: string; result: string }[]>([])
@@ -248,11 +250,15 @@ function CoordinatorDashboard() {
     const fetchedUnits = await api.getUnits().catch(() => [])
     setUnits(fetchedUnits)
     let pending = 0
+    const byUnit: { unit: Unit; count: number }[] = []
     for (const unit of fetchedUnits) {
       const invitations = await api.getUnitInvitations(unit.id).catch(() => [])
-      pending += invitations.filter((inv: any) => inv.status === 'PENDING').length
+      const count = invitations.filter((inv: any) => inv.status === 'PENDING').length
+      pending += count
+      if (count > 0) byUnit.push({ unit, count })
     }
     setPendingCount(pending)
+    setPendingByUnit(byUnit)
   }
 
   useEffect(() => {
@@ -309,10 +315,13 @@ function CoordinatorDashboard() {
                 <h2>{units.length}</h2>
                 <p>Currently running</p>
               </div>
-              <div className="stat-card">
+              <div
+                className={`stat-card stat-card--clickable${showPendingBreakdown ? ' active' : ''}`}
+                onClick={() => setShowPendingBreakdown(p => !p)}
+              >
                 <span>Pending Responses</span>
                 <h2>{pendingCount}</h2>
-                <p>Awaiting tutor replies</p>
+                <p>Awaiting tutor replies {pendingCount > 0 ? '— click to view' : ''}</p>
               </div>
               <div className={`stat-card${getDaysRemaining() <= 3 ? ' warning' : ''}`}>
                 <span>Availability Deadline</span>
@@ -337,6 +346,35 @@ function CoordinatorDashboard() {
                 <p>Completed allocation</p>
               </div>
             </section>
+
+            {showPendingBreakdown && (
+              <section className="pending-breakdown">
+                <div className="pending-breakdown-header">
+                  <h3>Pending Responses by Unit</h3>
+                  <span className="pending-breakdown-deadline">
+                    {getDaysRemaining() > 0 ? `${getDaysRemaining()} days left` : getDaysRemaining() === 0 ? 'Due today' : 'Deadline passed'}
+                  </span>
+                </div>
+                {pendingByUnit.length === 0 ? (
+                  <p className="pending-breakdown-empty">No pending responses.</p>
+                ) : (
+                  pendingByUnit.map(({ unit, count }) => (
+                    <div key={unit.id} className="pending-breakdown-row">
+                      <div className="pending-breakdown-unit">
+                        <span className="unit-code-badge">{unit.code}</span>
+                        <span className="pending-breakdown-name">{unit.name}</span>
+                      </div>
+                      <div className="pending-breakdown-meta">
+                        <span className="pending-breakdown-count">{count} pending</span>
+                        <span className="pending-breakdown-days">
+                          {getDaysRemaining() > 0 ? `${getDaysRemaining()}d remaining` : 'Overdue'}
+                        </span>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </section>
+            )}
 
             <section className="units-panel">
               <div className="panel-heading">

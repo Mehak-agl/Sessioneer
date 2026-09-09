@@ -996,6 +996,87 @@ p {
   box-shadow: 0 18px 42px rgba(31, 53, 80, 0.12);
 }
 
+.stat-card--clickable {
+  cursor: pointer;
+}
+
+.stat-card--clickable.active {
+  border-color: var(--primary);
+  background: #f0fafd;
+}
+
+.pending-breakdown {
+  background: white;
+  border: 1.5px solid #d7eaf1;
+  border-radius: 16px;
+  padding: 20px 24px;
+  margin-bottom: 24px;
+  animation: notif-fade-in 0.15s ease;
+}
+
+.pending-breakdown-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.pending-breakdown-header h3 {
+  font-family: var(--font-heading);
+  font-size: 15px;
+  color: #1f3550;
+}
+
+.pending-breakdown-deadline {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.pending-breakdown-empty {
+  color: #657985;
+  font-size: 14px;
+}
+
+.pending-breakdown-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-top: 1px solid #f0f7fa;
+  gap: 12px;
+}
+
+.pending-breakdown-unit {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pending-breakdown-name {
+  font-size: 14px;
+  color: #1f3550;
+  font-weight: 500;
+}
+
+.pending-breakdown-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.pending-breakdown-count {
+  font-size: 13px;
+  font-weight: 700;
+  color: #e97316;
+}
+
+.pending-breakdown-days {
+  font-size: 12px;
+  color: #657985;
+}
+
 .stat-card span {
   color: #657985;
   font-weight: 700;

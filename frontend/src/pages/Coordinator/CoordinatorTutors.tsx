@@ -69,7 +69,7 @@ export default function CoordinatorTutors() {
     setCreating(true)
     const password = generatePassword()
     try {
-      await api.signup({ fullName: newName, email: newEmail, password, role: 'staff' })
+      await api.signup({ fullName: newName, email: newEmail, password, role: 'STAFF' })
       const newTutor: CreatedTutor = {
         id: Date.now(),
         fullName: newName,

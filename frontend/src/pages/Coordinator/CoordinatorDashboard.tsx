@@ -350,7 +350,7 @@ function CoordinatorDashboard() {
                 <p>Awaiting tutor replies {pendingCount > 0 ? '— click to view' : ''}</p>
               </div>
               <div className={`stat-card${getDaysRemaining() <= 3 ? ' warning' : ''}`}>
-                <span>Availability Deadline</span>
+                <span>Submission Deadline</span>
                 <h2>
                   {getDaysRemaining() > 0
                     ? `${getDaysRemaining()}d`
@@ -360,7 +360,7 @@ function CoordinatorDashboard() {
                 </h2>
                 <p>
                   {getDaysRemaining() > 0
-                    ? 'Days left to submit'
+                    ? 'Days left for tutors to respond'
                     : getDaysRemaining() === 0
                     ? 'Deadline is today'
                     : 'Submission closed'}

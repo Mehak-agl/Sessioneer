@@ -18,6 +18,21 @@ interface Unit {
 
 type View = 'dashboard' | 'units' | 'unit-detail'
 
+interface ConflictRequest {
+  id: number
+  tutorName: string
+  unit: string
+  session: string
+  date: string
+  type: 'Conflict' | 'Day-off'
+}
+
+const MOCK_CONFLICTS: ConflictRequest[] = [
+  { id: 1, tutorName: 'James Wilson',  unit: 'CAB302', session: 'Tutorial – Mon 10:00 am', date: '2026-08-10', type: 'Conflict' },
+  { id: 2, tutorName: 'Rohit Patel',   unit: 'IFN501', session: 'Tutorial – Thu 3:00 pm',  date: '2026-08-13', type: 'Day-off'  },
+  { id: 3, tutorName: 'Emily Chen',    unit: 'CAB303', session: 'Tutorial – Wed 11:00 am', date: '2026-08-19', type: 'Conflict' },
+]
+
 // Availability submission deadline for Semester 2, 2026
 const AVAIL_DEADLINE = new Date('2026-09-20')
 
@@ -380,6 +395,46 @@ function CoordinatorDashboard() {
                 )}
               </section>
             )}
+
+            <section className="detail-section">
+              <div className="section-header">
+                <div>
+                  <h2>Conflict & Day-off Requests</h2>
+                  <p>Tutors who need to be replaced for a session</p>
+                </div>
+                {MOCK_CONFLICTS.length > 0 && (
+                  <span className="conflict-count-badge">{MOCK_CONFLICTS.length} pending</span>
+                )}
+              </div>
+              {MOCK_CONFLICTS.length === 0 ? (
+                <p className="tutors-empty">No conflict or day-off requests.</p>
+              ) : (
+                <div className="tutors-table">
+                  <div className="tutors-table-header" style={{ gridTemplateColumns: '1fr 1fr 1fr auto' }}>
+                    <span>Tutor</span>
+                    <span>Unit / Session</span>
+                    <span>Date</span>
+                    <span>Type</span>
+                  </div>
+                  {MOCK_CONFLICTS.map(c => (
+                    <div key={c.id} className="tutors-table-row" style={{ gridTemplateColumns: '1fr 1fr 1fr auto' }}>
+                      <div className="tutors-avatar-name">
+                        <div className="tutors-avatar">
+                          {c.tutorName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                        </div>
+                        <span className="tutors-name">{c.tutorName}</span>
+                      </div>
+                      <div>
+                        <span className="unit-code-badge" style={{ marginRight: 6 }}>{c.unit}</span>
+                        <span style={{ fontSize: 13, color: '#657985' }}>{c.session}</span>
+                      </div>
+                      <span className="tutors-date">{new Date(c.date).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                      <span className={`conflict-type-badge${c.type === 'Conflict' ? ' conflict' : ' dayoff'}`}>{c.type}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
 
             <section className="units-panel">
               <div className="panel-heading">

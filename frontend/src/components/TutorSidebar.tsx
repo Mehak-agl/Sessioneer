@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { MOCK_NOTIFICATIONS, NOTIF_READ_KEY, NOTIF_EVENT } from '../data/notifications'
+import { MOCK_TUTOR_NOTIFICATIONS, TUTOR_NOTIF_READ_KEY, TUTOR_NOTIF_EVENT } from '../data/notifications'
 
 function getUnreadCount(): number {
   try {
-    const raw = localStorage.getItem(NOTIF_READ_KEY)
+    const raw = localStorage.getItem(TUTOR_NOTIF_READ_KEY)
     const readIds: string[] = raw ? JSON.parse(raw) : []
-    return MOCK_NOTIFICATIONS.filter(n => !readIds.includes(n.id)).length
+    return MOCK_TUTOR_NOTIFICATIONS.filter(n => !readIds.includes(n.id)).length
   } catch {
-    return MOCK_NOTIFICATIONS.length
+    return MOCK_TUTOR_NOTIFICATIONS.length
   }
 }
 
@@ -23,8 +23,8 @@ function StaffSidebar() {
 
   useEffect(() => {
     const handler = () => setUnreadCount(getUnreadCount())
-    window.addEventListener(NOTIF_EVENT, handler)
-    return () => window.removeEventListener(NOTIF_EVENT, handler)
+    window.addEventListener(TUTOR_NOTIF_EVENT, handler)
+    return () => window.removeEventListener(TUTOR_NOTIF_EVENT, handler)
   }, [])
 
   const handleLogout = () => {
@@ -78,7 +78,6 @@ function StaffSidebar() {
           )}
         </Link>
         <Link className={path === '/staff-chat' ? 'active' : ''} to="/staff-chat">Chat</Link>
-        <Link className={path === '/staff-profile' ? 'active' : ''} to="/staff-profile">Profile</Link>
       </nav>
 
       <div className="staff-menu-divider" />

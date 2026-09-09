@@ -28,15 +28,28 @@ interface Unit {
 function StaffDashboard() {
   const navigate = useNavigate()
   const [availability, setAvailability] = useState<Availability[]>([])
-  const [allocations] = useState<Allocation[]>([])
+  // FIX: this was declared with no setter and never fetched, so
+  // "Allocated Classes" always showed 0/empty no matter what data
+  // existed — see the real fetch added below, same myStaffId trick
+  // TutorMyUnits.tsx already uses (invitations don't carry a
+  // separate "who am I" endpoint, but every invitation includes
+  // staff.id, which is this tutor's own id).
+  const [allocations, setAllocations] = useState<Allocation[]>([])
   const [invitedUnits, setInvitedUnits] = useState<Unit[]>([])
+  const [myStaffId, setMyStaffId] = useState<number | null>(null)
 
   useEffect(() => {
     api.getMyAvailability().then(setAvailability).catch(console.error)
     api.getMyInvitations().then((invitations: any[]) => {
       setInvitedUnits(invitations.map(inv => inv.unit))
+      setMyStaffId(invitations[0]?.staff?.id ?? null)
     }).catch(console.error)
   }, [])
+
+  useEffect(() => {
+    if (myStaffId == null) return
+    api.getMyAllocations(myStaffId).then(setAllocations).catch(console.error)
+  }, [myStaffId])
 
   const handleLogout = () => {
     localStorage.removeItem('sessioneer_token')

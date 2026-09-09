@@ -329,10 +329,7 @@ function CoordinatorDashboard() {
                   <p>Manage tutors, units, schedules and allocations</p>
                 </div>
               </div>
-              <div style={{display:'flex', gap:'12px'}}>
-                <button className="new-unit-btn" onClick={() => setShowImportModal(true)}>↑ Import Tutors</button>
-                <button className="logout-btn" onClick={handleLogout}>Logout</button>
-              </div>
+              <button className="logout-btn" onClick={handleLogout}>Logout</button>
             </header>
 
             <section className="stats-grid">

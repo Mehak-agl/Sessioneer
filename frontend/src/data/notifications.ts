@@ -5,6 +5,22 @@ export type NotifType =
   | 'allocation_confirmed'
   | 'allocation_rejected'
 
+export type TutorNotifType =
+  | 'invitation'
+  | 'allocation'
+  | 'deadline'
+  | 'swap_approved'
+  | 'swap_declined'
+
+export interface TutorNotification {
+  id: string
+  type: TutorNotifType
+  title: string
+  message: string
+  unit: string
+  time: string
+}
+
 export interface Notification {
   id: string
   type: NotifType
@@ -16,6 +32,8 @@ export interface Notification {
 
 export const NOTIF_READ_KEY = 'sessioneer_read_notifs'
 export const NOTIF_EVENT = 'sessioneer_notif_updated'
+export const TUTOR_NOTIF_READ_KEY = 'sessioneer_tutor_read_notifs'
+export const TUTOR_NOTIF_EVENT = 'sessioneer_tutor_notif_updated'
 
 const t = (offsetMs: number) => new Date(Date.now() - offsetMs).toISOString()
 const MIN = 60000
@@ -83,6 +101,73 @@ export const MOCK_NOTIFICATIONS: Notification[] = [
     type: 'allocation_confirmed',
     title: 'Allocation Confirmed',
     message: 'Shari confirmed the Wednesday 11:00 am session for CAB302.',
+    unit: 'CAB302',
+    time: t(96 * HR),
+  },
+]
+
+export const MOCK_TUTOR_NOTIFICATIONS: TutorNotification[] = [
+  {
+    id: 't1',
+    type: 'allocation',
+    title: 'Session Allocated',
+    message: 'You have been allocated to the Tuesday 9:00 am tutorial for CAB302 – Software Architecture.',
+    unit: 'CAB302',
+    time: t(30 * MIN),
+  },
+  {
+    id: 't2',
+    type: 'invitation',
+    title: 'Unit Invitation',
+    message: 'Dr. Anantha has invited you to join IFN501 – Data Science Fundamentals as a sessional tutor.',
+    unit: 'IFN501',
+    time: t(3 * HR),
+  },
+  {
+    id: 't3',
+    type: 'deadline',
+    title: 'Availability Deadline',
+    message: 'Reminder: availability submission for CAB303 – Database Systems closes in 3 days. Please submit before the deadline.',
+    unit: 'CAB303',
+    time: t(6 * HR),
+  },
+  {
+    id: 't4',
+    type: 'allocation',
+    title: 'Session Allocated',
+    message: 'You have been allocated to the Thursday 2:00 pm lab for IFN501 – Data Science Fundamentals.',
+    unit: 'IFN501',
+    time: t(24 * HR),
+  },
+  {
+    id: 't5',
+    type: 'swap_approved',
+    title: 'Swap Request Approved',
+    message: 'Your request to swap the Friday 11:00 am session for CAB302 has been approved by the coordinator.',
+    unit: 'CAB302',
+    time: t(36 * HR),
+  },
+  {
+    id: 't6',
+    type: 'invitation',
+    title: 'Unit Invitation',
+    message: 'Dr. Priya has invited you to join CAB303 – Database Systems as a sessional tutor.',
+    unit: 'CAB303',
+    time: t(50 * HR),
+  },
+  {
+    id: 't7',
+    type: 'swap_declined',
+    title: 'Swap Request Declined',
+    message: 'Your request to swap the Wednesday 1:00 pm session for IFN501 was declined. Please contact your coordinator.',
+    unit: 'IFN501',
+    time: t(72 * HR),
+  },
+  {
+    id: 't8',
+    type: 'deadline',
+    title: 'Availability Deadline Passed',
+    message: 'The availability submission window for CAB302 has now closed. Contact your coordinator if you missed it.',
     unit: 'CAB302',
     time: t(96 * HR),
   },

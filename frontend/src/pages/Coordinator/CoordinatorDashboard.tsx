@@ -36,6 +36,7 @@ function CoordinatorDashboard() {
   const [pendingCount, setPendingCount] = useState(0)
   const [pendingByUnit, setPendingByUnit] = useState<{ unit: Unit; count: number }[]>([])
   const [showPendingBreakdown, setShowPendingBreakdown] = useState(false)
+  const [uninvitedCount, setUninvitedCount] = useState(0)
   const [showImportModal, setShowImportModal] = useState(false)
   const [importRows, setImportRows] = useState<{ name: string; email: string }[]>([])
   const [importStatus, setImportStatus] = useState<{ email: string; result: string }[]>([])
@@ -259,6 +260,10 @@ function CoordinatorDashboard() {
     }
     setPendingCount(pending)
     setPendingByUnit(byUnit)
+    const uninvited = (await Promise.all(
+      fetchedUnits.map(u => api.getUnitInvitations(u.id).catch(() => []))
+    )).filter(invites => invites.length === 0).length
+    setUninvitedCount(uninvited)
   }
 
   useEffect(() => {
@@ -340,10 +345,10 @@ function CoordinatorDashboard() {
                     : 'Submission closed'}
                 </p>
               </div>
-              <div className="stat-card success">
-                <span>Finalised</span>
-                <h2>0</h2>
-                <p>Completed allocation</p>
+              <div className={`stat-card${uninvitedCount > 0 ? ' warning' : ' success'}`}>
+                <span>Pending Invitations</span>
+                <h2>{uninvitedCount}</h2>
+                <p>{uninvitedCount > 0 ? 'Units with no tutors invited' : 'All units have invites sent'}</p>
               </div>
             </section>
 

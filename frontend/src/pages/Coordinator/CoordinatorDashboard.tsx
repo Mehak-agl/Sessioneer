@@ -52,6 +52,7 @@ function CoordinatorDashboard() {
   const [pendingByUnit, setPendingByUnit] = useState<{ unit: Unit; count: number }[]>([])
   const [showPendingBreakdown, setShowPendingBreakdown] = useState(false)
   const [uninvitedCount, setUninvitedCount] = useState(0)
+  const [invitesByUnit, setInvitesByUnit] = useState<{ unit: Unit; total: number; responded: number }[]>([])
   const [showImportModal, setShowImportModal] = useState(false)
   const [importRows, setImportRows] = useState<{ name: string; email: string }[]>([])
   const [importStatus, setImportStatus] = useState<{ email: string; result: string }[]>([])
@@ -275,10 +276,15 @@ function CoordinatorDashboard() {
     }
     setPendingCount(pending)
     setPendingByUnit(byUnit)
-    const uninvited = (await Promise.all(
+    const allInvites = await Promise.all(
       fetchedUnits.map(u => api.getUnitInvitations(u.id).catch(() => []))
-    )).filter(invites => invites.length === 0).length
-    setUninvitedCount(uninvited)
+    )
+    setUninvitedCount(allInvites.filter(invites => invites.length === 0).length)
+    setInvitesByUnit(fetchedUnits.map((unit, i) => ({
+      unit,
+      total: allInvites[i].length,
+      responded: allInvites[i].filter((inv: any) => inv.status === 'RESPONDED').length,
+    })))
   }
 
   useEffect(() => {
@@ -434,6 +440,41 @@ function CoordinatorDashboard() {
                   ))}
                 </div>
               )}
+            </section>
+
+            <section className="detail-section">
+              <div className="section-header">
+                <div>
+                  <h2>Tutor Invitations by Unit</h2>
+                  <p>Breakdown of invited and responded tutors per unit</p>
+                </div>
+              </div>
+              <div className="tutors-table">
+                <div className="tutors-table-header" style={{ gridTemplateColumns: '1fr 1fr 1fr 2fr' }}>
+                  <span>Unit</span>
+                  <span>Invited</span>
+                  <span>Responded</span>
+                  <span>Progress</span>
+                </div>
+                {invitesByUnit.map(({ unit, total, responded }) => {
+                  const pct = total === 0 ? 0 : Math.round((responded / total) * 100)
+                  return (
+                    <div key={unit.id} className="tutors-table-row" style={{ gridTemplateColumns: '1fr 1fr 1fr 2fr' }}>
+                      <div>
+                        <span className="unit-code-badge">{unit.code}</span>
+                      </div>
+                      <span className="tutors-name">{total} tutors</span>
+                      <span className="tutors-name">{responded} responded</span>
+                      <div className="invite-progress-bar-wrap">
+                        <div className="invite-progress-bar">
+                          <div className="invite-progress-fill" style={{ width: `${pct}%` }} />
+                        </div>
+                        <span className="invite-progress-pct">{pct}%</span>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
             </section>
 
             <section className="units-panel">

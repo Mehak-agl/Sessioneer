@@ -18,6 +18,15 @@ interface Unit {
 
 type View = 'dashboard' | 'units' | 'unit-detail'
 
+// Availability submission deadline for Semester 2, 2026
+const AVAIL_DEADLINE = new Date('2026-09-20')
+
+function getDaysRemaining(): number {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  return Math.ceil((AVAIL_DEADLINE.getTime() - today.getTime()) / 86400000)
+}
+
 function CoordinatorDashboard() {
   const navigate = useNavigate()
   const [units, setUnits] = useState<Unit[]>([])
@@ -305,10 +314,22 @@ function CoordinatorDashboard() {
                 <h2>{pendingCount}</h2>
                 <p>Awaiting tutor replies</p>
               </div>
-              <div className="stat-card warning">
-                <span>Conflicts</span>
-                <h2>0</h2>
-                <p>Need attention</p>
+              <div className={`stat-card${getDaysRemaining() <= 3 ? ' warning' : ''}`}>
+                <span>Availability Deadline</span>
+                <h2>
+                  {getDaysRemaining() > 0
+                    ? `${getDaysRemaining()}d`
+                    : getDaysRemaining() === 0
+                    ? 'Today'
+                    : 'Closed'}
+                </h2>
+                <p>
+                  {getDaysRemaining() > 0
+                    ? 'Days left to submit'
+                    : getDaysRemaining() === 0
+                    ? 'Deadline is today'
+                    : 'Submission closed'}
+                </p>
               </div>
               <div className="stat-card success">
                 <span>Finalised</span>

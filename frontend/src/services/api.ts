@@ -62,6 +62,24 @@ async function requestEmptyResponse(method: string, path: string, body?: object)
   }
 }
 
+async function requestText(method: string, path: string, body?: object) {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  }
+  const token = getToken()
+  if (token) headers['Authorization'] = `Bearer ${token}`
+
+  const res = await fetch(`${BASE_URL}${path}`, {
+    method,
+    headers,
+    body: body ? JSON.stringify(body) : undefined,
+  })
+
+  const text = await res.text()
+  if (!res.ok) throw new Error(text)
+  return text
+}
+
 export const api = {
   signup: (data: object) => request('POST', '/auth/signup', data),
   login: (data: object) => request('POST', '/auth/login', data),
@@ -94,4 +112,8 @@ export const api = {
   updateGroupPermissions: (groupId: number, permissions: object) => request('PUT', `/groups/${groupId}/permissions`, permissions),
   setGroupMemberAdmin: (groupId: number, userId: number, isAdmin: boolean) => requestEmptyResponse('PUT', `/groups/${groupId}/members/${userId}/admin`, { isAdmin }),
   updateAdminPermissions: (groupId: number, userId: number, permissions: object) => requestEmptyResponse('PUT', `/groups/${groupId}/members/${userId}/admin-permissions`, permissions),
+  getProfile: () => request('GET', '/profile'),
+  updatePhoto: (photo: string) => request('PUT', '/profile/photo', { photo }),
+  updateResume: (resumeName: string, resumeData: string, resumeType: string) => request('PUT', '/profile/resume', { resumeName, resumeData, resumeType }),
+  changePassword: (currentPassword: string, newPassword: string) => requestText('PUT', '/profile/password', { currentPassword, newPassword }),
 }

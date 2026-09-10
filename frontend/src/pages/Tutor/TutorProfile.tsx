@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import StaffSidebar from '../../components/TutorSidebar'
+import { api } from '../../services/api'
 
 
 type Theme = 'light' | 'dark'
@@ -24,9 +25,23 @@ export default function TutorProfile() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [passwordMessage, setPasswordMessage] = useState('')
   const [passwordMessageType, setPasswordMessageType] = useState<'success' | 'error'>('success')
+  const [resumeData, setResumeData] = useState<string | null>(null)
+  const [showPhotoModal, setShowPhotoModal] = useState(false)
 
   const photoInputRef = useRef<HTMLInputElement>(null)
   const resumeInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    api.getProfile().then((profile: any) => {
+      if (profile.photo) {
+        const dataUrl = `data:image/jpeg;base64,${profile.photo}`
+        setPhoto(dataUrl)
+        localStorage.setItem(PHOTO_STORAGE_KEY, dataUrl)
+      }
+      if (profile.resumeName) setResumeName(profile.resumeName)
+      if (profile.resumeData) setResumeData(profile.resumeData)
+    }).catch(console.error)
+  }, [])
 
   useEffect(() => {
     applyTheme(theme)
@@ -36,14 +51,16 @@ export default function TutorProfile() {
     const file = e.target.files?.[0]
     if (!file) return
     const reader = new FileReader()
-    reader.onload = () => {
+    reader.onload = async () => {
       const dataUrl = reader.result as string
-      setPhoto(dataUrl)
-      // Persisted to localStorage so it survives a refresh — this is safe
-      // since it never leaves the browser, but note it's per-browser only
-      // (won't follow the account to another device without a real
-      // backend to store it against the user's profile).
-      localStorage.setItem(PHOTO_STORAGE_KEY, dataUrl)
+      const base64 = dataUrl.split(',')[1]
+      try {
+        await api.updatePhoto(base64)
+        setPhoto(dataUrl)
+        localStorage.setItem(PHOTO_STORAGE_KEY, dataUrl)
+      } catch (err) {
+        console.error(err)
+      }
     }
     reader.readAsDataURL(file)
   }
@@ -51,10 +68,17 @@ export default function TutorProfile() {
   const handleResumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-    // Only the file name is kept — there's no backend endpoint to actually
-    // upload/store the resume file yet, and browsers can't persist raw
-    // file contents across a refresh without one. This resets on reload.
-    setResumeName(file.name)
+    const reader = new FileReader()
+    reader.onload = async () => {
+      const base64 = (reader.result as string).split(',')[1]
+      try {
+        await api.updateResume(file.name, base64, file.type)
+        setResumeName(file.name)
+      } catch (err) {
+        console.error(err)
+      }
+    }
+    reader.readAsDataURL(file)
   }
 
   const toggleTheme = () => {
@@ -65,7 +89,7 @@ export default function TutorProfile() {
     })
   }
 
-  const handleChangePassword = (e: React.FormEvent) => {
+  const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault()
     setPasswordMessage('')
 
@@ -85,16 +109,17 @@ export default function TutorProfile() {
       return
     }
 
-    // NOTE: there is no backend endpoint for changing a password yet
-    // (AuthController only has /signup and /login). This is a fully
-    // working form with real validation, but the submit below is a
-    // placeholder — nothing is actually sent anywhere until that
-    // endpoint exists.
-    setPasswordMessage('Password change form is ready, but not yet connected to a backend endpoint.')
-    setPasswordMessageType('error')
-    setCurrentPassword('')
-    setNewPassword('')
-    setConfirmPassword('')
+    try {
+      await api.changePassword(currentPassword, newPassword)
+      setPasswordMessage('Password changed successfully.')
+      setPasswordMessageType('success')
+      setCurrentPassword('')
+      setNewPassword('')
+      setConfirmPassword('')
+    } catch (err: any) {
+      setPasswordMessage(err.message || 'Failed to change password.')
+      setPasswordMessageType('error')
+    }
   }
 
   return (
@@ -114,10 +139,33 @@ export default function TutorProfile() {
 
         <section className="profile-card-section">
           <div className="profile-photo-wrapper">
-            {photo ? (
-              <img src={photo} alt={fullName} className="profile-photo-circle" />
-            ) : (
+            {photo ? (              
+              <img 
+                src={photo} 
+                alt={fullName} 
+                className="profile-photo-circle" 
+                onClick={() => setShowPhotoModal(true)}
+                style={{ cursor: 'pointer' }}
+              />
+            ) : (             
               <div className="profile-photo-circle profile-photo-placeholder">{initials}</div>
+            )}
+
+            {showPhotoModal && (
+              <div 
+                onClick={() => setShowPhotoModal(false)}
+                style={{
+                  position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  zIndex: 1000, cursor: 'pointer'
+                }}
+              >
+                <img 
+                  src={photo!} 
+                  alt={fullName}
+                  style={{ maxWidth: '90vw', maxHeight: '90vh', borderRadius: '16px', objectFit: 'contain' }}
+                />
+              </div>
             )}
             <button className="profile-photo-edit-btn" onClick={() => photoInputRef.current?.click()}>
               Change photo
@@ -144,9 +192,18 @@ export default function TutorProfile() {
           </div>
 
           <div className="resume-row">
-            <span className="resume-filename">
-              {resumeName ? resumeName : 'No resume uploaded yet'}
-            </span>
+            {resumeName ? (
+              <a 
+                href={resumeData ? `data:application/pdf;base64,${resumeData}` : '#'}
+                download={resumeName}
+                className="resume-filename"
+                style={{ color: '#0097b2', textDecoration: 'underline', cursor: 'pointer' }}
+              >
+                {resumeName}
+              </a>
+            ) : (
+              <span className="resume-filename">No resume uploaded yet</span>
+            )}
             <button className="add-btn" onClick={() => resumeInputRef.current?.click()}>
               {resumeName ? 'Replace resume' : 'Upload resume'}
             </button>

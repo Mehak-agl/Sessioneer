@@ -25,6 +25,8 @@ export default function LoginPage() {
       localStorage.setItem('sessioneer_token', res.token)
       localStorage.setItem('sessioneer_role', res.role.toLowerCase())
       localStorage.setItem('sessioneer_name', res.fullName)
+      // Store user ID in localStorage for testing purposes (not secure for production)
+      localStorage.setItem('sessioneer_user_id', String(res.userId))
       navigate(res.role === 'COORDINATOR' ? '/coordinator' : '/staff')
     } catch {
       // Fall back to mock auth when backend is not running

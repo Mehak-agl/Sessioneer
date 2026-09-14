@@ -5,7 +5,7 @@ import { api } from '../../services/api'
 
 type Theme = 'light' | 'dark'
 
-const PHOTO_STORAGE_KEY = 'sessioneer_photo'
+const PHOTO_STORAGE_KEY = 'coordinator_photo'
 const THEME_STORAGE_KEY = 'sessioneer_theme'
 
 function applyTheme(theme: Theme) {

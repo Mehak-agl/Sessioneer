@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { api, SELF_ASSIGN_STAFF_ID } from "../../services/api";
-import CoordinatorSidebar from '../../components/CooordinatorSidebar'
+import CoordinatorSidebar from '../../components/CoordinatorSidebar'
 
 interface Unit {
   id: number;

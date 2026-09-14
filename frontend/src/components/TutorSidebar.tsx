@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 function StaffSidebar() {
   const fullName = localStorage.getItem('sessioneer_name') || 'Staff';
   const initials = fullName.split(' ').map((n: string) => n[0]).join('');
-  const photo = localStorage.getItem('sessioneer_photo');
+  const photo = localStorage.getItem('tutor_photo');
 
   return (
     <aside className="staff-sidebar">

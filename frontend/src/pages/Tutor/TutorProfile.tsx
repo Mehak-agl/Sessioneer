@@ -5,7 +5,7 @@ import { api } from '../../services/api'
 
 type Theme = 'light' | 'dark'
 
-const PHOTO_STORAGE_KEY = 'sessioneer_photo'
+const PHOTO_STORAGE_KEY = 'tutor_photo'
 const THEME_STORAGE_KEY = 'sessioneer_theme'
 
 function applyTheme(theme: Theme) {
@@ -25,8 +25,8 @@ export default function TutorProfile() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [passwordMessage, setPasswordMessage] = useState('')
   const [passwordMessageType, setPasswordMessageType] = useState<'success' | 'error'>('success')
-  const [resumeData, setResumeData] = useState<string | null>(null)
   const [showPhotoModal, setShowPhotoModal] = useState(false)
+  const [resumeData, setResumeData] = useState<string | null>(null)
 
   const photoInputRef = useRef<HTMLInputElement>(null)
   const resumeInputRef = useRef<HTMLInputElement>(null)
@@ -74,6 +74,7 @@ export default function TutorProfile() {
       try {
         await api.updateResume(file.name, base64, file.type)
         setResumeName(file.name)
+        setResumeData(base64)
       } catch (err) {
         console.error(err)
       }
@@ -139,15 +140,15 @@ export default function TutorProfile() {
 
         <section className="profile-card-section">
           <div className="profile-photo-wrapper">
-            {photo ? (              
+            {photo ? (
               <img 
                 src={photo} 
                 alt={fullName} 
-                className="profile-photo-circle" 
+                className="profile-photo-circle"
                 onClick={() => setShowPhotoModal(true)}
                 style={{ cursor: 'pointer' }}
               />
-            ) : (             
+            ) : (
               <div className="profile-photo-circle profile-photo-placeholder">{initials}</div>
             )}
 

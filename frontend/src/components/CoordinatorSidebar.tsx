@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { MOCK_NOTIFICATIONS, NOTIF_READ_KEY, NOTIF_EVENT } from '../data/notifications'
 
 function getUnreadCount(): number {
@@ -15,9 +15,10 @@ function getUnreadCount(): number {
 function CoordinatorSidebar() {
   const fullName = localStorage.getItem('sessioneer_name') || 'Coordinator'
   const initials = fullName.split(' ').map((n: string) => n[0]).join('')
-  const photo = localStorage.getItem('sessioneer_photo')
+  const photo = localStorage.getItem('coordinator_photo')
   const [unreadCount, setUnreadCount] = useState(getUnreadCount)
   const location = useLocation()
+  const navigate = useNavigate()
   const path = location.pathname
 
   useEffect(() => {
@@ -25,6 +26,15 @@ function CoordinatorSidebar() {
     window.addEventListener(NOTIF_EVENT, handler)
     return () => window.removeEventListener(NOTIF_EVENT, handler)
   }, [])
+
+  const goToProfile = () => navigate('/coordinator-profile')
+
+  const handleLogout = () => {
+    localStorage.removeItem('sessioneer_token')
+    localStorage.removeItem('sessioneer_role')
+    localStorage.removeItem('sessioneer_name')
+    navigate('/')
+  }
 
   return (
     <aside className="coord-sidebar">
@@ -36,7 +46,18 @@ function CoordinatorSidebar() {
         </div>
       </div>
 
-      <div className="coord-profile">
+      <div
+        className="coord-profile clickable"
+        role="button"
+        tabIndex={0}
+        onClick={goToProfile}
+        onKeyDown={e => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            goToProfile()
+          }
+        }}
+      >
         {photo ? (
           <img src={photo} alt={fullName} className="coord-avatar sidebar-avatar-photo" />
         ) : (
@@ -50,11 +71,11 @@ function CoordinatorSidebar() {
 
       <nav className="coord-menu">
         <Link className={path === '/coordinator' ? 'active' : ''} to="/coordinator">Dashboard</Link>
-        <Link to="/coordinator">My Units</Link>
+        <Link className={path === '/coordinator/units' ? 'active' : ''} to="/coordinator/units">My Units</Link>
         <Link className={path === '/calendar' ? 'active' : ''} to="/calendar">Calendar</Link>
-        <Link to="/coordinator">Tutors</Link>
-        <Link to="/coordinator">Allocations</Link>
-        <Link to="/coordinator">Reports</Link>
+        <Link className={path === '/coordinator/tutors' ? 'active' : ''} to="/coordinator/tutors">Tutors</Link>
+        <Link className={path === '/coordinator/allocations' ? 'active' : ''} to="/coordinator/allocations">Allocations</Link>
+        <Link className={path === '/coordinator/reports' ? 'active' : ''} to="/coordinator/reports">Reports</Link>
         <Link to="/coordinator-notifications" className={`notif-nav-link${path === '/coordinator-notifications' ? ' active' : ''}`}>
           Notifications
           {unreadCount > 0 && (
@@ -62,8 +83,13 @@ function CoordinatorSidebar() {
           )}
         </Link>
         <Link className={path === '/coordinator-chat' ? 'active' : ''} to="/coordinator-chat">Chat</Link>
-        <Link className={path === '/coordinator-profile' ? 'active' : ''} to="/coordinator-profile">Profile</Link>
       </nav>
+
+      <div className="coord-menu-divider" />
+
+      <button type="button" className="coord-logout-btn" onClick={handleLogout}>
+        <span className="coord-logout-icon">⏻</span> Logout
+      </button>
     </aside>
   )
 }

@@ -1,4 +1,5 @@
 const BASE_URL = 'http://localhost:8080/api'
+export const SELF_ASSIGN_STAFF_ID = 0
 
 function getToken() {
   return localStorage.getItem('sessioneer_token')
@@ -116,4 +117,5 @@ export const api = {
   updatePhoto: (photo: string) => request('PUT', '/profile/photo', { photo }),
   updateResume: (resumeName: string, resumeData: string, resumeType: string) => request('PUT', '/profile/resume', { resumeName, resumeData, resumeType }),
   changePassword: (currentPassword: string, newPassword: string) => requestText('PUT', '/profile/password', { currentPassword, newPassword }),
+  selfAssign: (data: object) => request('POST', '/allocations', data),
 }

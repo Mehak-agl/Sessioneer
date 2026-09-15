@@ -271,6 +271,86 @@ export async function getAllStaff() {
   return delay(db.users.filter(u => u.role === 'STAFF').map(toStaffSummary))
 }
 
+// ── Tutor Report section (Coordinator view of all tutors) ─────────────────
+//
+// A tutor's resume is uploaded from their own Profile page (see
+// pages/Tutor/TutorProfile.tsx). There's no backend endpoint to store it
+// against their account yet, so — same mock-only approach as everything
+// else in this file — it's kept in localStorage, one entry per tutor id,
+// which lets the Coordinator's Tutor Report screens read it back here.
+
+function readResume(userId: number): { fileName?: string; data?: string } {
+  try {
+    const fileName = localStorage.getItem(`sessioneer_resume_name_${userId}`)
+    const data = localStorage.getItem(`sessioneer_resume_${userId}`)
+    return { fileName: fileName ?? undefined, data: data ?? undefined }
+  } catch {
+    return {}
+  }
+}
+
+function tutorUnitsFor(db: ReturnType<typeof getDb>, staffId: number) {
+  return db.invitations
+    .filter(inv => inv.staffId === staffId)
+    .map(inv => {
+      const unit = db.units.find(u => u.id === inv.unitId)
+      const sessionIdsInUnit = new Set(db.sessions.filter(s => s.unitId === inv.unitId).map(s => s.id))
+      const sessionsAllocated = db.allocations.filter(
+        a => a.staffId === staffId && sessionIdsInUnit.has(a.sessionId),
+      ).length
+      return {
+        unitId: inv.unitId,
+        code: unit?.code ?? 'Unknown',
+        name: unit?.name ?? 'Unknown unit',
+        semester: unit?.semester ?? '',
+        invitationStatus: inv.status,
+        sessionsAllocated,
+      }
+    })
+}
+
+export async function getAllTutors() {
+  const db = getDb()
+  const tutors = db.users
+    .filter(u => u.role === 'STAFF')
+    .map(u => {
+      const units = tutorUnitsFor(db, u.id)
+      const totalSessionsAllocated = units.reduce((sum, unit) => sum + unit.sessionsAllocated, 0)
+      return {
+        id: u.id,
+        fullName: u.fullName,
+        email: u.email,
+        unitCount: units.length,
+        totalSessionsAllocated,
+        hasResume: Boolean(readResume(u.id).data),
+      }
+    })
+  return delay(tutors)
+}
+
+export async function getTutorProfile(tutorId: number) {
+  const db = getDb()
+  const user = db.users.find(u => u.id === tutorId && u.role === 'STAFF')
+  if (!user) return delay(fail('Tutor not found.'))
+
+  const units = tutorUnitsFor(db, user.id)
+  const totalSessionsAllocated = units.reduce((sum, unit) => sum + unit.sessionsAllocated, 0)
+  const pendingInvitations = units.filter(u => u.invitationStatus === 'PENDING').length
+  const resume = readResume(user.id)
+
+  return delay({
+    id: user.id,
+    fullName: user.fullName,
+    email: user.email,
+    units,
+    totalSessionsAllocated,
+    pendingInvitations,
+    hasResume: Boolean(resume.data),
+    resumeFileName: resume.fileName,
+    resumeData: resume.data,
+  })
+}
+
 export async function inviteStaff(unitId: number, staffId: number) {
   const db = getDb()
   if (!db.units.some(u => u.id === unitId)) return delay(fail('Unit not found.'))

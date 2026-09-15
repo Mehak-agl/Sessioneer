@@ -11,6 +11,7 @@ import CoordinatorProfile from './pages/Coordinator/CoordinatorProfile'
 import CoordinatorNotifications from './pages/Coordinator/CoordinatorNotifications'
 import CoordinatorTutors from './pages/Coordinator/CoordinatorTutors'
 import CoordinatorReports from './pages/Coordinator/CoordinatorReports'
+import CoordinatorTutorProfile from './pages/Coordinator/CoordinatorTutorProfile'
 
 import TutorDashboard from './pages/Tutor/TutorDashboard'
 import TutorMyUnits from './pages/Tutor/TutorMyUnits'
@@ -42,6 +43,7 @@ export default function App() {
         <Route path="/coordinator-profile" element={<CoordinatorProfile />} />
         <Route path="/coordinator/tutors" element={<CoordinatorTutors />} />
         <Route path="/coordinator/reports" element={<CoordinatorReports />} />
+        <Route path="/coordinator/reports/:id" element={<CoordinatorTutorProfile />} />
         <Route path="/staff-profile" element={<TutorProfile />} />
         <Route path="/staff-contracts" element={<TutorContracts />} />
         <Route path="/staff-notifications" element={<TutorNotifications />} />

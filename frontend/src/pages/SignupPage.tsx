@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { api } from '../services/api'
+import PasswordInput from '../components/PasswordInput'
 
 
 type Role = 'coordinator' | 'staff'
@@ -82,13 +83,25 @@ export default function SignupPage() {
             <div className="form-row">
               <div className="form-group">
                 <label htmlFor="password">Password</label>
-                <input id="password" type="password" placeholder="Min. 6 characters"
-                  value={password} onChange={e => setPassword(e.target.value)} required />
+                <PasswordInput
+                  id="password"
+                  placeholder="Min. 6 characters"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  autoComplete="new-password"
+                  required
+                />
               </div>
               <div className="form-group">
                 <label htmlFor="confirmPassword">Confirm Password</label>
-                <input id="confirmPassword" type="password" placeholder="Re-enter password"
-                  value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required />
+                <PasswordInput
+                  id="confirmPassword"
+                  placeholder="Re-enter password"
+                  value={confirmPassword}
+                  onChange={e => setConfirmPassword(e.target.value)}
+                  autoComplete="new-password"
+                  required
+                />
               </div>
             </div>
             {error && <p className="signup-error">{error}</p>}

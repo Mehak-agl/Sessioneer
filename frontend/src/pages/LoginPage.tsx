@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { api } from '../services/api'
+import PasswordInput from '../components/PasswordInput'
 
 
 type Role = 'coordinator' | 'staff'
@@ -85,8 +86,14 @@ export default function LoginPage() {
             </div>
             <div className="form-group">
               <label htmlFor="password">Password</label>
-              <input id="password" type="password" placeholder="Enter your password"
-                value={password} onChange={e => setPassword(e.target.value)} required />
+              <PasswordInput
+                id="password"
+                placeholder="Enter your password"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                autoComplete="current-password"
+                required
+              />
             </div>
             {error && <p className="login-error">{error}</p>}
             <button type="submit" className="login-btn">Sign In</button>

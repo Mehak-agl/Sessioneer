@@ -1,27 +1,27 @@
 /* ==========================================================================
-   GLOBAL.CSS Ã¢â‚¬â€ merged from all page-level .css files
+   GLOBAL.CSS ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â merged from all page-level .css files
    ==========================================================================
    See chat for the full list of conflicts found + how they were resolved.
    Quick summary of the non-obvious decisions (search these tags below):
      [CONFLICT: body/*]        one canonical body/reset block, not one per page
      [CONFLICT: calendar]      coordinator + tutor calendar used the same
-                                class names with different values Ã¢â‚¬â€ merged
+                                class names with different values ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â merged
                                 using the coordinator version (more complete)
-     [CONFLICT: modal h2]      margin-bottom 8px vs 24px Ã¢â‚¬â€ kept 24px
-     [CONFLICT: empty-state]   two different designs under the same name Ã¢â‚¬â€
+     [CONFLICT: modal h2]      margin-bottom 8px vs 24px ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â kept 24px
+     [CONFLICT: empty-state]   two different designs under the same name ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â
                                 renamed the tutor-dashboard one
    ========================================================================== */
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬ 1. Root variables + base reset [CONFLICT: body/*] Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ 1. Root variables + base reset [CONFLICT: body/*] ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
    index.css, CoordinatorCalendarPage.css, CoordinatorDashboard.css, and
    TutorCalendar.css EACH declared their own `body { ... }` / `* { ... }`.
    Only the LAST one in the file would have actually applied, silently,
-   to the WHOLE app (not just that page) Ã¢â‚¬â€ different font-family (Arial
+   to the WHOLE app (not just that page) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â different font-family (Arial
    vs Lato) and background depending on import order. Keeping exactly one
    copy here, taken from index.css since it's the real app-wide stylesheet.
    Each page's own background color is still applied via its wrapper div
    (.dashboard-page, .calendar-page, .login-wrapper, etc.) further down,
-   so nothing changes visually Ã¢â‚¬â€ this just makes it not order-dependent. */
+   so nothing changes visually ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â this just makes it not order-dependent. */
 
 :root {
   --primary: #0097B2;
@@ -36,6 +36,15 @@
 
   --font-heading: 'Montserrat', sans-serif;
   --font-body: 'Lato', sans-serif;
+
+  /* App-wide text tones (headings, body copy, and least-emphasis text)
+     used across cards/panels throughout the dashboard. Defined as
+     variables â€” rather than hardcoded on every rule â€” so Dark Mode can
+     swap them for lighter tones in one place instead of every element
+     needing its own override. See body.dark-theme below. */
+  --app-heading: #1f3550;
+  --app-text: #657985;
+  --app-muted: #99adb6;
 }
 
 *, *::before, *::after {
@@ -65,9 +74,9 @@ p {
 }
 
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬ 2. Login + Signup (shared brand panel, role selector, form fields) Ã¢â€â‚¬Ã¢â€â‚¬
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ 2. Login + Signup (shared brand panel, role selector, form fields) ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
    These two files declared identical rules for .brand-*, .role-selector,
-   .role-btn, .form-group Ã¢â‚¬â€ deduped cleanly, no conflicts, just merged. */
+   .role-btn, .form-group ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â deduped cleanly, no conflicts, just merged. */
 
 .login-wrapper,
 .signup-wrapper {
@@ -165,7 +174,7 @@ p {
 }
 
 .brand-features li::before {
-  content: 'Ã¢Å“â€œ';
+  content: 'ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“';
   font-size: 13px;
   color: #378ADD;
   font-weight: 700;
@@ -354,7 +363,7 @@ p {
 .signup-staff-notice h3 {
   font-family: var(--font-heading);
   font-size: 18px;
-  color: #1f3550;
+  color: var(--app-heading);
   margin-bottom: 10px;
 }
 
@@ -367,7 +376,7 @@ p {
 
 .signup-staff-notice-sub {
   font-size: 13px;
-  color: #657985;
+  color: var(--app-text);
 }
 
 .signup-staff-notice-sub a {
@@ -419,7 +428,7 @@ p {
 .create-tutor-cred-label {
   font-size: 12px;
   font-weight: 700;
-  color: #8fa8b8;
+  color: var(--app-muted);
   text-transform: uppercase;
   letter-spacing: 0.06em;
   flex-shrink: 0;
@@ -427,7 +436,7 @@ p {
 
 .create-tutor-cred-value {
   font-size: 14px;
-  color: #1f3550;
+  color: var(--app-heading);
   font-weight: 500;
   word-break: break-all;
 }
@@ -442,7 +451,7 @@ p {
 
 .create-tutor-note {
   font-size: 12px;
-  color: #8fa8b8;
+  color: var(--app-muted);
   text-align: center;
   margin-bottom: 20px;
 }
@@ -548,7 +557,7 @@ p {
 }
 
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬ 3. Coordinator sidebar Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ 3. Coordinator sidebar ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
 
 .coord-sidebar {
   width: 285px;
@@ -697,7 +706,7 @@ p {
 }
 
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬ 4. Tutor / staff sidebar Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ 4. Tutor / staff sidebar ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
 
 .staff-sidebar {
   width: 285px;
@@ -792,11 +801,11 @@ p {
 }
 
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬ 5. Coordinator dashboard shell (also reused by MyUnitsView) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ 5. Coordinator dashboard shell (also reused by MyUnitsView) ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
    NOTE: .sidebar / .sidebar-logo / .profile / .menu below look like
    leftovers from before CoordinatorSidebar.tsx was split into its own
    component (which now uses .coord-sidebar instead). They don't appear
-   to be used anywhere anymore Ã¢â‚¬â€ left in as dead weight rather than
+   to be used anywhere anymore ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â left in as dead weight rather than
    deleted, since removing them isn't a CSS-merge decision to make
    silently. Safe to delete later once you confirm nothing references
    them. */
@@ -947,13 +956,13 @@ p {
 .page-title h1 {
   margin: 0;
   font-family: "Montserrat", sans-serif;
-  color: #1f3550;
+  color: var(--app-heading);
   font-size: 34px;
 }
 
 .page-title p {
   margin: 6px 0 0;
-  color: #657985;
+  color: var(--app-text);
   font-size: 17px;
 }
 
@@ -997,14 +1006,14 @@ p {
 }
 
 .stat-card span {
-  color: #657985;
+  color: var(--app-text);
   font-weight: 700;
   font-size: 14px;
 }
 
 .stat-card h2 {
   margin: 14px 0 6px;
-  color: #1f3550;
+  color: var(--app-heading);
   font-family: "Montserrat", sans-serif;
   font-size: 42px;
 }
@@ -1053,13 +1062,13 @@ p {
 .panel-heading h2 {
   margin: 0;
   font-family: "Montserrat", sans-serif;
-  color: #1f3550;
+  color: var(--app-heading);
   font-size: 26px;
 }
 
 .panel-heading p {
   margin: 5px 0 0;
-  color: #657985;
+  color: var(--app-text);
   font-size: 16px;
 }
 
@@ -1090,14 +1099,14 @@ p {
 
 .unit-card h3 {
   margin: 0;
-  color: #1f3550;
+  color: var(--app-heading);
   font-family: "Montserrat", sans-serif;
   font-size: 21px;
 }
 
 .unit-card p {
   margin: 8px 0 0;
-  color: #657985;
+  color: var(--app-text);
   font-size: 16px;
 }
 
@@ -1110,7 +1119,7 @@ p {
 .unit-actions button,
 .calendar-btn {
   background: white;
-  color: #1f3550;
+  color: var(--app-heading);
   border: 1.5px solid #425868;
   border-radius: 10px;
   padding: 11px 18px;
@@ -1145,7 +1154,7 @@ p {
 .logout-btn {
   padding: 10px 20px;
   background: transparent;
-  color: #657985;
+  color: var(--app-text);
   border: 1.5px solid #d7eaf1;
   border-radius: 10px;
   font-family: 'Montserrat', sans-serif;
@@ -1194,14 +1203,14 @@ p {
 }
 
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬ 6. Tutor / staff dashboard [CONFLICT: empty-state] Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ 6. Tutor / staff dashboard [CONFLICT: empty-state] ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
    StaffDashboard.css had its own `.empty-state` (yellow warning box) that
    is a DIFFERENT design from MyUnitsView's `.empty-state` (dashed grey
-   call-to-action box, in section 8 below). They mean different things Ã¢â‚¬â€
-   "here's a warning" vs "click here to create something" Ã¢â‚¬â€ so merging
+   call-to-action box, in section 8 below). They mean different things ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â
+   "here's a warning" vs "click here to create something" ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â so merging
    them under one name would visibly break one of the two pages. Renamed
    this one to `.empty-state-warning`. You'll need to update the tutor
-   dashboard .tsx Ã¢â‚¬â€ see the "exact changes" list in chat. */
+   dashboard .tsx ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â see the "exact changes" list in chat. */
 
 .staff-dashboard-page {
   display: flex;
@@ -1241,13 +1250,13 @@ p {
 .staff-page-title h1 {
   margin: 0;
   font-family: "Montserrat", sans-serif;
-  color: #1f3550;
+  color: var(--app-heading);
   font-size: 34px;
 }
 
 .staff-page-title p {
   margin: 6px 0 0;
-  color: #657985;
+  color: var(--app-text);
   font-size: 17px;
 }
 
@@ -1268,14 +1277,14 @@ p {
 }
 
 .staff-stat-card span {
-  color: #657985;
+  color: var(--app-text);
   font-weight: 700;
   font-size: 14px;
 }
 
 .staff-stat-card h2 {
   margin: 14px 0 6px;
-  color: #1f3550;
+  color: var(--app-heading);
   font-size: 34px;
 }
 
@@ -1307,13 +1316,13 @@ p {
 
 .staff-panel-heading h2 {
   margin: 0;
-  color: #1f3550;
+  color: var(--app-heading);
   font-size: 26px;
 }
 
 .staff-panel-heading p {
   margin: 5px 0 0;
-  color: #657985;
+  color: var(--app-text);
   font-size: 16px;
 }
 
@@ -1342,12 +1351,12 @@ p {
 
 .preference-card h3 {
   margin: 0;
-  color: #1f3550;
+  color: var(--app-heading);
 }
 
 .preference-card p {
   margin: 8px 0 0;
-  color: #657985;
+  color: var(--app-text);
 }
 
 .staff-class-card {
@@ -1363,13 +1372,13 @@ p {
 
 .staff-class-card h3 {
   margin: 0;
-  color: #1f3550;
+  color: var(--app-heading);
   font-size: 21px;
 }
 
 .staff-class-card p {
   margin: 8px 0 0;
-  color: #657985;
+  color: var(--app-text);
 }
 
 .staff-class-card.allocated {
@@ -1413,7 +1422,7 @@ p {
   cursor: pointer;
 }
 
-/* renamed from .empty-state Ã¢â‚¬â€ see conflict note above */
+/* renamed from .empty-state ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â see conflict note above */
 .empty-state-warning {
   background: #fff8dc;
   color: #745a00;
@@ -1423,7 +1432,7 @@ p {
 }
 
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬ 7. Coordinator unit detail view Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ 7. Coordinator unit detail view ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
 
 .unit-detail {
   padding: 0;
@@ -1469,13 +1478,13 @@ p {
 .detail-title h1 {
   font-family: 'Montserrat', sans-serif;
   font-size: 28px;
-  color: #1f3550;
+  color: var(--app-heading);
   margin: 0 0 4px;
 }
 
 .detail-title p {
   margin: 0;
-  color: #657985;
+  color: var(--app-text);
   font-size: 14px;
 }
 
@@ -1497,13 +1506,13 @@ p {
 .section-header h2 {
   font-family: 'Montserrat', sans-serif;
   font-size: 20px;
-  color: #1f3550;
+  color: var(--app-heading);
   margin: 0 0 4px;
 }
 
 .section-header p {
   margin: 0;
-  color: #657985;
+  color: var(--app-text);
   font-size: 13px;
 }
 
@@ -1524,7 +1533,7 @@ p {
 .add-btn:hover { background: #007f96; }
 
 .empty-info {
-  color: #657985;
+  color: var(--app-text);
   font-size: 14px;
   background: #f8fcfd;
   border: 1.5px dashed #d7eaf1;
@@ -1606,7 +1615,7 @@ body.dark-theme .session-group-select-all-checkbox {
   font-family: 'Montserrat', sans-serif;
   font-size: 16px;
   font-weight: 700;
-  color: #1f3550;
+  color: var(--app-heading);
 }
 
 .session-time {
@@ -1618,14 +1627,14 @@ body.dark-theme .session-group-select-all-checkbox {
 
 .session-location {
   font-size: 12px;
-  color: #657985;
+  color: var(--app-text);
   margin-top: 4px;
 }
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬ shared modal styling [CONFLICT: modal h2] Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ shared modal styling [CONFLICT: modal h2] ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
    .modal h2 had margin-bottom: 8px here (unit detail modal, which is
    always followed by a .modal-sub subtitle) vs margin-bottom: 24px in
-   MyUnitsView (which has no subtitle). Kept 24px Ã¢â‚¬â€ for the unit-detail
+   MyUnitsView (which has no subtitle). Kept 24px ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â for the unit-detail
    modal this just adds ~16px more space above .modal-sub, which reads
    fine; nothing overlaps or breaks. */
 
@@ -1657,12 +1666,12 @@ body.dark-theme .session-group-select-all-checkbox {
 .modal h2 {
   font-family: 'Montserrat', sans-serif;
   font-size: 22px;
-  color: #1f3550;
+  color: var(--app-heading);
   margin-bottom: 24px;
 }
 
 .modal-sub {
-  color: #657985;
+  color: var(--app-text);
   font-size: 14px;
   margin-bottom: 20px;
 }
@@ -1676,7 +1685,7 @@ body.dark-theme .session-group-select-all-checkbox {
 .form-field label {
   font-size: 13px;
   font-weight: 600;
-  color: #1f3550;
+  color: var(--app-heading);
 }
 
 .form-field input,
@@ -1686,7 +1695,7 @@ body.dark-theme .session-group-select-all-checkbox {
   border-radius: 10px;
   font-family: 'Lato', sans-serif;
   font-size: 14px;
-  color: #1f3550;
+  color: var(--app-heading);
   outline: none;
   background: #f8fcfd;
   transition: border-color 0.2s;
@@ -1712,7 +1721,7 @@ body.dark-theme .session-group-select-all-checkbox {
   border-radius: 10px;
   font-family: 'Lato', sans-serif;
   font-weight: 600;
-  color: #657985;
+  color: var(--app-text);
   cursor: pointer;
   transition: 0.2s;
 }
@@ -1798,12 +1807,12 @@ body.dark-theme .session-group-select-all-checkbox {
 .tutor-name {
   font-weight: 700;
   font-size: 15px;
-  color: #1f3550;
+  color: var(--app-heading);
 }
 
 .tutor-email {
   font-size: 12px;
-  color: #657985;
+  color: var(--app-text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1826,7 +1835,7 @@ body.dark-theme .session-group-select-all-checkbox {
 .remove-tutor-btn {
   background: none;
   border: 1.5px solid #d7eaf1;
-  color: #657985;
+  color: var(--app-text);
   padding: 6px 14px;
   border-radius: 8px;
   font-size: 12px;
@@ -1841,7 +1850,7 @@ body.dark-theme .session-group-select-all-checkbox {
   color: #e53935;
 }
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬ Simulate accept/decline (testing-only, Invited Tutors section) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Simulate accept/decline (testing-only, Invited Tutors section) ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
 
 .simulate-accept-btn,
 .simulate-decline-btn {
@@ -1879,7 +1888,7 @@ body.dark-theme .session-group-select-all-checkbox {
   cursor: default;
 }
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬ Availability submission countdown (Invited Tutors section) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Availability submission countdown (Invited Tutors section) ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
 
 .section-header-actions {
   display: flex;
@@ -1889,7 +1898,7 @@ body.dark-theme .session-group-select-all-checkbox {
 
 .countdown-none-hint {
   margin: 6px 0 0;
-  color: #97a6b0;
+  color: var(--app-muted);
   font-size: 12px;
   font-style: italic;
 }
@@ -1918,7 +1927,7 @@ body.dark-theme .session-group-select-all-checkbox {
   opacity: 0.8;
 }
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬ Recurring session grouping (Sessions section) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Recurring session grouping (Sessions section) ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
 
 .session-group-card {
   padding: 0;
@@ -1984,7 +1993,7 @@ button.session-group-count {
 }
 
 .session-group-range {
-  color: #657985 !important;
+  color: var(--app-text) !important;
   font-weight: 500 !important;
 }
 
@@ -2016,7 +2025,7 @@ button.session-group-count {
 }
 
 .session-occurrence-date {
-  color: #1f3550;
+  color: var(--app-heading);
   font-weight: 600;
   white-space: nowrap;
   flex: 1 1 170px;
@@ -2035,12 +2044,12 @@ button.session-group-count {
   margin-left: 14px;
 }
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬ Holiday marking (per dated occurrence) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Holiday marking (per dated occurrence) ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
 
 .session-holiday-btn {
   background: none;
   border: 1.5px solid #d7eaf1;
-  color: #657985;
+  color: var(--app-text);
   font-size: 11px;
   font-weight: 700;
   padding: 5px 10px;
@@ -2064,7 +2073,7 @@ button.session-group-count {
 
 .session-occurrence-date.holiday {
   text-decoration: line-through;
-  color: #97a6b0;
+  color: var(--app-muted);
   font-weight: 500;
 }
 
@@ -2081,7 +2090,7 @@ button.session-group-count {
   margin-left: 2px;
 }
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬ Deleting sessions (single occurrence or whole recurring series) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Deleting sessions (single occurrence or whole recurring series) ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
 
 .session-delete-btn {
   background: none;
@@ -2157,7 +2166,7 @@ body.dark-theme .status-badge.unavailable {
 .session-group-body-label {
   font-size: 12px;
   font-weight: 600;
-  color: #657985;
+  color: var(--app-text);
 }
 
 .session-edit-series-btn {
@@ -2199,7 +2208,7 @@ body.dark-theme .status-badge.unavailable {
 }
 
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬ 8. My Units view [CONFLICT: modal h2 Ã¢â‚¬â€ see note in section 7] Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ 8. My Units view [CONFLICT: modal h2 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â see note in section 7] ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
 
 .my-units {
   padding: 0;
@@ -2215,12 +2224,12 @@ body.dark-theme .status-badge.unavailable {
 .my-units-header h1 {
   font-family: 'Montserrat', sans-serif;
   font-size: 32px;
-  color: #1f3550;
+  color: var(--app-heading);
   margin-bottom: 4px;
 }
 
 .my-units-header p {
-  color: #657985;
+  color: var(--app-text);
   font-size: 15px;
   margin: 0;
 }
@@ -2262,12 +2271,12 @@ body.dark-theme .status-badge.unavailable {
   gap: 16px;
 }
 
-/* NOTE: this is the "no units yet" call-to-action style Ã¢â‚¬â€ different from
+/* NOTE: this is the "no units yet" call-to-action style ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â different from
    .empty-state-warning in section 6, kept as its original name/design. */
 .empty-state {
   text-align: center;
   padding: 60px 20px;
-  color: #657985;
+  color: var(--app-text);
   background: white;
   border-radius: 18px;
   border: 1.5px dashed #d7eaf1;
@@ -2313,13 +2322,13 @@ body.dark-theme .status-badge.unavailable {
 .unit-row-info h3 {
   font-family: 'Montserrat', sans-serif;
   font-size: 17px;
-  color: #1f3550;
+  color: var(--app-heading);
   margin: 0 0 4px;
 }
 
 .unit-meta {
   font-size: 13px;
-  color: #657985;
+  color: var(--app-text);
 }
 
 .unit-row-actions {
@@ -2347,7 +2356,7 @@ body.dark-theme .status-badge.unavailable {
 }
 
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬ 9. Calendar (coordinator + tutor) [CONFLICT: calendar] Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ 9. Calendar (coordinator + tutor) [CONFLICT: calendar] ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
    Both calendar pages used the exact same class names with different
    values (padding, border-radius, whether events show a colored left
    border + text color, whether the legend is a styled bar, etc).
@@ -2400,7 +2409,7 @@ body.dark-theme .status-badge.unavailable {
 
 .page-heading h1 {
   margin: 0;
-  color: #1f3550;
+  color: var(--app-heading);
   font-size: 30px;
 }
 
@@ -2436,7 +2445,7 @@ body.dark-theme .status-badge.unavailable {
 
 .summary-card h2 {
   margin: 0;
-  color: #1f3550;
+  color: var(--app-heading);
   font-size: 36px;
 }
 
@@ -2540,7 +2549,7 @@ body.dark-theme .status-badge.unavailable {
 
 .day-number {
   font-weight: bold;
-  color: #1f3550;
+  color: var(--app-heading);
   margin-bottom: 8px;
 }
 
@@ -2595,7 +2604,7 @@ body.dark-theme .status-badge.unavailable {
 }
 
 /* Thin yellow strip showing the tutor's own submitted availability for a
-   day Ã¢â‚¬â€ deliberately much slimmer than .class-event (which represents an
+   day ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â deliberately much slimmer than .class-event (which represents an
    actual scheduled session), so the two are never visually confused. */
 .availability-strip {
   margin-top: 6px;
@@ -2638,7 +2647,7 @@ body.dark-theme .status-badge.unavailable {
   border-radius: 12px;
   border: 1px solid #cfe3eb;
   background: white;
-  color: #1f3550;
+  color: var(--app-heading);
   font-weight: bold;
   font-size: 15px;
   cursor: pointer;
@@ -2675,7 +2684,7 @@ body.dark-theme .status-badge.unavailable {
 }
 
 .unit-filter-box label {
-  color: #1f3550;
+  color: var(--app-heading);
   font-weight: bold;
   font-size: 15px;
 }
@@ -2686,7 +2695,7 @@ body.dark-theme .status-badge.unavailable {
   border-radius: 12px;
   border: 1px solid #cfe3eb;
   background: white;
-  color: #1f3550;
+  color: var(--app-heading);
   font-weight: bold;
   cursor: pointer;
 }
@@ -2745,7 +2754,7 @@ body.dark-theme .status-badge.unavailable {
   }
 }
 
-/* Leftover sidebar wrapper class from an earlier calendar layout Ã¢â‚¬â€
+/* Leftover sidebar wrapper class from an earlier calendar layout ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â
    referenced in the media query above but not currently used by any
    element; harmless, left in rather than silently deleting it. */
 .calendar-sidebar {
@@ -2813,10 +2822,10 @@ body.dark-theme .status-badge.unavailable {
 }
 
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬ 10. Chat (coordinator + tutor Ã¢â‚¬â€ identical, deduped cleanly) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ 10. Chat (coordinator + tutor ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â identical, deduped cleanly) ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
    These two files were the same rule-for-rule, no conflicts. TutorChat.css
    just had one extra block (.chat-permission-notice) that CoordinatorChat
-   didn't need Ã¢â‚¬â€ included below, harmless either way. */
+   didn't need ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â included below, harmless either way. */
 
 .chat-page {
   display: flex;
@@ -2870,7 +2879,7 @@ body.dark-theme .status-badge.unavailable {
   padding: 14px 18px 6px;
   font-size: 12px;
   font-weight: 700;
-  color: #99adb6;
+  color: var(--app-muted);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -2883,7 +2892,7 @@ body.dark-theme .status-badge.unavailable {
 .chat-empty-hint {
   padding: 12px 18px;
   font-size: 13px;
-  color: #99adb6;
+  color: var(--app-muted);
 }
 
 .chat-list-item {
@@ -2931,12 +2940,12 @@ body.dark-theme .status-badge.unavailable {
 .chat-list-item-name {
   font-weight: 700;
   font-size: 14px;
-  color: #1f3550;
+  color: var(--app-heading);
 }
 
 .chat-list-item-sub {
   font-size: 12px;
-  color: #657985;
+  color: var(--app-text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2953,7 +2962,7 @@ body.dark-theme .status-badge.unavailable {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #99adb6;
+  color: var(--app-muted);
   font-size: 14px;
 }
 
@@ -2969,12 +2978,12 @@ body.dark-theme .status-badge.unavailable {
 .chat-window-name {
   font-weight: 700;
   font-size: 15px;
-  color: #1f3550;
+  color: var(--app-heading);
 }
 
 .chat-window-sub {
   font-size: 12px;
-  color: #657985;
+  color: var(--app-text);
 }
 
 .chat-messages {
@@ -3021,7 +3030,7 @@ body.dark-theme .status-badge.unavailable {
 
 .chat-bubble-row.theirs .chat-bubble {
   background: #f0f7fa;
-  color: #1f3550;
+  color: var(--app-heading);
   border-bottom-left-radius: 4px;
 }
 
@@ -3042,7 +3051,7 @@ body.dark-theme .status-badge.unavailable {
   align-self: auto;
 }
 
-/* WhatsApp-style double tick read receipt â€” gray/translucent while just
+/* WhatsApp-style double tick read receipt Ã¢â‚¬â€ gray/translucent while just
    "Sent", brightened to teal once the mock marks the message "Read"
    (see SEEN_DELAY_MS in CoordinatorChat.tsx / TutorChat.tsx). Only ever
    shown on bubbles the current user sent. */
@@ -3165,13 +3174,13 @@ body.dark-theme .status-badge.unavailable {
 
 .chat-modal h2 {
   margin: 0 0 6px;
-  color: #1f3550;
+  color: var(--app-heading);
   font-size: 20px;
 }
 
 .chat-modal-sub {
   margin: 0 0 20px;
-  color: #657985;
+  color: var(--app-text);
   font-size: 13px;
 }
 
@@ -3190,7 +3199,7 @@ body.dark-theme .status-badge.unavailable {
 .chat-form-field label {
   font-size: 13px;
   font-weight: 600;
-  color: #1f3550;
+  color: var(--app-heading);
 }
 
 .chat-form-field input[type="text"],
@@ -3254,7 +3263,7 @@ body.dark-theme .status-badge.unavailable {
   border: 1.5px solid #d7eaf1;
   border-radius: 10px;
   font-weight: 600;
-  color: #657985;
+  color: var(--app-text);
   cursor: pointer;
 }
 
@@ -3283,7 +3292,7 @@ body.dark-theme .status-badge.unavailable {
   border-radius: 50%;
   border: 1.5px solid #d7eaf1;
   background: white;
-  color: #1f3550;
+  color: var(--app-heading);
   font-weight: 700;
   font-style: italic;
   cursor: pointer;
@@ -3306,7 +3315,7 @@ body.dark-theme .status-badge.unavailable {
   background: white;
   font-size: 18px;
   font-weight: 700;
-  color: #1f3550;
+  color: var(--app-heading);
   cursor: pointer;
 }
 
@@ -3331,7 +3340,7 @@ body.dark-theme .status-badge.unavailable {
   text-align: left;
   cursor: pointer;
   font-size: 13px;
-  color: #1f3550;
+  color: var(--app-heading);
 }
 
 .chat-attach-menu button:hover {
@@ -3373,7 +3382,7 @@ body.dark-theme .status-badge.unavailable {
 .group-info-header h2 {
   margin: 0;
   font-size: 18px;
-  color: #1f3550;
+  color: var(--app-heading);
 }
 
 .group-info-close {
@@ -3381,7 +3390,7 @@ body.dark-theme .status-badge.unavailable {
   border: none;
   font-size: 22px;
   cursor: pointer;
-  color: #657985;
+  color: var(--app-text);
 }
 
 .group-info-scroll {
@@ -3399,7 +3408,7 @@ body.dark-theme .status-badge.unavailable {
   margin: 0 0 12px;
   font-size: 13px;
   font-weight: 700;
-  color: #99adb6;
+  color: var(--app-muted);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -3413,12 +3422,12 @@ body.dark-theme .status-badge.unavailable {
 .group-info-name {
   font-size: 17px;
   font-weight: 700;
-  color: #1f3550;
+  color: var(--app-heading);
 }
 
 .group-info-unit {
   font-size: 12px;
-  color: #657985;
+  color: var(--app-text);
   margin-top: 2px;
 }
 
@@ -3440,7 +3449,7 @@ body.dark-theme .status-badge.unavailable {
   gap: 10px;
   padding: 8px 0;
   font-size: 13px;
-  color: #1f3550;
+  color: var(--app-heading);
 }
 
 .group-media-type {
@@ -3457,7 +3466,7 @@ body.dark-theme .status-badge.unavailable {
   justify-content: space-between;
   padding: 8px 0;
   font-size: 14px;
-  color: #1f3550;
+  color: var(--app-heading);
   cursor: pointer;
 }
 
@@ -3512,7 +3521,7 @@ body.dark-theme .status-badge.unavailable {
   text-align: left;
   cursor: pointer;
   font-size: 13px;
-  color: #1f3550;
+  color: var(--app-heading);
 }
 
 .group-member-menu button:hover {
@@ -3540,7 +3549,7 @@ body.dark-theme .status-badge.unavailable {
 .group-add-name {
   flex: 1;
   font-size: 13px;
-  color: #1f3550;
+  color: var(--app-heading);
 }
 
 .group-exit-btn {
@@ -3567,7 +3576,7 @@ body.dark-theme .status-badge.unavailable {
 }
 
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬ 11. Tutor availability view Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ 11. Tutor availability view ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
 
 .tutor-availability {
   padding: 0;
@@ -3599,13 +3608,13 @@ body.dark-theme .status-badge.unavailable {
 .avail-header h1 {
   font-family: 'Montserrat', sans-serif;
   font-size: 28px;
-  color: #1f3550;
+  color: var(--app-heading);
   margin: 0 0 6px;
 }
 
 .avail-header > div:first-child p {
   margin: 0;
-  color: #657985;
+  color: var(--app-text);
   font-size: 14px;
   line-height: 1.5;
 }
@@ -3649,13 +3658,13 @@ body.dark-theme .status-badge.unavailable {
 .avail-units-panel h2 {
   font-family: 'Montserrat', sans-serif;
   font-size: 18px;
-  color: #1f3550;
+  color: var(--app-heading);
   margin: 0 0 4px;
 }
 
 .avail-units-panel > p {
   margin: 0 0 16px;
-  color: #657985;
+  color: var(--app-text);
   font-size: 13px;
 }
 
@@ -3666,7 +3675,7 @@ body.dark-theme .status-badge.unavailable {
 }
 
 .avail-no-units {
-  color: #99adb6;
+  color: var(--app-muted);
   font-size: 14px;
   font-style: italic;
   margin: 0;
@@ -3715,12 +3724,12 @@ body.dark-theme .status-badge.unavailable {
 .avail-tab-name {
   font-size: 14px;
   font-weight: 600;
-  color: #1f3550;
+  color: var(--app-heading);
 }
 
 .avail-tab-sem {
   font-size: 12px;
-  color: #99adb6;
+  color: var(--app-muted);
 }
 
 .avail-tab-badge {
@@ -3752,20 +3761,20 @@ body.dark-theme .status-badge.unavailable {
 .avail-grid-heading h2 {
   font-family: 'Montserrat', sans-serif;
   font-size: 20px;
-  color: #1f3550;
+  color: var(--app-heading);
   margin: 0 0 4px;
 }
 
 .avail-grid-heading > div p {
   margin: 0;
-  color: #657985;
+  color: var(--app-text);
   font-size: 13px;
 }
 
 .avail-slot-count {
   font-size: 12px;
   font-weight: 700;
-  color: #99adb6;
+  color: var(--app-muted);
   background: #f0f5f7;
   padding: 5px 14px;
   border-radius: 999px;
@@ -3827,7 +3836,7 @@ body.dark-theme .status-badge.unavailable {
 .avail-day-label {
   font-size: 12px;
   font-weight: 700;
-  color: #1f3550;
+  color: var(--app-heading);
 }
 
 .avail-day-count {
@@ -3843,7 +3852,7 @@ body.dark-theme .status-badge.unavailable {
   display: flex;
   align-items: center;
   font-size: 11px;
-  color: #99adb6;
+  color: var(--app-muted);
   font-weight: 600;
   padding-right: 4px;
   height: 40px;
@@ -3887,12 +3896,12 @@ body.dark-theme .status-badge.unavailable {
 .avail-prefs-section h2 {
   font-family: 'Montserrat', sans-serif;
   font-size: 20px;
-  color: #1f3550;
+  color: var(--app-heading);
   margin: 0 0 2px;
 }
 
 .avail-prefs-section > p {
-  color: #657985;
+  color: var(--app-text);
   font-size: 13px;
   margin: -14px 0 0;
 }
@@ -3906,7 +3915,7 @@ body.dark-theme .status-badge.unavailable {
 .avail-pref-field label {
   font-size: 13px;
   font-weight: 600;
-  color: #1f3550;
+  color: var(--app-heading);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -3936,7 +3945,7 @@ body.dark-theme .status-badge.unavailable {
   font-family: 'Lato', sans-serif;
   font-size: 13px;
   font-weight: 600;
-  color: #657985;
+  color: var(--app-text);
   cursor: pointer;
   transition: 0.15s;
 }
@@ -3961,12 +3970,12 @@ body.dark-theme .status-badge.unavailable {
   justify-content: space-between;
   max-width: 360px;
   font-size: 12px;
-  color: #99adb6;
+  color: var(--app-muted);
 }
 
 .avail-optional {
   font-weight: 400;
-  color: #99adb6;
+  color: var(--app-muted);
   font-size: 12px;
 }
 
@@ -3976,7 +3985,7 @@ body.dark-theme .status-badge.unavailable {
   border-radius: 12px;
   font-family: 'Lato', sans-serif;
   font-size: 14px;
-  color: #1f3550;
+  color: var(--app-heading);
   background: #f8fcfd;
   resize: vertical;
   outline: none;
@@ -4013,7 +4022,7 @@ body.dark-theme .status-badge.unavailable {
 
 .avail-summary-empty {
   margin: 0;
-  color: #99adb6;
+  color: var(--app-muted);
   font-size: 14px;
   font-style: italic;
 }
@@ -4047,7 +4056,7 @@ body.dark-theme .status-badge.unavailable {
 
 .avail-summary-name {
   font-size: 14px;
-  color: #1f3550;
+  color: var(--app-heading);
   font-weight: 600;
   flex: 1;
 }
@@ -4064,7 +4073,7 @@ body.dark-theme .status-badge.unavailable {
   align-items: flex-start;
   gap: 12px;
   cursor: pointer;
-  color: #1f3550;
+  color: var(--app-heading);
   font-size: 14px;
   line-height: 1.6;
 }
@@ -4131,12 +4140,12 @@ body.dark-theme .status-badge.unavailable {
 .avail-success h2 {
   font-family: 'Montserrat', sans-serif;
   font-size: 28px;
-  color: #1f3550;
+  color: var(--app-heading);
   margin: 0 0 12px;
 }
 
 .avail-success p {
-  color: #657985;
+  color: var(--app-text);
   font-size: 15px;
   margin: 0 0 32px;
   line-height: 1.6;
@@ -4192,7 +4201,7 @@ body.dark-theme .status-badge.unavailable {
 .avail-success-unit-name {
   font-size: 14px;
   font-weight: 600;
-  color: #1f3550;
+  color: var(--app-heading);
   flex: 1;
 }
 
@@ -4206,12 +4215,12 @@ body.dark-theme .status-badge.unavailable {
 .avail-success-total {
   text-align: center;
   font-size: 13px;
-  color: #657985;
+  color: var(--app-text);
   padding: 6px 0 2px;
 }
 
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬ 12. Tutor "My Units" page Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ 12. Tutor "My Units" page ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
    New for this page only. Reuses a lot of existing classes directly:
    .chat-search-box / .chat-lists-scroll / .chat-empty-hint / .chat-window-empty
    (from the chat page's list panel), .unit-code-badge (from MyUnitsView),
@@ -4293,12 +4302,12 @@ body.dark-theme .status-badge.unavailable {
 .myunits-unit-name {
   font-weight: 700;
   font-size: 14px;
-  color: #1f3550;
+  color: var(--app-heading);
 }
 
 .myunits-unit-sem {
   font-size: 12px;
-  color: #657985;
+  color: var(--app-text);
 }
 
 .announcement-card {
@@ -4318,18 +4327,18 @@ body.dark-theme .status-badge.unavailable {
 
 .announcement-title {
   font-weight: 700;
-  color: #1f3550;
+  color: var(--app-heading);
   font-size: 14px;
 }
 
 .announcement-date {
   font-size: 12px;
-  color: #99adb6;
+  color: var(--app-muted);
 }
 
 .announcement-card p {
   margin: 0;
-  color: #657985;
+  color: var(--app-text);
   font-size: 13px;
   line-height: 1.5;
 }
@@ -4345,7 +4354,7 @@ body.dark-theme .status-badge.unavailable {
 }
 
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬ 13. Tutor availability modal (opened from Calendar) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ 13. Tutor availability modal (opened from Calendar) ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
    Reuses .modal-overlay / .modal / .form-field / .modal-actions /
    .cancel-btn / .confirm-btn from section 7, and .avail-grid / .avail-cell
    / .avail-day-header etc from section 11 (same grid styling as the old
@@ -4360,7 +4369,7 @@ body.dark-theme .status-badge.unavailable {
 .avail-period-estimate {
   margin: 0 0 16px;
   font-size: 12px;
-  color: #657985;
+  color: var(--app-text);
   font-style: italic;
 }
 
@@ -4389,7 +4398,7 @@ body.dark-theme .status-badge.unavailable {
   font-size: 13px;
 }
 
-/* was missing before Ã¢â‚¬â€ the modal was reusing .avail-saved-message (green)
+/* was missing before ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â the modal was reusing .avail-saved-message (green)
    for error text too, which is why "Something went wrong" showed in green.
    Errors now use this instead. */
 .avail-error-message {
@@ -4401,15 +4410,15 @@ body.dark-theme .status-badge.unavailable {
 
 .avail-range-hint {
   margin: 8px 0 0;
-  color: #657985;
+  color: var(--app-text);
   font-size: 12px;
 }
 
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬ 14. QUT Tutor Directory Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ 14. QUT Tutor Directory ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
    Reuses .tutors-list / .tutor-row / .tutor-avatar / .tutor-info /
    .tutor-name / .tutor-email from section 7 (coordinator's invited-tutors
-   list) directly Ã¢â‚¬â€ only the teaching-info row below each tutor is new. */
+   list) directly ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â only the teaching-info row below each tutor is new. */
 
 .directory-tutor-row {
   align-items: flex-start;
@@ -4429,15 +4438,15 @@ body.dark-theme .status-badge.unavailable {
 
 .directory-teaching-unknown {
   font-size: 12px;
-  color: #99adb6;
+  color: var(--app-muted);
   font-style: italic;
   margin-top: 8px;
 }
 
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬ 15. Coordinator Calendar filter tabs Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ 15. Coordinator Calendar filter tabs ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
    Reuses .avail-pill-row / .avail-pill (section 11) for the three filter
-   buttons, and .unit-filter-box (section 9) for the unit dropdown Ã¢â‚¬â€ only
+   buttons, and .unit-filter-box (section 9) for the unit dropdown ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â only
    the wrapping layout below is new. */
 
 .calendar-filter-tabs {
@@ -4466,9 +4475,9 @@ body.dark-theme .status-badge.unavailable {
 }
 
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬ 16. Chat: Admin & Member Permission management Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ 16. Chat: Admin & Member Permission management ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
    Reuses .group-permission-row (already defined in section 10) for every
-   checkbox row Ã¢â‚¬â€ only the expand/collapse wrappers below are new. */
+   checkbox row ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â only the expand/collapse wrappers below are new. */
 
 .perm-section-hint {
   padding: 0 0 8px;
@@ -4492,7 +4501,7 @@ body.dark-theme .status-badge.unavailable {
   cursor: pointer;
   font-size: 13px;
   font-weight: 600;
-  color: #1f3550;
+  color: var(--app-heading);
 }
 
 .admin-perm-name {
@@ -4503,7 +4512,7 @@ body.dark-theme .status-badge.unavailable {
 
 .admin-perm-chevron {
   font-size: 10px;
-  color: #99adb6;
+  color: var(--app-muted);
 }
 
 .admin-perm-panel {
@@ -4525,7 +4534,7 @@ body.dark-theme .status-badge.unavailable {
   justify-content: space-between;
   font-size: 13px;
   font-weight: 700;
-  color: #1f3550;
+  color: var(--app-heading);
   margin-bottom: 8px;
 }
 
@@ -4549,7 +4558,7 @@ body.dark-theme .status-badge.unavailable {
 
 .member-perm-default-hint {
   font-size: 11px;
-  color: #99adb6;
+  color: var(--app-muted);
   font-style: italic;
 }
 
@@ -4564,7 +4573,7 @@ body.dark-theme .status-badge.unavailable {
 }
 
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬ 17. Profile pages (Coordinator + Tutor) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ 17. Profile pages (Coordinator + Tutor) ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
    Reuses .detail-section / .section-header / .add-btn / .form-field /
    .form-row-2 / .detail-form / .confirm-btn from section 7, and
    .avail-saved-message / .avail-error-message from section 11/13. Only
@@ -4629,7 +4638,7 @@ body.dark-theme .status-badge.unavailable {
 
 .profile-name {
   margin: 0 0 8px;
-  color: #1f3550;
+  color: var(--app-heading);
   font-size: 24px;
 }
 
@@ -4642,6 +4651,53 @@ body.dark-theme .status-badge.unavailable {
   border-radius: 999px;
 }
 
+.tutor-report-email {
+  color: var(--app-muted);
+  font-size: 14px;
+  margin: 0;
+}
+
+.tutor-report-stats {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.tutor-report-stat {
+  flex: 1;
+  min-width: 140px;
+  background: #f6fcfd;
+  border: 1.5px solid #d7eaf1;
+  border-radius: 16px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  text-align: center;
+}
+
+.tutor-report-stat-value {
+  font-family: var(--font-heading);
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--app-heading);
+}
+
+.tutor-report-stat-label {
+  font-size: 13px;
+  color: var(--app-muted);
+}
+
+body.dark-theme .tutor-report-stat {
+  background: #182437;
+  border-color: #2a3b52;
+}
+
+body.dark-theme .tutor-report-stat-value {
+  color: #e0eaf0;
+}
+
 .resume-row {
   display: flex;
   align-items: center;
@@ -4652,8 +4708,61 @@ body.dark-theme .status-badge.unavailable {
 .resume-filename {
   flex: 1;
   min-width: 160px;
-  color: #657985;
+  color: var(--app-text);
   font-size: 14px;
+}
+
+.resume-view-btn {
+  background: #e7f6fa;
+  color: #0097b2;
+  border: 1.5px solid #b7e4ee;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-weight: bold;
+  font-size: 14px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.resume-view-btn:hover {
+  background: #d6eef5;
+}
+
+.resume-delete-btn {
+  background: #fee2e2;
+  color: #991b1b;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-weight: bold;
+  font-size: 14px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.resume-delete-btn:hover {
+  background: #fecaca;
+}
+
+body.dark-theme .resume-view-btn {
+  background: #10202a;
+  color: #7fd7e8;
+  border-color: #1e4060;
+}
+
+body.dark-theme .resume-view-btn:hover {
+  background: #14283a;
+}
+
+body.dark-theme .resume-delete-btn {
+  background: #2a1616;
+  color: #f0a0a0;
+}
+
+body.dark-theme .resume-delete-btn:hover {
+  background: #3a1e1e;
 }
 
 .settings-row {
@@ -4666,13 +4775,13 @@ body.dark-theme .status-badge.unavailable {
 
 .settings-row-title {
   margin: 0 0 4px;
-  color: #1f3550;
+  color: var(--app-heading);
   font-size: 16px;
 }
 
 .settings-row-sub {
   margin: 0;
-  color: #657985;
+  color: var(--app-text);
   font-size: 13px;
 }
 
@@ -4707,16 +4816,24 @@ body.dark-theme .status-badge.unavailable {
 }
 
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬ 18. Dark theme Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ 18. Dark theme ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
    Applied via a `dark-theme` class toggled on <body> from the Profile
    pages. This is a first pass covering the main page backgrounds, cards,
-   modals, and form inputs across the app Ã¢â‚¬â€ not every single element has
+   modals, and form inputs across the app ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â not every single element has
    been hand-checked, so if something looks off in dark mode on a page
    not listed here, it just needs its own override added below. */
 
 body.dark-theme {
   background: #0f1b2b;
   color: #e2e8f0;
+
+  /* Re-point the shared text-tone variables (see :root) at lighter
+     colours so every card/panel/list/badge that uses --app-heading,
+     --app-text, or --app-muted for its text becomes readable against
+     the dark backgrounds below, without needing a per-element override. */
+  --app-heading: #f8fafc;
+  --app-text: #c7d6df;
+  --app-muted: #93a9b5;
 }
 
 body.dark-theme .dashboard-page,
@@ -4868,6 +4985,27 @@ body.dark-theme .chat-input-row textarea {
   color: #e2e8f0;
 }
 
+/* Plain success/error text (not a self-contained badge with its own
+   light background, e.g. the password-change and availability-save
+   confirmation messages) â€” brightened so dark green/red don't disappear
+   against the dark card backgrounds above. */
+body.dark-theme .avail-saved-message {
+  color: #4ade80;
+}
+
+body.dark-theme .avail-error-message {
+  color: #f87171;
+}
+
+body.dark-theme .form-field input::placeholder,
+body.dark-theme .form-group input::placeholder,
+body.dark-theme .chat-search-box input::placeholder,
+body.dark-theme .avail-notes::placeholder,
+body.dark-theme .chat-input-row textarea::placeholder,
+body.dark-theme .tutor-search-input::placeholder {
+  color: #6b7f90;
+}
+
 body.dark-theme .avail-cell {
   background: #131f30;
   border-color: #2a3b52;
@@ -4905,7 +5043,7 @@ body.dark-theme .empty-state-warning {
   margin: 20px 0 0;
 }
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬ 18. Notifications page Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ 18. Notifications page ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
 
 .sidebar-notif-badge {
   display: inline-flex;
@@ -4943,7 +5081,7 @@ body.dark-theme .empty-state-warning {
   border: 1.5px solid #d7eaf1;
   border-radius: 20px;
   background: white;
-  color: #1f3550;
+  color: var(--app-heading);
   font-family: var(--font-body);
   font-size: 14px;
   font-weight: 600;
@@ -4988,7 +5126,7 @@ body.dark-theme .empty-state-warning {
 
 .notif-type-label {
   font-size: 13px;
-  color: #657985;
+  color: var(--app-text);
   font-weight: 600;
   flex-shrink: 0;
   margin-right: 4px;
@@ -5002,7 +5140,7 @@ body.dark-theme .empty-state-warning {
   border: 1.5px solid #d7eaf1;
   border-radius: 16px;
   background: white;
-  color: #1f3550;
+  color: var(--app-heading);
   font-family: var(--font-body);
   font-size: 13px;
   font-weight: 600;
@@ -5031,7 +5169,7 @@ body.dark-theme .empty-state-warning {
   border: 1.5px solid #d7eaf1;
   border-radius: 16px;
   background: white;
-  color: #1f3550;
+  color: var(--app-heading);
   font-family: var(--font-body);
   font-size: 13px;
   font-weight: 600;
@@ -5056,7 +5194,7 @@ body.dark-theme .empty-state-warning {
   font-family: var(--font-heading);
   font-size: 11px;
   font-weight: 700;
-  color: #8fa8b8;
+  color: var(--app-muted);
   text-transform: uppercase;
   letter-spacing: 0.09em;
   padding: 4px 2px 8px;
@@ -5143,12 +5281,12 @@ body.dark-theme .empty-state-warning {
   font-family: var(--font-heading);
   font-size: 15px;
   font-weight: 700;
-  color: #1f3550;
+  color: var(--app-heading);
 }
 
 .notif-time {
   font-size: 12px;
-  color: #657985;
+  color: var(--app-text);
   flex-shrink: 0;
 }
 
@@ -5214,7 +5352,7 @@ body.dark-theme .empty-state-warning {
   border-radius: 16px;
   padding: 48px;
   text-align: center;
-  color: #657985;
+  color: var(--app-text);
   font-size: 15px;
 }
 
@@ -5246,7 +5384,7 @@ body.dark-theme .notif-tab.active {
   background: var(--primary);
   color: white;
 }
-/* Ã¢â€â‚¬Ã¢â€â‚¬ 19. Unit three-dot menu + year grouping (My Units page) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ 19. Unit three-dot menu + year grouping (My Units page) ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
 
 .unit-menu-wrapper {
   position: relative;
@@ -5255,7 +5393,7 @@ body.dark-theme .notif-tab.active {
 .unit-menu-btn {
   background: white;
   border: 1.5px solid #d7eaf1;
-  color: #657985;
+  color: var(--app-text);
   width: 38px;
   height: 38px;
   border-radius: 10px;
@@ -5292,7 +5430,7 @@ body.dark-theme .notif-tab.active {
   text-align: left;
   cursor: pointer;
   font-size: 13px;
-  color: #1f3550;
+  color: var(--app-heading);
 }
 
 .unit-menu-dropdown button:hover {
@@ -5324,7 +5462,7 @@ body.dark-theme .notif-tab.active {
 }
 
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬ 20. Session edit button (Unit Detail page) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ 20. Session edit button (Unit Detail page) ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
 
 .session-edit-btn {
   background: none;
@@ -5341,7 +5479,7 @@ body.dark-theme .notif-tab.active {
 }
 
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬ 20b. Coordinator Allocations page Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ 20b. Coordinator Allocations page ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
 
 .allocations-page {
   max-width: 1100px;
@@ -5370,7 +5508,7 @@ body.dark-theme .notif-tab.active {
   font-family: 'Montserrat', sans-serif;
   font-weight: 700;
   font-size: 14px;
-  color: #1f3550;
+  color: var(--app-heading);
 }
 
 .allocation-assigned.self .allocation-assigned-name {
@@ -5379,7 +5517,7 @@ body.dark-theme .notif-tab.active {
 
 .allocation-assigned-email {
   font-size: 12px;
-  color: #657985;
+  color: var(--app-text);
   margin: 2px 0 8px;
 }
 
@@ -5417,7 +5555,7 @@ body.dark-theme .notif-tab.active {
 .allocation-candidates-label {
   font-size: 12px;
   font-weight: 700;
-  color: #657985;
+  color: var(--app-text);
   margin: 0 0 8px;
   text-transform: uppercase;
   letter-spacing: 0.03em;
@@ -5438,7 +5576,7 @@ body.dark-theme .notif-tab.active {
   padding: 8px 12px;
   font-size: 13px;
   font-weight: 600;
-  color: #1f3550;
+  color: var(--app-heading);
   cursor: pointer;
   transition: 0.2s;
 }
@@ -5465,14 +5603,14 @@ body.dark-theme .notif-tab.active {
 
 .allocation-lecture-hint {
   font-size: 11px;
-  color: #97a6b0;
+  color: var(--app-muted);
   font-style: italic;
   margin: 6px 0 0;
 }
 
 .allocation-empty-hint {
   font-size: 12px;
-  color: #97a6b0;
+  color: var(--app-muted);
   font-style: italic;
   margin: 0 0 10px;
 }
@@ -5524,16 +5662,16 @@ body.dark-theme .notif-tab.active {
 .allocation-search-row strong {
   display: block;
   font-size: 14px;
-  color: #1f3550;
+  color: var(--app-heading);
 }
 
 .allocation-search-row span {
   font-size: 12px;
-  color: #657985;
+  color: var(--app-text);
 }
 
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬ 21. Scroll wheel time picker (Google-Maps-style "Leave at") Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ 21. Scroll wheel time picker (Google-Maps-style "Leave at") ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
 
 .time-wheel-picker {
   display: flex;
@@ -5544,7 +5682,7 @@ body.dark-theme .notif-tab.active {
 .time-wheel-picker label {
   font-size: 12px;
   font-weight: 600;
-  color: #1f3550;
+  color: var(--app-heading);
 }
 
 .time-wheel-columns {
@@ -5559,7 +5697,7 @@ body.dark-theme .notif-tab.active {
 
 .time-wheel-colon {
   font-weight: 700;
-  color: #1f3550;
+  color: var(--app-heading);
   font-size: 13px;
 }
 
@@ -5585,7 +5723,7 @@ body.dark-theme .notif-tab.active {
   justify-content: center;
   scroll-snap-align: center;
   font-size: 12px;
-  color: #99adb6;
+  color: var(--app-muted);
   cursor: pointer;
   font-weight: 600;
   transition: color 0.15s, font-size 0.15s;
@@ -5633,7 +5771,7 @@ body.dark-theme .notif-tab.active {
 }
 
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬ 22. Multi-session Add Session form (full-width page) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ 22. Multi-session Add Session form (full-width page) ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
    Mirrors .unit-detail: this view takes over the whole .main-content
    area beside the sidebar instead of opening as a centered modal, with
    a .back-btn ("Back to Manage") matching the Manage page's own
@@ -5668,7 +5806,7 @@ body.dark-theme .notif-tab.active {
   margin: 0;
   font-size: 16px;
   font-family: 'Montserrat', sans-serif;
-  color: #1f3550;
+  color: var(--app-heading);
   display: flex;
   align-items: center;
   gap: 10px;
@@ -5721,7 +5859,7 @@ body.dark-theme .notif-tab.active {
   margin: 16px 0 0;
 }
 
-/* Segmented control Ã¢â‚¬â€ replaces free-floating pill rows for mutually
+/* Segmented control ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â replaces free-floating pill rows for mutually
    exclusive choices (campus, schedule type, week pattern) with a single
    bordered strip, closer to a modern toggle group. */
 .segmented-row {
@@ -5744,7 +5882,7 @@ body.dark-theme .notif-tab.active {
   font-family: 'Lato', sans-serif;
   font-size: 13px;
   font-weight: 600;
-  color: #657985;
+  color: var(--app-text);
   cursor: pointer;
   transition: 0.15s;
   text-align: center;
@@ -5778,7 +5916,7 @@ body.dark-theme .notif-tab.active {
 
 /* Day-of-week multi-select for the Tutor's "Add Additional Availability"
    schedule (unlike the Coordinator's single-day dropdown, a tutor can
-   offer several weekdays at once) â€” reuses .segmented-btn's look but
+   offer several weekdays at once) Ã¢â‚¬â€ reuses .segmented-btn's look but
    wraps freely instead of forcing an even-width bordered strip. */
 .myunits-add-days-row {
   display: flex;
@@ -5833,7 +5971,7 @@ body.dark-theme .notif-tab.active {
   padding: 0;
 }
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬ 19. Staff sidebar extras (logout, clickable profile, divider) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ 19. Staff sidebar extras (logout, clickable profile, divider) ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
 
 .staff-profile.clickable {
   cursor: pointer;
@@ -5883,7 +6021,7 @@ body.dark-theme .notif-tab.active {
   font-size: 16px;
 }
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬ 20. Coming Soon pages Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ 20. Coming Soon pages ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
 
 .coming-soon-card {
   background: white;
@@ -5903,13 +6041,13 @@ body.dark-theme .notif-tab.active {
 .coming-soon-card h2 {
   font-family: var(--font-heading);
   font-size: 24px;
-  color: #1f3550;
+  color: var(--app-heading);
   margin-bottom: 12px;
 }
 
 .coming-soon-card p {
   font-size: 15px;
-  color: #657985;
+  color: var(--app-text);
   line-height: 1.6;
   margin-bottom: 10px;
 }
@@ -5919,7 +6057,7 @@ body.dark-theme .notif-tab.active {
   color: #0097b2 !important;
 }
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬ 21. Coordinator Tutors page Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ 21. Coordinator Tutors page ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
 
 .tutor-search-input {
   padding: 9px 16px;
@@ -5927,7 +6065,7 @@ body.dark-theme .notif-tab.active {
   border-radius: 10px;
   font-family: var(--font-body);
   font-size: 14px;
-  color: #1f3550;
+  color: var(--app-heading);
   outline: none;
   width: 260px;
   transition: border-color 0.2s;
@@ -5939,7 +6077,7 @@ body.dark-theme .notif-tab.active {
 
 .tutors-loading,
 .tutors-empty {
-  color: #657985;
+  color: var(--app-text);
   font-size: 14px;
   padding: 24px 0;
 }
@@ -5953,7 +6091,7 @@ body.dark-theme .notif-tab.active {
 .tutors-empty-state {
   text-align: center;
   padding: 48px 24px;
-  color: #657985;
+  color: var(--app-text);
 }
 
 .tutors-empty-icon {
@@ -5964,7 +6102,7 @@ body.dark-theme .notif-tab.active {
 .tutors-empty-state h3 {
   font-family: var(--font-heading);
   font-size: 17px;
-  color: #1f3550;
+  color: var(--app-heading);
   margin-bottom: 8px;
 }
 
@@ -5981,7 +6119,7 @@ body.dark-theme .notif-tab.active {
   font-family: var(--font-heading);
   font-size: 12px;
   font-weight: 700;
-  color: #657985;
+  color: var(--app-text);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   border-bottom: 1.5px solid #d7eaf1;
@@ -5989,6 +6127,10 @@ body.dark-theme .notif-tab.active {
 
 .tutors-table-header--4col {
   grid-template-columns: 1fr 1fr auto;
+}
+
+.tutors-table-header--5col {
+  grid-template-columns: 1.4fr 1.4fr 0.7fr 1fr 0.9fr;
 }
 
 .tutors-table-row {
@@ -6004,9 +6146,17 @@ body.dark-theme .notif-tab.active {
   grid-template-columns: 1fr 1fr auto;
 }
 
+.tutors-table-row--5col {
+  grid-template-columns: 1.4fr 1.4fr 0.7fr 1fr 0.9fr;
+}
+
+.tutors-table-row-clickable {
+  cursor: pointer;
+}
+
 .tutors-date {
   font-size: 13px;
-  color: #8fa8b8;
+  color: var(--app-muted);
   white-space: nowrap;
 }
 
@@ -6041,13 +6191,13 @@ body.dark-theme .notif-tab.active {
 
 .tutors-name {
   font-weight: 600;
-  color: #1f3550;
+  color: var(--app-heading);
   font-size: 14px;
 }
 
 .tutors-email {
   font-size: 14px;
-  color: #657985;
+  color: var(--app-text);
 }
 
 body.dark-theme .coming-soon-card {
@@ -6077,7 +6227,7 @@ body.dark-theme .tutor-search-input {
   color: #e0eaf0;
 }
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬ 22. Auto Allocate Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ 22. Auto Allocate ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
 
 .auto-allocate-btn {
   display: flex;
@@ -6114,7 +6264,7 @@ body.dark-theme .tutor-search-input {
   border-radius: 12px;
   padding: 28px;
   text-align: center;
-  color: #657985;
+  color: var(--app-text);
   font-size: 14px;
   margin: 16px 0;
   line-height: 1.7;
@@ -6195,12 +6345,12 @@ body.dark-theme .tutor-search-input {
   font-family: var(--font-heading);
   font-size: 14px;
   font-weight: 700;
-  color: #1f3550;
+  color: var(--app-heading);
 }
 
 .auto-alloc-session-time {
   font-size: 12px;
-  color: #657985;
+  color: var(--app-text);
 }
 
 .auto-alloc-session-count {
@@ -6225,7 +6375,7 @@ body.dark-theme .tutor-search-input {
 .auto-alloc-tutor-name {
   font-size: 14px;
   font-weight: 600;
-  color: #1f3550;
+  color: var(--app-heading);
 }
 
 .auto-alloc-match-badge {
@@ -6293,7 +6443,7 @@ body.dark-theme .auto-alloc-tutor-name {
 
 /* ===== Merged in from Sessioneer (mock-data tutor pages: Calendar, MyUnits, AvailabilityModal) ===== */
 
-/* Tutor calendar's own color scheme Ã¢â‚¬â€ invitation received / availability
+/* Tutor calendar's own color scheme ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â invitation received / availability
    submitted for that class / additional availability outside any
    scheduled class. Separate from allocated/pending/conflict above, which
    the coordinator calendar still uses. */
@@ -6323,10 +6473,10 @@ body.dark-theme .auto-alloc-tutor-name {
   opacity: 0.85;
 }
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬ Scheduled Classes (select-to-submit) & Add Additional Availability Ã¢â€â‚¬Ã¢â€â‚¬
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Scheduled Classes (select-to-submit) & Add Additional Availability ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
    The cards themselves reuse the coordinator's own .session-card /
-   .session-group-card / .session-group-body classes (Coordinator Ã¢â‚¬Âº
-   Sessions) so they look identical on both sides Ã¢â‚¬â€ nothing new to style
+   .session-group-card / .session-group-body classes (Coordinator ÃƒÂ¢Ã¢â€šÂ¬Ã‚Âº
+   Sessions) so they look identical on both sides ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â nothing new to style
    for the card shell itself, just the per-date row content below. */
 
 .myunits-class-list {
@@ -6337,7 +6487,7 @@ body.dark-theme .auto-alloc-tutor-name {
 
 /* When the list sits inside a .session-group-body (Scheduled Classes,
    expanded card) instead of standing alone in a .detail-section, the
-   card body already supplies its own border/background/scroll Ã¢â‚¬â€ so the
+   card body already supplies its own border/background/scroll ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â so the
    rows go edge-to-edge with no gap, same as the coordinator's own
    .session-occurrence-row list. */
 .myunits-class-list-in-card {
@@ -6414,7 +6564,7 @@ body.dark-theme .auto-alloc-tutor-name {
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  color: #99adb6;
+  color: var(--app-muted);
 }
 
 .myunits-class-info {
@@ -6429,7 +6579,7 @@ body.dark-theme .auto-alloc-tutor-name {
   font-family: 'Montserrat', sans-serif;
   font-weight: 700;
   font-size: 14px;
-  color: #1f3550;
+  color: var(--app-heading);
 }
 
 .myunits-class-time {
@@ -6440,7 +6590,7 @@ body.dark-theme .auto-alloc-tutor-name {
 
 .myunits-class-location {
   font-size: 12px;
-  color: #657985;
+  color: var(--app-text);
 }
 
 .myunits-class-conflict-note {
@@ -6453,7 +6603,7 @@ body.dark-theme .auto-alloc-tutor-name {
 .myunits-class-unavailable-btn {
   background: none;
   border: 1.5px solid #d7eaf1;
-  color: #657985;
+  color: var(--app-text);
   font-size: 11px;
   font-weight: 600;
   padding: 6px 12px;
@@ -6489,16 +6639,16 @@ body.dark-theme .auto-alloc-tutor-name {
   border-radius: 12px;
   padding: 12px 14px;
   font-size: 13px;
-  color: #1f3550;
+  color: var(--app-heading);
 }
 
 .myunits-additional-row strong {
-  color: #1f3550;
+  color: var(--app-heading);
 }
 
 .myunits-additional-notes {
   margin: 6px 0 0;
-  color: #657985;
+  color: var(--app-text);
   font-size: 12px;
   line-height: 1.5;
 }
@@ -6526,4 +6676,58 @@ body.dark-theme .myunits-class-list-in-card .myunits-class-row {
 body.dark-theme .myunits-class-title,
 body.dark-theme .myunits-additional-row strong {
   color: #f1f5f9;
+}
+/* â”€â”€ 23. Password show/hide toggle â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   Used by LoginPage, SignupPage, and the Change Password forms on both
+   Profile pages via the shared PasswordInput component. The input keeps
+   whatever styling its surrounding .form-group/.form-field already gives
+   it (border, background, radius, colour, including dark-theme) â€” this
+   just adds the eye button on top and reserves room for it. */
+.password-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.password-input-wrapper input {
+  width: 100%;
+  padding-right: 42px !important;
+}
+
+.password-toggle-btn {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  padding: 4px;
+  margin: 0;
+  cursor: pointer;
+  color: #97a6b0;
+  line-height: 0;
+}
+
+.password-toggle-btn:hover,
+.password-toggle-btn:focus-visible {
+  color: var(--primary);
+}
+
+.password-toggle-btn:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+body.dark-theme .password-toggle-btn {
+  color: var(--app-muted);
+}
+
+body.dark-theme .password-toggle-btn:hover,
+body.dark-theme .password-toggle-btn:focus-visible {
+  color: #7fd7e8;
 }

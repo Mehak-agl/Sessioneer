@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import StaffSidebar from '../../components/TutorSidebar'
+import PasswordInput from '../../components/PasswordInput'
 
 
 type Theme = 'light' | 'dark'
@@ -11,12 +12,32 @@ function applyTheme(theme: Theme) {
   document.body.classList.toggle('dark-theme', theme === 'dark')
 }
 
+// Resumes are stored per-tutor (keyed by their user id from the mock-mode
+// login token) so the Coordinator's Tutor Report can show the resume that
+// actually belongs to the tutor being viewed, instead of every tutor
+// sharing one global "the resume" slot. Falls back to a generic key when
+// there's no recognisable mock user id (e.g. talking to a real backend).
+function currentTutorStorageId(): string {
+  const token = localStorage.getItem('sessioneer_token') || ''
+  const match = /^mock-user:(\d+)$/.exec(token)
+  return match ? match[1] : 'me'
+}
+
+function resumeDataKey(): string {
+  return `sessioneer_resume_${currentTutorStorageId()}`
+}
+
+function resumeNameKey(): string {
+  return `sessioneer_resume_name_${currentTutorStorageId()}`
+}
+
 export default function TutorProfile() {
   const fullName = localStorage.getItem('sessioneer_name') || 'Tutor'
   const initials = fullName.split(' ').filter(Boolean).map(n => n[0]).join('').toUpperCase()
 
   const [photo, setPhoto] = useState<string | null>(() => localStorage.getItem(PHOTO_STORAGE_KEY))
-  const [resumeName, setResumeName] = useState<string | null>(null)
+  const [resumeName, setResumeName] = useState<string | null>(() => localStorage.getItem(resumeNameKey()))
+  const [resumeData, setResumeData] = useState<string | null>(() => localStorage.getItem(resumeDataKey()))
   const [theme, setTheme] = useState<Theme>(() => (localStorage.getItem(THEME_STORAGE_KEY) as Theme) || 'light')
 
   const [currentPassword, setCurrentPassword] = useState('')
@@ -51,10 +72,39 @@ export default function TutorProfile() {
   const handleResumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-    // Only the file name is kept — there's no backend endpoint to actually
-    // upload/store the resume file yet, and browsers can't persist raw
-    // file contents across a refresh without one. This resets on reload.
-    setResumeName(file.name)
+    // There's no backend endpoint yet to actually upload/store the resume
+    // against the tutor's account, so — same approach as the profile photo
+    // above — it's kept as a data URL in localStorage. That's enough to
+    // let the tutor view or delete what they just uploaded from this
+    // browser, it just won't follow them to another device.
+    const reader = new FileReader()
+    reader.onload = () => {
+      const dataUrl = reader.result as string
+      setResumeName(file.name)
+      setResumeData(dataUrl)
+      localStorage.setItem(resumeNameKey(), file.name)
+      localStorage.setItem(resumeDataKey(), dataUrl)
+    }
+    reader.readAsDataURL(file)
+    // Allow re-selecting the same file name later (e.g. after deleting).
+    e.target.value = ''
+  }
+
+  const handleViewResume = () => {
+    if (!resumeData) return
+    const win = window.open()
+    if (win) {
+      win.document.write(
+        `<iframe src="${resumeData}" style="border:0;position:fixed;inset:0;width:100%;height:100%;" title="${resumeName ?? 'Resume'}"></iframe>`
+      )
+    }
+  }
+
+  const handleDeleteResume = () => {
+    setResumeName(null)
+    setResumeData(null)
+    localStorage.removeItem(resumeNameKey())
+    localStorage.removeItem(resumeDataKey())
   }
 
   const toggleTheme = () => {
@@ -147,9 +197,19 @@ export default function TutorProfile() {
             <span className="resume-filename">
               {resumeName ? resumeName : 'No resume uploaded yet'}
             </span>
+            {resumeName && resumeData && (
+              <button className="resume-view-btn" onClick={handleViewResume}>
+                View
+              </button>
+            )}
             <button className="add-btn" onClick={() => resumeInputRef.current?.click()}>
               {resumeName ? 'Replace resume' : 'Upload resume'}
             </button>
+            {resumeName && (
+              <button className="resume-delete-btn" onClick={handleDeleteResume}>
+                Delete
+              </button>
+            )}
             <input
               ref={resumeInputRef}
               type="file"
@@ -185,27 +245,27 @@ export default function TutorProfile() {
             <form className="detail-form password-form" onSubmit={handleChangePassword}>
               <div className="form-field">
                 <label>Current Password</label>
-                <input
-                  type="password"
+                <PasswordInput
                   value={currentPassword}
                   onChange={e => setCurrentPassword(e.target.value)}
+                  autoComplete="current-password"
                 />
               </div>
               <div className="form-row-2">
                 <div className="form-field">
                   <label>New Password</label>
-                  <input
-                    type="password"
+                  <PasswordInput
                     value={newPassword}
                     onChange={e => setNewPassword(e.target.value)}
+                    autoComplete="new-password"
                   />
                 </div>
                 <div className="form-field">
                   <label>Confirm New Password</label>
-                  <input
-                    type="password"
+                  <PasswordInput
                     value={confirmPassword}
                     onChange={e => setConfirmPassword(e.target.value)}
+                    autoComplete="new-password"
                   />
                 </div>
               </div>

@@ -78,7 +78,6 @@ function StaffSidebar() {
           )}
         </Link>
         <Link className={path === '/staff-chat' ? 'active' : ''} to="/staff-chat">Chat</Link>
-        <Link className={path === '/staff-profile' ? 'active' : ''} to="/staff-profile">Profile</Link>
       </nav>
 
       <div className="staff-menu-divider" />

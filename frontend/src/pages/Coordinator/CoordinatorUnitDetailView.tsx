@@ -508,19 +508,24 @@ export default function UnitDetailView({ unit, onBack }: Props) {
 
   // Marks (or unmarks) a single dated occurrence as a holiday — e.g. a
   // public holiday or teaching-free day that falls on what would
-  // otherwise be a regular recurring slot. Local only, same as the rest
-  // of session editing: there's no backend status for this, so it just
-  // flips the status shown here and remembers what it was before so
-  // un-marking restores it. Only ever applies to that one date, not the
+  // otherwise be a regular recurring slot. Only ever applies to that one date, not the
   // whole recurring group.
-  const toggleHoliday = (session: Session) => {
-    setSessions(prev => prev.map(s => {
-      if (s.id !== session.id) return s
-      if (s.status === 'HOLIDAY') {
-        return { ...s, status: s.previousStatus ?? 'PENDING', previousStatus: undefined }
-      }
-      return { ...s, previousStatus: s.status, status: 'HOLIDAY' }
-    }))
+  const toggleHoliday = async (session: Session) => {
+    const newStatus = session.status === 'HOLIDAY'
+      ? (session.previousStatus ?? 'PENDING')
+      : 'HOLIDAY'
+    try {
+      await api.updateSessionStatus(session.id, newStatus)
+      setSessions(prev => prev.map(s => {
+        if (s.id !== session.id) return s
+        if (s.status === 'HOLIDAY') {
+          return { ...s, status: s.previousStatus ?? 'PENDING', previousStatus: undefined }
+        }
+        return { ...s, previousStatus: s.status, status: 'HOLIDAY' }
+      }))
+    } catch (err) {
+      console.error(err)
+    }
   }
 
   // Flags (or unflags) a specific invited tutor as unable to teach one
@@ -550,31 +555,43 @@ export default function UnitDetailView({ unit, onBack }: Props) {
   // backend endpoint to delete a session yet (only create/read exist), so
   // this just removes it from what's shown here; it comes back on refresh
   // since it's never actually removed server-side.
-  const handleDeleteSession = (session: Session) => {
+  const handleDeleteSession = async (session: Session) => {
     const ok = window.confirm(
       `Delete the ${session.title} session on ${new Date(session.startTime).toLocaleDateString()}? This can't be undone.`
     )
     if (!ok) return
-    setSessions(prev => prev.filter(s => s.id !== session.id))
+    try {
+      await api.deleteSession(session.id)
+      setSessions(prev => prev.filter(s => s.id !== session.id))
+    } catch (err) {
+      console.error(err)
+    }
   }
 
-  const handleDeleteGroup = (group: SessionGroup) => {
+  const handleDeleteGroup = async (group: SessionGroup) => {
     const ok = window.confirm(
-      `Delete all ${group.sessions.length} sessions in this recurring "${group.title}" (${DAY_NAMES[group.dayOfWeek]}s, ${group.timeLabel}) pattern? This can't be undone.`
+      `Delete all ${group.sessions.length} sessions in this recurring "${group.title}" pattern? This can't be undone.`
     )
     if (!ok) return
-    const idsToDelete = new Set(group.sessions.map(s => s.id))
-    setSessions(prev => prev.filter(s => !idsToDelete.has(s.id)))
-    setExpandedGroups(prev => {
-      const next = new Set(prev)
-      next.delete(group.key)
-      return next
-    })
+    try {
+      for (const s of group.sessions) {
+        await api.deleteSession(s.id)
+      }
+      const idsToDelete = new Set(group.sessions.map(s => s.id))
+      setSessions(prev => prev.filter(s => !idsToDelete.has(s.id)))
+      setExpandedGroups(prev => {
+        const next = new Set(prev)
+        next.delete(group.key)
+        return next
+      })
+    } catch (err) {
+      console.error(err)
+    }
   }
 
   const editingGroup = sessionGroups.find(g => g.key === editingGroupKey) ?? null
 
-  const handleSaveGroupEdit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSaveGroupEdit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!editingGroup) return
     setEditSeriesError('')
@@ -592,35 +609,52 @@ export default function UnitDetailView({ unit, onBack }: Props) {
       return
     }
 
-    // NOTE: there is no backend endpoint to update sessions (only
-    // create/read exist), so this only changes what you see here right
-    // now — it will reset if you refresh the page or come back later.
     const newLocation = buildLocationStringFrom(editLocationType, editCampus, editBlock, editRoom)
-    const newMode: Session['mode'] = editLocationType === 'online' ? 'online' : 'on-campus'
     const oldIds = new Set(editingGroup.sessions.map(s => s.id))
-    // Dates that still fall in the new range/day keep their existing id,
-    // status and holiday history — so re-shaping a series doesn't wipe
-    // out an ALLOCATED or HOLIDAY mark on a date that's still in it.
     const oldByDateKey = new Map<string, Session>(
       editingGroup.sessions.map(s => [new Date(s.startTime).toDateString(), s])
     )
 
-    const newSessions: Session[] = occurrenceDates.map((date, i) => {
-      const existing = oldByDateKey.get(date.toDateString())
-      return {
-        id: existing ? existing.id : -(Date.now() + i),
-        title: editClassType,
-        startTime: formatEditDateTime(date, editStartTime),
-        endTime: formatEditDateTime(date, editEndTime),
-        location: newLocation,
-        status: existing ? existing.status : 'PENDING',
-        mode: newMode,
-        previousStatus: existing?.previousStatus,
-      }
-    })
+    try {
+      const newSessions: Session[] = []
+      for (let i = 0; i < occurrenceDates.length; i++) {
+        const date = occurrenceDates[i]
+        const existing = oldByDateKey.get(date.toDateString())
+        const startTime = formatEditDateTime(date, editStartTime)
+        const endTime = formatEditDateTime(date, editEndTime)
 
-    setSessions(prev => [...prev.filter(s => !oldIds.has(s.id)), ...newSessions])
-    setEditingGroupKey(null)
+        if (existing && existing.id > 0) {
+          const updated = await api.updateSession(existing.id, {
+            title: editClassType,
+            startTime,
+            endTime,
+            location: newLocation,
+          })
+          newSessions.push({ ...updated, mode: editLocationType === 'online' ? 'online' : 'on-campus' })
+        } else {
+          const created = await api.createSession(unit.id, {
+            title: editClassType,
+            startTime,
+            endTime,
+            location: newLocation,
+          })
+          newSessions.push({ ...created, mode: editLocationType === 'online' ? 'online' : 'on-campus' })
+        }
+      }
+
+      // Delete sessions that fell out of range
+      for (const s of editingGroup.sessions) {
+        if (s.id > 0 && !occurrenceDates.some(d => d.toDateString() === new Date(s.startTime).toDateString())) {
+          await api.deleteSession(s.id)
+        }
+      }
+
+      setSessions(prev => [...prev.filter(s => !oldIds.has(s.id)), ...newSessions])
+      setEditingGroupKey(null)
+    } catch (err) {
+      console.error(err)
+      setEditSeriesError('Failed to save changes. Please try again.')
+    }
   }
 
 

@@ -54,4 +54,11 @@ public class UnitInvitationService {
         invitationRepository.findByUnitIdAndStaffId(unitId, staffId)
                 .ifPresent(invitationRepository::delete);
     }
+
+    public UnitInvitation respondToInvitation(Long unitId, Long staffId) {
+        UnitInvitation invitation = invitationRepository.findByUnitIdAndStaffId(unitId, staffId)
+                .orElseThrow(() -> new RuntimeException("Invitation not found"));
+        invitation.setStatus(InvitationStatus.RESPONDED);
+        return invitationRepository.save(invitation);
+    }
 }

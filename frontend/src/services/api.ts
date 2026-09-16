@@ -118,4 +118,13 @@ export const api = {
   updateResume: (resumeName: string, resumeData: string, resumeType: string) => request('PUT', '/profile/resume', { resumeName, resumeData, resumeType }),
   changePassword: (currentPassword: string, newPassword: string) => requestText('PUT', '/profile/password', { currentPassword, newPassword }),
   selfAssign: (data: object) => request('POST', '/allocations', data),
+  //deleteSession: (sessionId: number) => requestNoBody('DELETE', `/units/0/sessions/${sessionId}`),
+  respondToInvitation: (unitId: number, staffId: number) => requestEmptyResponse('POST', `/units/${unitId}/invite/${staffId}/respond`, {}),
+  declineInvitation: (unitId: number, staffId: number) => requestNoBody('DELETE', `/units/${unitId}/invite/${staffId}`),
+  markStaffUnavailableForSession: (sessionId: number, staffId: number, unavailable: boolean) => requestEmptyResponse('POST', `/sessions/${sessionId}/unavailable/${staffId}`, { unavailable }),
+  //updateSession: (sessionId: number, data: object) => request('PUT', `/units/0/sessions/${sessionId}`, data),
+  //updateSessionStatus: (sessionId: number, status: string) => request('PUT', `/units/0/sessions/${sessionId}/status`, { status }),
+  updateSessionStatus: (sessionId: number, status: string) => request('PUT', `/sessions/${sessionId}/status`, { status }),
+  deleteSession: (sessionId: number) => requestNoBody('DELETE', `/sessions/${sessionId}`),
+  updateSession: (sessionId: number, data: object) => request('PUT', `/sessions/${sessionId}`, data),
 }

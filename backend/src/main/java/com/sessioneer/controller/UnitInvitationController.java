@@ -38,4 +38,9 @@ public class UnitInvitationController {
         invitationService.removeInvitation(unitId, staffId);
         return ResponseEntity.ok().build();
     }
+
+    @PostMapping("/units/{unitId}/invite/{staffId}/respond")
+    public ResponseEntity<UnitInvitation> respond(@PathVariable Long unitId, @PathVariable Long staffId) {
+        return ResponseEntity.ok(invitationService.respondToInvitation(unitId, staffId));
+    }
 }

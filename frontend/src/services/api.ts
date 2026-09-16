@@ -127,4 +127,7 @@ export const api = {
   updateSessionStatus: (sessionId: number, status: string) => request('PUT', `/sessions/${sessionId}/status`, { status }),
   deleteSession: (sessionId: number) => requestNoBody('DELETE', `/sessions/${sessionId}`),
   updateSession: (sessionId: number, data: object) => request('PUT', `/sessions/${sessionId}`, data),
+  setDeadline: (unitId: number, deadline: string) => request('PUT', `/units/${unitId}/deadline`, { deadline }),
+  clearDeadline: (unitId: number) => requestNoBody('DELETE', `/units/${unitId}/deadline`),
+  acceptInvitation: (unitId: number, staffId: number) => requestEmptyResponse('POST', `/units/${unitId}/invite/${staffId}/respond`, {}),
 }

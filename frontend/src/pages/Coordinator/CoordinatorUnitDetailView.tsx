@@ -234,7 +234,7 @@ function buildLocationStringFrom(locationType: LocationType, campus: Campus, blo
 // stored per-unit in localStorage and only affects what's shown on this
 // screen. A real deadline would need a backend field on the invitation
 // (or unit) so tutors' own submission screens could enforce/show it too.
-function deadlineStorageKey(unitId: number) {
+/***function deadlineStorageKey(unitId: number) {
   return `sessioneer:availDeadline:unit:${unitId}`
 }
 
@@ -244,7 +244,7 @@ function loadDeadline(unitId: number): string {
   } catch {
     return ''
   }
-}
+}***/
 
 function formatCountdown(deadlineIso: string, now: number): { label: string; state: 'normal' | 'urgent' | 'expired' } {
   const target = new Date(deadlineIso).getTime()
@@ -318,7 +318,10 @@ export default function UnitDetailView({ unit, onBack }: Props) {
     loadSessions().catch(console.error)
     api.getAllStaff().then(setStaffList).catch(console.error)
     api.getUnitInvitations(unit.id).then(setInvitations).catch(console.error)
-    setDeadline(loadDeadline(unit.id))
+    api.getUnits().then((units: any[]) => {
+      const u = units.find(u => u.id === unit.id)
+      if (u?.availabilityDeadline) setDeadline(u.availabilityDeadline)
+    }).catch(console.error)
     setExpandedGroups(new Set())
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [unit.id])
@@ -390,26 +393,26 @@ export default function UnitDetailView({ unit, onBack }: Props) {
     setShowDeadlineModal(true)
   }
 
-  const handleSaveDeadline = () => {
+  const handleSaveDeadline = async () => {
     if (!deadlineDraft) return
     try {
-      localStorage.setItem(deadlineStorageKey(unit.id), deadlineDraft)
+      await api.setDeadline(unit.id, deadlineDraft)
+      setDeadline(deadlineDraft)
+      setNow(Date.now())
+      setShowDeadlineModal(false)
     } catch (err) {
       console.error(err)
     }
-    setDeadline(deadlineDraft)
-    setNow(Date.now())
-    setShowDeadlineModal(false)
   }
 
-  const handleClearDeadline = () => {
+  const handleClearDeadline = async () => {
     try {
-      localStorage.removeItem(deadlineStorageKey(unit.id))
+      await api.clearDeadline(unit.id)
+      setDeadline('')
+      setShowDeadlineModal(false)
     } catch (err) {
       console.error(err)
     }
-    setDeadline('')
-    setShowDeadlineModal(false)
   }
 
   const countdown = deadline ? formatCountdown(deadline, now) : null

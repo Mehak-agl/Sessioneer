@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 //import { api } from "../../services/api";
 import { api } from "../../services/api";
 import StaffSidebar from "../../components/TutorSidebar"
-import { getDaysLeftInAvailabilityWindow } from "../../constants/availability"
+//import { getDaysLeftInAvailabilityWindow } from "../../constants/availability"
 
 
 interface Availability {
@@ -38,12 +38,25 @@ function StaffDashboard() {
   const [allocations, setAllocations] = useState<Allocation[]>([])
   const [invitedUnits, setInvitedUnits] = useState<Unit[]>([])
   const [myStaffId, setMyStaffId] = useState<number | null>(null)
+  const [nearestDeadline, setNearestDeadline] = useState<string | null>(null)
 
   useEffect(() => {
     api.getMyAvailability().then(setAvailability).catch(console.error)
     api.getMyInvitations().then((invitations: any[]) => {
       setInvitedUnits(invitations.map(inv => inv.unit))
       setMyStaffId(invitations[0]?.staff?.id ?? null)
+      
+      // Find nearest upcoming deadline
+      const deadlines = invitations
+        .map(inv => inv.unit.availabilityDeadline)
+        .filter(Boolean)
+        .map(d => new Date(d).getTime())
+        .filter(t => t > Date.now())
+        .sort()
+      
+      if (deadlines.length > 0) {
+        setNearestDeadline(new Date(deadlines[0]).toISOString())
+      }
     }).catch(console.error)
   }, [])
 
@@ -71,7 +84,7 @@ function StaffDashboard() {
   )
 
   const submittedCount = invitedUnits.filter(u => submittedUnitIds.has(u.id)).length
-  const daysLeft = getDaysLeftInAvailabilityWindow()
+  //const daysLeft = getDaysLeftInAvailabilityWindow()
 
   return (
     <div className="staff-dashboard-page">
@@ -91,9 +104,18 @@ function StaffDashboard() {
 
         <section className="staff-stats-grid">
           <div className="staff-stat-card deadline-card">
-            <span>O Week Availability Window</span>
-            <h2>{daysLeft > 0 ? `${daysLeft} day${daysLeft !== 1 ? 's' : ''} left` : 'Closed'}</h2>
-            <p>{daysLeft > 0 ? 'Submit or update on the Calendar page' : 'Contact your coordinator for changes'}</p>
+            <span>Next Availability Deadline</span>
+            {nearestDeadline ? (
+              <>
+                <h2>{Math.ceil((new Date(nearestDeadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24))} days left</h2>
+                <p>Due {new Date(nearestDeadline).toLocaleDateString()}</p>
+              </>
+            ) : (
+              <>
+                <h2>No deadline set</h2>
+                <p>Contact your coordinator</p>
+              </>
+            )}
           </div>
           <div className="staff-stat-card">
             <span>Units Invited To</span>

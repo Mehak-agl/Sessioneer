@@ -21,6 +21,7 @@ interface UnitSummary {
   name: string
   semester: string
   coordinator?: { fullName: string }
+  availabilityDeadline?: string
 }
 
 interface StaffUser {
@@ -679,7 +680,8 @@ export default function TutorMyUnits() {
     setAcceptError('')
     setAcceptedUnitIds(prev => new Set(prev).add(unitId))
     try {
-      await api.acceptInvitation(unitId)
+      const staffId = Number(localStorage.getItem('sessioneer_user_id'))
+      await api.acceptInvitation(unitId, staffId)
       const fresh = await api.getMyInvitations()
       setInvitations(fresh)
     } catch (err: any) {

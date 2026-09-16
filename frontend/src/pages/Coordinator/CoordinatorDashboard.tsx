@@ -32,13 +32,39 @@ const MOCK_CONFLICTS: ConflictRequest[] = [
   { id: 3, tutorName: 'Emily Chen',    unit: 'CAB303', session: 'Tutorial – Wed 11:00 am', date: '2026-08-19', type: 'Conflict' },
 ]
 
-// Availability submission deadline for Semester 2, 2026
-const AVAIL_DEADLINE = new Date('2026-09-20')
+// ── Per-unit availability submission deadlines ──────────────────────────
+// Deadlines are set per unit on the unit's "Manage" screen (see
+// CoordinatorUnitDetailView.tsx) and stored client-side under this same
+// localStorage key, so the dashboard just reads them back to build a
+// per-unit breakdown instead of showing a single hardcoded date.
+function deadlineStorageKey(unitId: number) {
+  return `sessioneer:availDeadline:unit:${unitId}`
+}
 
-function getDaysRemaining(): number {
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  return Math.ceil((AVAIL_DEADLINE.getTime() - today.getTime()) / 86400000)
+function loadUnitDeadline(unitId: number): string {
+  try {
+    return localStorage.getItem(deadlineStorageKey(unitId)) ?? ''
+  } catch {
+    return ''
+  }
+}
+
+type DeadlineState = 'normal' | 'urgent' | 'expired'
+
+function formatDeadlineCountdown(deadlineIso: string, now: number): { label: string; state: DeadlineState } {
+  const target = new Date(deadlineIso).getTime()
+  if (Number.isNaN(target)) return { label: '', state: 'normal' }
+  const diffMs = target - now
+  if (diffMs <= 0) return { label: 'Deadline passed', state: 'expired' }
+
+  const totalSeconds = Math.floor(diffMs / 1000)
+  const days = Math.floor(totalSeconds / 86400)
+  const hours = Math.floor((totalSeconds % 86400) / 3600)
+
+  if (days > 0) return { label: `${days}d ${hours}h left`, state: days <= 1 ? 'urgent' : 'normal' }
+
+  const minutes = Math.floor((totalSeconds % 3600) / 60)
+  return { label: `${hours}h ${minutes}m left`, state: 'urgent' }
 }
 
 function CoordinatorDashboard() {
@@ -50,6 +76,8 @@ function CoordinatorDashboard() {
   const [pendingCount, setPendingCount] = useState(0)
   const [pendingByUnit, setPendingByUnit] = useState<{ unit: Unit; count: number }[]>([])
   const [showPendingBreakdown, setShowPendingBreakdown] = useState(false)
+  const [showDeadlineBreakdown, setShowDeadlineBreakdown] = useState(false)
+  const [now, setNow] = useState(() => Date.now())
   const [uninvitedCount, setUninvitedCount] = useState(0)
   const [invitesByUnit, setInvitesByUnit] = useState<{ unit: Unit; total: number; responded: number }[]>([])
   const [showImportModal, setShowImportModal] = useState(false)
@@ -290,6 +318,25 @@ function CoordinatorDashboard() {
     loadUnits()
   }, [])
 
+  // Keeps the deadline countdowns (stat card + breakdown) ticking while the
+  // dashboard is open, so "Xd Yh left" stays accurate without a refresh.
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 30000)
+    return () => clearInterval(id)
+  }, [])
+
+  // Per-unit deadlines, soonest first. Read straight from localStorage on
+  // every render (cheap) so this stays in sync after a deadline is set or
+  // changed on a unit's Manage screen and the coordinator comes back here.
+  const unitDeadlines = units
+    .map(unit => ({ unit, deadline: loadUnitDeadline(unit.id) }))
+    .filter(d => d.deadline)
+    .map(d => ({ ...d, countdown: formatDeadlineCountdown(d.deadline, now) }))
+    .sort((a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime())
+
+  const nearestUpcomingDeadline = unitDeadlines.find(d => d.countdown.state !== 'expired')
+  const allDeadlinesExpired = unitDeadlines.length > 0 && !nearestUpcomingDeadline
+
   const handleLogout = () => {
     localStorage.removeItem("sessioneer_token");
     localStorage.removeItem("sessioneer_role");
@@ -322,7 +369,7 @@ function CoordinatorDashboard() {
           <>
             <header className="topbar">
               <div className="page-title">
-                <img src="/icons.svg" alt="Page logo" />
+                <img src="/logo.png" alt="Page logo" />
                 <div>
                   <h1>Coordinator Dashboard</h1>
                   <p>Manage tutors, units, schedules and allocations</p>
@@ -345,21 +392,24 @@ function CoordinatorDashboard() {
                 <h2>{pendingCount}</h2>
                 <p>Awaiting tutor replies {pendingCount > 0 ? '— click to view' : ''}</p>
               </div>
-              <div className={`stat-card${getDaysRemaining() <= 3 ? ' warning' : ''}`}>
+              <div
+                className={`stat-card stat-card--clickable${(nearestUpcomingDeadline?.countdown.state === 'urgent' || allDeadlinesExpired) ? ' warning' : ''}${showDeadlineBreakdown ? ' active' : ''}`}
+                onClick={() => setShowDeadlineBreakdown(p => !p)}
+              >
                 <span>Submission Deadline</span>
                 <h2>
-                  {getDaysRemaining() > 0
-                    ? `${getDaysRemaining()}d`
-                    : getDaysRemaining() === 0
-                    ? 'Today'
-                    : 'Closed'}
+                  {nearestUpcomingDeadline
+                    ? nearestUpcomingDeadline.countdown.label
+                    : allDeadlinesExpired
+                    ? 'Closed'
+                    : 'None set'}
                 </h2>
                 <p>
-                  {getDaysRemaining() > 0
-                    ? 'Days left for tutors to respond'
-                    : getDaysRemaining() === 0
-                    ? 'Deadline is today'
-                    : 'Submission closed'}
+                  {nearestUpcomingDeadline
+                    ? `Nearest — ${nearestUpcomingDeadline.unit.code} — click to view by unit`
+                    : allDeadlinesExpired
+                    ? 'All unit deadlines have passed — click to view'
+                    : 'No unit deadlines set yet — click to view'}
                 </p>
               </div>
               <div className={`stat-card${uninvitedCount > 0 ? ' warning' : ' success'}`}>
@@ -374,23 +424,60 @@ function CoordinatorDashboard() {
                 <div className="pending-breakdown-header">
                   <h3>Pending Responses by Unit</h3>
                   <span className="pending-breakdown-deadline">
-                    {getDaysRemaining() > 0 ? `${getDaysRemaining()} days left` : getDaysRemaining() === 0 ? 'Due today' : 'Deadline passed'}
+                    {pendingByUnit.length} unit{pendingByUnit.length !== 1 ? 's' : ''} awaiting responses
                   </span>
                 </div>
                 {pendingByUnit.length === 0 ? (
                   <p className="pending-breakdown-empty">No pending responses.</p>
                 ) : (
-                  pendingByUnit.map(({ unit, count }) => (
+                  pendingByUnit.map(({ unit, count }) => {
+                    // Each unit can have its own submission deadline (set on its
+                    // Manage screen) — show that instead of a single shared one.
+                    const unitDeadline = loadUnitDeadline(unit.id)
+                    const unitCountdown = unitDeadline ? formatDeadlineCountdown(unitDeadline, now) : null
+                    return (
+                      <div key={unit.id} className="pending-breakdown-row">
+                        <div className="pending-breakdown-unit">
+                          <span className="unit-code-badge">{unit.code}</span>
+                          <span className="pending-breakdown-name">{unit.name}</span>
+                        </div>
+                        <div className="pending-breakdown-meta">
+                          <span className="pending-breakdown-count">{count} pending</span>
+                          <span className="pending-breakdown-days">
+                            {unitCountdown ? unitCountdown.label : 'No deadline set'}
+                          </span>
+                        </div>
+                      </div>
+                    )
+                  })
+                )}
+              </section>
+            )}
+
+            {showDeadlineBreakdown && (
+              <section className="pending-breakdown">
+                <div className="pending-breakdown-header">
+                  <h3>Submission Deadlines by Unit</h3>
+                  <span className="pending-breakdown-deadline">
+                    {unitDeadlines.length} unit{unitDeadlines.length !== 1 ? 's' : ''} with a deadline set
+                  </span>
+                </div>
+                {unitDeadlines.length === 0 ? (
+                  <p className="pending-breakdown-empty">
+                    No units have an availability deadline set yet. Open a unit's "Manage" screen to set one.
+                  </p>
+                ) : (
+                  unitDeadlines.map(({ unit, deadline, countdown }) => (
                     <div key={unit.id} className="pending-breakdown-row">
                       <div className="pending-breakdown-unit">
                         <span className="unit-code-badge">{unit.code}</span>
                         <span className="pending-breakdown-name">{unit.name}</span>
                       </div>
                       <div className="pending-breakdown-meta">
-                        <span className="pending-breakdown-count">{count} pending</span>
-                        <span className="pending-breakdown-days">
-                          {getDaysRemaining() > 0 ? `${getDaysRemaining()}d remaining` : 'Overdue'}
+                        <span className="pending-breakdown-count">
+                          Due {new Date(deadline).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}
                         </span>
+                        <span className={`deadline-state-pill ${countdown.state}`}>{countdown.label}</span>
                       </div>
                     </div>
                   ))

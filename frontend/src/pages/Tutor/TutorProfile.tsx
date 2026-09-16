@@ -33,6 +33,7 @@ function resumeNameKey(): string {
 
 export default function TutorProfile() {
   const fullName = localStorage.getItem('sessioneer_name') || 'Tutor'
+  const email = localStorage.getItem('sessioneer_email') || ''
   const initials = fullName.split(' ').filter(Boolean).map(n => n[0]).join('').toUpperCase()
 
   const [photo, setPhoto] = useState<string | null>(() => localStorage.getItem(PHOTO_STORAGE_KEY))
@@ -182,6 +183,7 @@ export default function TutorProfile() {
           </div>
 
           <h2 className="profile-name">{fullName}</h2>
+          {email && <p className="profile-email">{email}</p>}
           <span className="profile-position-badge">Tutor</span>
         </section>
 

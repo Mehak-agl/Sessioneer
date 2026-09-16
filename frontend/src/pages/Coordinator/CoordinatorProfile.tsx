@@ -15,6 +15,7 @@ function applyTheme(theme: Theme) {
 
 export default function CoordinatorProfile() {
   const fullName = localStorage.getItem('sessioneer_name') || 'Coordinator'
+  const email = localStorage.getItem('sessioneer_email') || ''
   const initials = fullName.split(' ').filter(Boolean).map(n => n[0]).join('').toUpperCase()
 
   const [photo, setPhoto] = useState<string | null>(() => localStorage.getItem(PHOTO_STORAGE_KEY))
@@ -123,6 +124,7 @@ export default function CoordinatorProfile() {
           </div>
 
           <h2 className="profile-name">{fullName}</h2>
+          {email && <p className="profile-email">{email}</p>}
           <span className="profile-position-badge">Coordinator</span>
         </section>
 

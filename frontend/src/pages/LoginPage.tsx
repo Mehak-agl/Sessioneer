@@ -26,6 +26,9 @@ export default function LoginPage() {
       localStorage.setItem('sessioneer_token', res.token)
       localStorage.setItem('sessioneer_role', res.role.toLowerCase())
       localStorage.setItem('sessioneer_name', res.fullName)
+      // The email the person just signed in with is the email registered
+      // to their account — save it so the Profile pages can display it.
+      localStorage.setItem('sessioneer_email', email)
       navigate(res.role === 'COORDINATOR' ? '/coordinator' : '/staff')
     } catch {
       // Fall back to mock auth when backend is not running
@@ -34,6 +37,7 @@ export default function LoginPage() {
         localStorage.setItem('sessioneer_token', 'mock-token')
         localStorage.setItem('sessioneer_role', mock.role.toLowerCase())
         localStorage.setItem('sessioneer_name', mock.fullName)
+        localStorage.setItem('sessioneer_email', mock.email)
         navigate(mock.role === 'COORDINATOR' ? '/coordinator' : '/staff')
       } else {
         setError('Invalid email or password.')

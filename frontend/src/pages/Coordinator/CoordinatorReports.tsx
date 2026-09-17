@@ -1,4 +1,4 @@
-import CoordinatorSidebar from '../../components/CooordinatorSidebar'
+import CoordinatorSidebar from '../../components/CoordinatorSidebar'
 
 export default function CoordinatorReports() {
   return (

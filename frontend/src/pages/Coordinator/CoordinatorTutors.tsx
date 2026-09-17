@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import CoordinatorSidebar from '../../components/CooordinatorSidebar'
+import CoordinatorSidebar from '../../components/CoordinatorSidebar'
 import { api } from '../../services/api'
 
 interface CreatedTutor {

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import StaffSidebar from '../../components/TutorSidebar'
+import { api } from '../../services/api'
 import PasswordInput from '../../components/PasswordInput'
 
 
@@ -12,33 +13,13 @@ function applyTheme(theme: Theme) {
   document.body.classList.toggle('dark-theme', theme === 'dark')
 }
 
-// Resumes are stored per-tutor (keyed by their user id from the mock-mode
-// login token) so the Coordinator's Tutor Report can show the resume that
-// actually belongs to the tutor being viewed, instead of every tutor
-// sharing one global "the resume" slot. Falls back to a generic key when
-// there's no recognisable mock user id (e.g. talking to a real backend).
-function currentTutorStorageId(): string {
-  const token = localStorage.getItem('sessioneer_token') || ''
-  const match = /^mock-user:(\d+)$/.exec(token)
-  return match ? match[1] : 'me'
-}
-
-function resumeDataKey(): string {
-  return `sessioneer_resume_${currentTutorStorageId()}`
-}
-
-function resumeNameKey(): string {
-  return `sessioneer_resume_name_${currentTutorStorageId()}`
-}
-
 export default function TutorProfile() {
   const fullName = localStorage.getItem('sessioneer_name') || 'Tutor'
   const email = localStorage.getItem('sessioneer_email') || ''
   const initials = fullName.split(' ').filter(Boolean).map(n => n[0]).join('').toUpperCase()
 
   const [photo, setPhoto] = useState<string | null>(() => localStorage.getItem(PHOTO_STORAGE_KEY))
-  const [resumeName, setResumeName] = useState<string | null>(() => localStorage.getItem(resumeNameKey()))
-  const [resumeData, setResumeData] = useState<string | null>(() => localStorage.getItem(resumeDataKey()))
+  const [resumeName, setResumeName] = useState<string | null>(null)
   const [theme, setTheme] = useState<Theme>(() => (localStorage.getItem(THEME_STORAGE_KEY) as Theme) || 'light')
 
   const [currentPassword, setCurrentPassword] = useState('')
@@ -46,9 +27,23 @@ export default function TutorProfile() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [passwordMessage, setPasswordMessage] = useState('')
   const [passwordMessageType, setPasswordMessageType] = useState<'success' | 'error'>('success')
+  const [showPhotoModal, setShowPhotoModal] = useState(false)
+  const [resumeData, setResumeData] = useState<string | null>(null)
 
   const photoInputRef = useRef<HTMLInputElement>(null)
   const resumeInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    api.getProfile().then((profile: any) => {
+      if (profile.photo) {
+        const dataUrl = `data:image/jpeg;base64,${profile.photo}`
+        setPhoto(dataUrl)
+        localStorage.setItem(PHOTO_STORAGE_KEY, dataUrl)
+      }
+      if (profile.resumeName) setResumeName(profile.resumeName)
+      if (profile.resumeData) setResumeData(profile.resumeData)
+    }).catch(console.error)
+  }, [])
 
   useEffect(() => {
     applyTheme(theme)
@@ -58,14 +53,16 @@ export default function TutorProfile() {
     const file = e.target.files?.[0]
     if (!file) return
     const reader = new FileReader()
-    reader.onload = () => {
+    reader.onload = async () => {
       const dataUrl = reader.result as string
-      setPhoto(dataUrl)
-      // Persisted to localStorage so it survives a refresh — this is safe
-      // since it never leaves the browser, but note it's per-browser only
-      // (won't follow the account to another device without a real
-      // backend to store it against the user's profile).
-      localStorage.setItem(PHOTO_STORAGE_KEY, dataUrl)
+      const base64 = dataUrl.split(',')[1]
+      try {
+        await api.updatePhoto(base64)
+        setPhoto(dataUrl)
+        localStorage.setItem(PHOTO_STORAGE_KEY, dataUrl)
+      } catch (err) {
+        console.error(err)
+      }
     }
     reader.readAsDataURL(file)
   }
@@ -73,39 +70,18 @@ export default function TutorProfile() {
   const handleResumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-    // There's no backend endpoint yet to actually upload/store the resume
-    // against the tutor's account, so — same approach as the profile photo
-    // above — it's kept as a data URL in localStorage. That's enough to
-    // let the tutor view or delete what they just uploaded from this
-    // browser, it just won't follow them to another device.
     const reader = new FileReader()
-    reader.onload = () => {
-      const dataUrl = reader.result as string
-      setResumeName(file.name)
-      setResumeData(dataUrl)
-      localStorage.setItem(resumeNameKey(), file.name)
-      localStorage.setItem(resumeDataKey(), dataUrl)
+    reader.onload = async () => {
+      const base64 = (reader.result as string).split(',')[1]
+      try {
+        await api.updateResume(file.name, base64, file.type)
+        setResumeName(file.name)
+        setResumeData(base64)
+      } catch (err) {
+        console.error(err)
+      }
     }
     reader.readAsDataURL(file)
-    // Allow re-selecting the same file name later (e.g. after deleting).
-    e.target.value = ''
-  }
-
-  const handleViewResume = () => {
-    if (!resumeData) return
-    const win = window.open()
-    if (win) {
-      win.document.write(
-        `<iframe src="${resumeData}" style="border:0;position:fixed;inset:0;width:100%;height:100%;" title="${resumeName ?? 'Resume'}"></iframe>`
-      )
-    }
-  }
-
-  const handleDeleteResume = () => {
-    setResumeName(null)
-    setResumeData(null)
-    localStorage.removeItem(resumeNameKey())
-    localStorage.removeItem(resumeDataKey())
   }
 
   const toggleTheme = () => {
@@ -116,7 +92,7 @@ export default function TutorProfile() {
     })
   }
 
-  const handleChangePassword = (e: React.FormEvent) => {
+  const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault()
     setPasswordMessage('')
 
@@ -136,16 +112,17 @@ export default function TutorProfile() {
       return
     }
 
-    // NOTE: there is no backend endpoint for changing a password yet
-    // (AuthController only has /signup and /login). This is a fully
-    // working form with real validation, but the submit below is a
-    // placeholder — nothing is actually sent anywhere until that
-    // endpoint exists.
-    setPasswordMessage('Password change form is ready, but not yet connected to a backend endpoint.')
-    setPasswordMessageType('error')
-    setCurrentPassword('')
-    setNewPassword('')
-    setConfirmPassword('')
+    try {
+      await api.changePassword(currentPassword, newPassword)
+      setPasswordMessage('Password changed successfully.')
+      setPasswordMessageType('success')
+      setCurrentPassword('')
+      setNewPassword('')
+      setConfirmPassword('')
+    } catch (err: any) {
+      setPasswordMessage(err.message || 'Failed to change password.')
+      setPasswordMessageType('error')
+    }
   }
 
   return (
@@ -166,9 +143,32 @@ export default function TutorProfile() {
         <section className="profile-card-section">
           <div className="profile-photo-wrapper">
             {photo ? (
-              <img src={photo} alt={fullName} className="profile-photo-circle" />
+              <img 
+                src={photo} 
+                alt={fullName} 
+                className="profile-photo-circle"
+                onClick={() => setShowPhotoModal(true)}
+                style={{ cursor: 'pointer' }}
+              />
             ) : (
               <div className="profile-photo-circle profile-photo-placeholder">{initials}</div>
+            )}
+
+            {showPhotoModal && (
+              <div 
+                onClick={() => setShowPhotoModal(false)}
+                style={{
+                  position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  zIndex: 1000, cursor: 'pointer'
+                }}
+              >
+                <img 
+                  src={photo!} 
+                  alt={fullName}
+                  style={{ maxWidth: '90vw', maxHeight: '90vh', borderRadius: '16px', objectFit: 'contain' }}
+                />
+              </div>
             )}
             <button className="profile-photo-edit-btn" onClick={() => photoInputRef.current?.click()}>
               Change photo
@@ -183,8 +183,8 @@ export default function TutorProfile() {
           </div>
 
           <h2 className="profile-name">{fullName}</h2>
-          {email && <p className="profile-email">{email}</p>}
           <span className="profile-position-badge">Tutor</span>
+          {email && <p className="profile-email">{email}</p>}
         </section>
 
         <section className="detail-section">
@@ -196,22 +196,21 @@ export default function TutorProfile() {
           </div>
 
           <div className="resume-row">
-            <span className="resume-filename">
-              {resumeName ? resumeName : 'No resume uploaded yet'}
-            </span>
-            {resumeName && resumeData && (
-              <button className="resume-view-btn" onClick={handleViewResume}>
-                View
-              </button>
+            {resumeName ? (
+              <a 
+                href={resumeData ? `data:application/pdf;base64,${resumeData}` : '#'}
+                download={resumeName}
+                className="resume-filename"
+                style={{ color: '#0097b2', textDecoration: 'underline', cursor: 'pointer' }}
+              >
+                {resumeName}
+              </a>
+            ) : (
+              <span className="resume-filename">No resume uploaded yet</span>
             )}
             <button className="add-btn" onClick={() => resumeInputRef.current?.click()}>
               {resumeName ? 'Replace resume' : 'Upload resume'}
             </button>
-            {resumeName && (
-              <button className="resume-delete-btn" onClick={handleDeleteResume}>
-                Delete
-              </button>
-            )}
             <input
               ref={resumeInputRef}
               type="file"

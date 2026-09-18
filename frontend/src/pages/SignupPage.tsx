@@ -26,6 +26,8 @@ export default function SignupPage() {
       localStorage.setItem('sessioneer_token', res.token)
       localStorage.setItem('sessioneer_role', res.role.toLowerCase())
       localStorage.setItem('sessioneer_name', res.fullName)
+      // Store user ID in localStorage for testing purposes (not secure for production)
+      localStorage.setItem('sessioneer_user_id', String(res.userId))
       // Save the email that was just registered so the Profile pages can
       // display the account's actual email address.
       localStorage.setItem('sessioneer_email', email)

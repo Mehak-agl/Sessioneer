@@ -5,6 +5,15 @@ export type NotifType =
   | 'allocation_confirmed'
   | 'allocation_rejected'
 
+export interface Notification {
+  id: string
+  type: NotifType
+  title: string
+  message: string
+  unit: string
+  time: string
+}
+
 export type TutorNotifType =
   | 'invitation'
   | 'allocation'
@@ -15,15 +24,6 @@ export type TutorNotifType =
 export interface TutorNotification {
   id: string
   type: TutorNotifType
-  title: string
-  message: string
-  unit: string
-  time: string
-}
-
-export interface Notification {
-  id: string
-  type: NotifType
   title: string
   message: string
   unit: string
@@ -172,3 +172,4 @@ export const MOCK_TUTOR_NOTIFICATIONS: TutorNotification[] = [
     time: t(96 * HR),
   },
 ]
+

@@ -26,6 +26,8 @@ export default function LoginPage() {
       localStorage.setItem('sessioneer_token', res.token)
       localStorage.setItem('sessioneer_role', res.role.toLowerCase())
       localStorage.setItem('sessioneer_name', res.fullName)
+      // Store user ID in localStorage for testing purposes (not secure for production)
+      localStorage.setItem('sessioneer_user_id', String(res.userId))
       // The email the person just signed in with is the email registered
       // to their account — save it so the Profile pages can display it.
       localStorage.setItem('sessioneer_email', email)

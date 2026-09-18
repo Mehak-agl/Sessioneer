@@ -1,42 +1,5 @@
-import * as mockApi from './mockApi'
-
 const BASE_URL = 'http://localhost:8080/api'
-
-// Fixed id used to tag a coordinator's self-assignment to a session
-// (as opposed to a real staff member's id, which starts at 1).
-export const SELF_ASSIGN_STAFF_ID = -1
-
-// ─────────────────────────────────────────────────────────────────────────
-// Mock mode: when on, every api.* call below is served from an in-memory/
-// localStorage-backed mock backend (services/mockApi.ts + mockDb.ts)
-// instead of hitting the real server at BASE_URL. This lets the whole
-// frontend be exercised — login, units, sessions, invitations,
-// availability, allocations — without the Spring Boot backend running at
-// all, and without changing anything about how the real backend works.
-//
-// Toggle it from the switch in the bottom-right corner of the app
-// (see components/MockModeToggle.tsx), or manually via:
-//   localStorage.setItem('sessioneer_mock_mode', 'true' | 'false')
-// It defaults to ON so the app is testable out of the box.
-// ─────────────────────────────────────────────────────────────────────────
-export const MOCK_MODE_STORAGE_KEY = 'sessioneer_mock_mode'
-
-export function isMockMode(): boolean {
-  try {
-    const stored = localStorage.getItem(MOCK_MODE_STORAGE_KEY)
-    return stored === null ? true : stored === 'true'
-  } catch {
-    return true
-  }
-}
-
-export function setMockMode(on: boolean) {
-  try {
-    localStorage.setItem(MOCK_MODE_STORAGE_KEY, on ? 'true' : 'false')
-  } catch {
-    // ignore — worst case the toggle doesn't persist across reloads
-  }
-}
+export const SELF_ASSIGN_STAFF_ID = 0
 
 function getToken() {
   return localStorage.getItem('sessioneer_token')
@@ -63,7 +26,62 @@ async function request(method: string, path: string, body?: object) {
   return res.json()
 }
 
-const realApi = {
+async function requestNoBody(method: string, path: string) {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  }
+  const token = getToken()
+  if (token) headers['Authorization'] = `Bearer ${token}`
+
+  const res = await fetch(`${BASE_URL}${path}`, {
+    method,
+    headers,
+  })
+
+  if (!res.ok) {
+    const error = await res.text()
+    throw new Error(error)
+  }
+}
+
+async function requestEmptyResponse(method: string, path: string, body?: object) {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  }
+  const token = getToken()
+  if (token) headers['Authorization'] = `Bearer ${token}`
+
+  const res = await fetch(`${BASE_URL}${path}`, {
+    method,
+    headers,
+    body: body ? JSON.stringify(body) : undefined,
+  })
+
+  if (!res.ok) {
+    const error = await res.text()
+    throw new Error(error)
+  }
+}
+
+async function requestText(method: string, path: string, body?: object) {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  }
+  const token = getToken()
+  if (token) headers['Authorization'] = `Bearer ${token}`
+
+  const res = await fetch(`${BASE_URL}${path}`, {
+    method,
+    headers,
+    body: body ? JSON.stringify(body) : undefined,
+  })
+
+  const text = await res.text()
+  if (!res.ok) throw new Error(text)
+  return text
+}
+
+export const api = {
   signup: (data: object) => request('POST', '/auth/signup', data),
   login: (data: object) => request('POST', '/auth/login', data),
   getUnits: () => request('GET', '/units'),
@@ -77,35 +95,41 @@ const realApi = {
   getUnitAllocations: (unitId: number) => request('GET', `/allocations/unit/${unitId}`),
   getMyAllocations: (staffId: number) => request('GET', `/allocations/staff/${staffId}`),
   getAllStaff: () => request('GET', '/users/staff'),
-  getAllTutors: () => request('GET', '/users/tutors/reports'),
-  getTutorProfile: (tutorId: number) => request('GET', `/users/tutors/${tutorId}/report`),
   inviteStaff: (unitId: number, staffId: number) => request('POST', `/units/${unitId}/invite/${staffId}`),
   getUnitInvitations: (unitId: number) => request('GET', `/units/${unitId}/invitations`),
   getMyInvitations: () => request('GET', '/invitations/me'),
   removeInvitation: (unitId: number, staffId: number) => request('DELETE', `/units/${unitId}/invite/${staffId}`),
-  acceptInvitation: (unitId: number) => request('POST', `/units/${unitId}/invitations/accept`),
-  respondToInvitation: (unitId: number, staffId: number) => request('POST', `/units/${unitId}/invite/${staffId}/respond`),
-  declineInvitation: (unitId: number, staffId: number) => request('DELETE', `/units/${unitId}/invite/${staffId}`),
-  markStaffUnavailableForSession: (sessionId: number, staffId: number, unavailable: boolean) =>
-    request('POST', `/sessions/${sessionId}/unavailable/${staffId}`, { unavailable }),
-  selfAssign: (data: { sessionId: number; coordinatorName: string; coordinatorEmail?: string }) =>
-    request('POST', '/allocations/self-assign', data),
+  sendMessage: (data: object) => request('POST', '/messages', data),
+  getMessages: (userId: number) => request('GET', `/messages/with/${userId}`),
+  getConversations: () => request('GET', '/messages/conversations'),
+  createGroup: (data: object) => request('POST', '/groups', data),
+  getMyGroups: () => request('GET', '/groups'),
+  getGroupMembers: (groupId: number) => request('GET', `/groups/${groupId}/members`),
+  sendGroupMessage: (groupId: number, data: object) => request('POST', `/groups/${groupId}/messages`, data),
+  getGroupMessages: (groupId: number) => request('GET', `/groups/${groupId}/messages`),
+  addGroupMember: (groupId: number, userId: number) => requestNoBody('POST', `/groups/${groupId}/members/${userId}`),
+  removeGroupMember: (groupId: number, userId: number) => requestNoBody('DELETE', `/groups/${groupId}/members/${userId}`),
+  renameGroup: (groupId: number, name: string) => request('PUT', `/groups/${groupId}/name`, { name }),
+  updateGroupPermissions: (groupId: number, permissions: object) => request('PUT', `/groups/${groupId}/permissions`, permissions),
+  setGroupMemberAdmin: (groupId: number, userId: number, isAdmin: boolean) => requestEmptyResponse('PUT', `/groups/${groupId}/members/${userId}/admin`, { isAdmin }),
+  updateAdminPermissions: (groupId: number, userId: number, permissions: object) => requestEmptyResponse('PUT', `/groups/${groupId}/members/${userId}/admin-permissions`, permissions),
+  getProfile: () => request('GET', '/profile'),
+  updatePhoto: (photo: string) => request('PUT', '/profile/photo', { photo }),
+  updateResume: (resumeName: string, resumeData: string, resumeType: string) => request('PUT', '/profile/resume', { resumeName, resumeData, resumeType }),
+  changePassword: (currentPassword: string, newPassword: string) => requestText('PUT', '/profile/password', { currentPassword, newPassword }),
+  selfAssign: (data: object) => request('POST', '/allocations/self-assign', data),
+  //deleteSession: (sessionId: number) => requestNoBody('DELETE', `/units/0/sessions/${sessionId}`),
+  respondToInvitation: (unitId: number, staffId: number) => requestEmptyResponse('POST', `/units/${unitId}/invite/${staffId}/respond`, {}),
+  declineInvitation: (unitId: number, staffId: number) => requestNoBody('DELETE', `/units/${unitId}/invite/${staffId}`),
+  markStaffUnavailableForSession: (sessionId: number, staffId: number, unavailable: boolean) => requestEmptyResponse('POST', `/sessions/${sessionId}/unavailable/${staffId}`, { unavailable }),
+  //updateSession: (sessionId: number, data: object) => request('PUT', `/units/0/sessions/${sessionId}`, data),
+  //updateSessionStatus: (sessionId: number, status: string) => request('PUT', `/units/0/sessions/${sessionId}/status`, { status }),
+  updateSessionStatus: (sessionId: number, status: string) => request('PUT', `/sessions/${sessionId}/status`, { status }),
+  deleteSession: (sessionId: number) => requestNoBody('DELETE', `/sessions/${sessionId}`),
+  updateSession: (sessionId: number, data: object) => request('PUT', `/sessions/${sessionId}`, data),
+  setDeadline: (unitId: number, deadline: string) => request('PUT', `/units/${unitId}/deadline`, { deadline }),
+  clearDeadline: (unitId: number) => requestNoBody('DELETE', `/units/${unitId}/deadline`),
+  acceptInvitation: (unitId: number, staffId: number) => requestEmptyResponse('POST', `/units/${unitId}/invite/${staffId}/respond`, {}),
+  getAllTutors: () => request('GET', '/tutors'),
+  getTutorProfile: (id: number) => request('GET', `/tutors/${id}`),
 }
-
-type RealApi = typeof realApi
-
-// Delegates every call to the mock backend or the real one, decided fresh
-// on every call (so flipping the toggle takes effect immediately without
-// needing a reload).
-function makeApi(): RealApi {
-  const result = {} as RealApi
-  for (const key of Object.keys(realApi) as (keyof RealApi)[]) {
-    result[key] = ((...args: any[]) => {
-      const impl = isMockMode() ? (mockApi as any)[key] : (realApi as any)[key]
-      return impl(...args)
-    }) as any
-  }
-  return result
-}
-
-export const api = makeApi()

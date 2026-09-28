@@ -554,17 +554,14 @@ export default function UnitDetailView({ unit, onBack }: Props) {
   }
 
   // Deletes a single dated occurrence, or every occurrence in a recurring
-  // group at once. Local only — same as edit/holiday above, there's no
-  // backend endpoint to delete a session yet (only create/read exist), so
-  // this just removes it from what's shown here; it comes back on refresh
-  // since it's never actually removed server-side.
+  // group at once — real backend delete now (see api.ts fix).
   const handleDeleteSession = async (session: Session) => {
     const ok = window.confirm(
       `Delete the ${session.title} session on ${new Date(session.startTime).toLocaleDateString()}? This can't be undone.`
     )
     if (!ok) return
     try {
-      await api.deleteSession(session.id)
+      await api.deleteSession(unit.id, session.id)
       setSessions(prev => prev.filter(s => s.id !== session.id))
     } catch (err) {
       console.error(err)
@@ -578,7 +575,7 @@ export default function UnitDetailView({ unit, onBack }: Props) {
     if (!ok) return
     try {
       for (const s of group.sessions) {
-        await api.deleteSession(s.id)
+        await api.deleteSession(unit.id, s.id)
       }
       const idsToDelete = new Set(group.sessions.map(s => s.id))
       setSessions(prev => prev.filter(s => !idsToDelete.has(s.id)))
@@ -627,7 +624,7 @@ export default function UnitDetailView({ unit, onBack }: Props) {
         const endTime = formatEditDateTime(date, editEndTime)
 
         if (existing && existing.id > 0) {
-          const updated = await api.updateSession(existing.id, {
+          const updated = await api.updateSession(unit.id, existing.id, {
             title: editClassType,
             startTime,
             endTime,
@@ -648,7 +645,7 @@ export default function UnitDetailView({ unit, onBack }: Props) {
       // Delete sessions that fell out of range
       for (const s of editingGroup.sessions) {
         if (s.id > 0 && !occurrenceDates.some(d => d.toDateString() === new Date(s.startTime).toDateString())) {
-          await api.deleteSession(s.id)
+          await api.deleteSession(unit.id, s.id)
         }
       }
 

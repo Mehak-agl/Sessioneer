@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import MockModeToggle from './components/MockModeToggle'
 import LoginPage from './pages/LoginPage'
 import SignupPage from './pages/SignupPage'
 import CoordinatorDashboard from './pages/Coordinator/CoordinatorDashboard'
@@ -21,10 +22,12 @@ import TutorProfile from './pages/Tutor/TutorProfile'
 import TutorContracts from './pages/Tutor/TutorContracts'
 import TutorNotifications from './pages/Tutor/TutorNotifications'
 import TutorReports from './pages/Tutor/TutorReports'
+import TutorEmergencySwap from './pages/Tutor/TutorEmergencySwap'
 
 export default function App() {
   return (
     <BrowserRouter>
+      <MockModeToggle />
       <Routes>
         <Route path="/" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
@@ -49,6 +52,7 @@ export default function App() {
         <Route path="/staff-contracts" element={<TutorContracts />} />
         <Route path="/staff-notifications" element={<TutorNotifications />} />
         <Route path="/staff-reports" element={<TutorReports />} />
+        <Route path="/staff-swaps" element={<TutorEmergencySwap />} />
       </Routes>
     </BrowserRouter>
   )

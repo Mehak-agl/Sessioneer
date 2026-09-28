@@ -48,7 +48,7 @@ export default function CoordinatorReports() {
           <div className="page-title">
             <img src="/logo.png" alt="Page logo" />
             <div>
-              <h1>Tutor Reports</h1>
+              <h1>Tutor's Resume</h1>
               <p>A centralised view of every tutor and their teaching load</p>
             </div>
           </div>

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { api } from "../../services/api";
 interface Unit {
   id: number;
@@ -77,6 +77,49 @@ export default function MyUnitsView({ units, onUnitCreated, onSelectUnit, onUnit
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [openMenuUnitId, setOpenMenuUnitId] = useState<number | null>(null)
+
+  // ── Filters: subject (unit code), year, semester ─────────────────────
+  // 'all' means "don't filter on this field". Options are derived from
+  // whatever units are actually in the list, so there's never a filter
+  // choice that would show zero results.
+  const [filterSubject, setFilterSubject] = useState('all')
+  const [filterYear, setFilterYear] = useState('all')
+  const [filterSemester, setFilterSemester] = useState('all')
+
+  const filterOptions = useMemo(() => {
+    const subjects = new Set<string>()
+    const years = new Set<string>()
+    const semesters = new Set<string>()
+    for (const unit of units) {
+      subjects.add(unit.code)
+      const { semNum, year } = parseSemester(unit.semester)
+      years.add(year)
+      semesters.add(semNum)
+    }
+    return {
+      subjects: Array.from(subjects).sort(),
+      years: Array.from(years).sort((a, b) => Number(b) - Number(a)),
+      semesters: Array.from(semesters).sort(),
+    }
+  }, [units])
+
+  const filteredUnits = useMemo(() => {
+    return units.filter(unit => {
+      if (filterSubject !== 'all' && unit.code !== filterSubject) return false
+      const { semNum, year } = parseSemester(unit.semester)
+      if (filterYear !== 'all' && year !== filterYear) return false
+      if (filterSemester !== 'all' && semNum !== filterSemester) return false
+      return true
+    })
+  }, [units, filterSubject, filterYear, filterSemester])
+
+  const filtersActive = filterSubject !== 'all' || filterYear !== 'all' || filterSemester !== 'all'
+
+  const clearFilters = () => {
+    setFilterSubject('all')
+    setFilterYear('all')
+    setFilterSemester('all')
+  }
 
   // ── Edit Semester / Year → clones into a NEW unit ────────────────────
   // Per the brief: changing semester or year must never modify or delete
@@ -187,9 +230,47 @@ export default function MyUnitsView({ units, onUnitCreated, onSelectUnit, onUnit
       <div className="my-units-header">
         <div>
           <h1>My Units</h1>
-          <p>{units.length} unit{units.length !== 1 ? 's' : ''} this semester</p>
+          <p>
+            {filteredUnits.length} unit{filteredUnits.length !== 1 ? 's' : ''}
+            {filtersActive ? ` of ${units.length}` : ' this semester'}
+          </p>
         </div>
         <button className="create-btn" onClick={() => setShowForm(true)}>+ Create Unit</button>
+      </div>
+
+      <div className="units-filter-bar">
+        <div className="form-field">
+          <label>Subject</label>
+          <select value={filterSubject} onChange={e => setFilterSubject(e.target.value)}>
+            <option value="all">All subjects</option>
+            {filterOptions.subjects.map(code => (
+              <option key={code} value={code}>{code}</option>
+            ))}
+          </select>
+        </div>
+        <div className="form-field">
+          <label>Year</label>
+          <select value={filterYear} onChange={e => setFilterYear(e.target.value)}>
+            <option value="all">All years</option>
+            {filterOptions.years.map(year => (
+              <option key={year} value={year}>{year}</option>
+            ))}
+          </select>
+        </div>
+        <div className="form-field">
+          <label>Semester</label>
+          <select value={filterSemester} onChange={e => setFilterSemester(e.target.value)}>
+            <option value="all">All semesters</option>
+            {filterOptions.semesters.map(sem => (
+              <option key={sem} value={sem}>Semester {sem}</option>
+            ))}
+          </select>
+        </div>
+        {filtersActive && (
+          <button type="button" className="clear-filters-btn" onClick={clearFilters}>
+            Clear filters
+          </button>
+        )}
       </div>
 
       {showForm && (
@@ -276,7 +357,13 @@ export default function MyUnitsView({ units, onUnitCreated, onSelectUnit, onUnit
           </div>
         )}
 
-        {groupUnitsByYear(sortUnits(units)).map(group => (
+        {units.length > 0 && filteredUnits.length === 0 && (
+          <div className="empty-state">
+            <p>No units match your filters. <button type="button" className="link-btn" onClick={clearFilters}>Clear filters</button> to see everything.</p>
+          </div>
+        )}
+
+        {groupUnitsByYear(sortUnits(filteredUnits)).map(group => (
           <div key={group.year} className="year-group-section">
             <h2 className="year-group-heading">{group.year}</h2>
             {group.units.map(unit => (

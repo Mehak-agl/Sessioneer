@@ -100,7 +100,7 @@ export default function CoordinatorTutors() {
           <div className="page-title">
             <img src="/logo.png" alt="Page logo" />
             <div>
-              <h1>Tutors</h1>
+              <h1>Create Tutor Accounts</h1>
               <p>Manage tutor accounts for your units</p>
             </div>
           </div>

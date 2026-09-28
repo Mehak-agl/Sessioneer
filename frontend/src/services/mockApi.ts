@@ -9,7 +9,7 @@
 // identically whether it's talking to this mock or the real backend.
 // ─────────────────────────────────────────────────────────────────────────
 
-import { getDb, saveDb, type MockUser } from './mockDb'
+import { getDb, saveDb, type MockUser, type MockSwapRequest } from './mockDb'
 
 export const SELF_ASSIGN_STAFF_ID = -1
 
@@ -411,4 +411,184 @@ export async function markStaffUnavailableForSession(sessionId: number, staffId:
   // Purely a client-side concept even on the real backend flow (see the
   // notes in CoordinatorUnitDetailView.tsx) — just acknowledge the call.
   return delay({ sessionId, staffId, unavailable })
+}
+
+// ── Profile ──────────────────────────────────────────────────────────────
+
+export async function getProfile() {
+  const user = requireCurrentUser()
+  const resume = readResume(user.id)
+  return delay({
+    id: user.id,
+    fullName: user.fullName,
+    email: user.email,
+    photo: user.photo,
+    resumeName: resume.fileName,
+    resumeData: resume.data,
+  })
+}
+
+export async function updatePhoto(photo: string) {
+  const user = requireCurrentUser()
+  user.photo = photo
+  saveDb()
+  return delay({ photo })
+}
+
+export async function updateResume(resumeName: string, resumeData: string) {
+  const user = requireCurrentUser()
+  try {
+    localStorage.setItem(`sessioneer_resume_name_${user.id}`, resumeName)
+    localStorage.setItem(`sessioneer_resume_${user.id}`, resumeData)
+  } catch {
+    // ignore quota errors — the upload still "succeeds" for this session
+  }
+  return delay({ resumeName, resumeData })
+}
+
+export async function changePassword(currentPassword: string, newPassword: string) {
+  const user = requireCurrentUser()
+  if (user.password !== currentPassword) {
+    return delay(fail('Current password is incorrect.'))
+  }
+  user.password = newPassword
+  saveDb()
+  return delay('Password changed successfully.')
+}
+
+// ── Emergency Class Swap ────────────────────────────────────────────────
+// See pages/Tutor/TutorEmergencySwap.tsx. A tutor who's already allocated
+// a class can hand it (or the whole recurring session) to another tutor
+// teaching the same unit — once that tutor agrees, the allocation moves
+// over immediately. No coordinator approval is needed; the coordinator
+// just gets an informational notice (see db.coordinatorNotices).
+
+function hydrateSwapRequest(db: ReturnType<typeof getDb>, id: number) {
+  const r = db.swapRequests.find(x => x.id === id)!
+  const unit = db.units.find(u => u.id === r.unitId)
+  const sessions = r.sessionIds
+    .map(sid => hydrateSession(db, sid))
+    .filter((s): s is NonNullable<typeof s> => s != null)
+  return {
+    id: r.id,
+    unit: unit ? { ...unit } : { id: r.unitId },
+    scope: r.scope,
+    sessions,
+    requestingStaff: hydrateStaffOrSelf(db, r.requestingStaffId),
+    targetStaff: hydrateStaffOrSelf(db, r.targetStaffId),
+    reason: r.reason,
+    status: r.status,
+    createdAt: r.createdAt,
+    respondedAt: r.respondedAt,
+  }
+}
+
+// Other tutors already teaching this unit — the pool a tutor can hand a
+// class off to.
+export async function getUnitTutors(unitId: number) {
+  const db = getDb()
+  const user = requireCurrentUser()
+  const rows = db.invitations
+    .filter(inv => inv.unitId === unitId && inv.status === 'RESPONDED' && inv.staffId !== user.id)
+    .map(inv => hydrateStaffOrSelf(db, inv.staffId))
+  return delay(rows)
+}
+
+export async function getMySwapRequests() {
+  const db = getDb()
+  const user = requireCurrentUser()
+  const byRecent = (a: { createdAt: string }, b: { createdAt: string }) =>
+    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  const outgoing = db.swapRequests.filter(r => r.requestingStaffId === user.id).map(r => hydrateSwapRequest(db, r.id))
+  const incoming = db.swapRequests.filter(r => r.targetStaffId === user.id).map(r => hydrateSwapRequest(db, r.id))
+  return delay({ outgoing: outgoing.sort(byRecent), incoming: incoming.sort(byRecent) })
+}
+
+export async function createSwapRequest(data: any) {
+  const db = getDb()
+  const user = requireCurrentUser()
+  const unitId = Number(data?.unitId)
+  const scope: 'SESSION' | 'SERIES' = data?.scope === 'SERIES' ? 'SERIES' : 'SESSION'
+  const sessionIds: number[] = Array.isArray(data?.sessionIds) ? data.sessionIds.map(Number) : []
+  const targetStaffId = Number(data?.targetStaffId)
+  const reason = String(data?.reason ?? '').trim()
+
+  if (sessionIds.length === 0) return delay(fail('No classes selected for this swap.'))
+  if (!db.units.some(u => u.id === unitId)) return delay(fail('Unit not found.'))
+  if (targetStaffId === user.id) return delay(fail('You cannot swap with yourself.'))
+  if (!db.users.some(u => u.id === targetStaffId && u.role === 'STAFF')) {
+    return delay(fail('Selected tutor not found.'))
+  }
+
+  // Every session in the request must currently be allocated to the
+  // requesting tutor — you can only hand off work that's actually yours.
+  const notMine = sessionIds.some(
+    sid => !db.allocations.some(a => a.sessionId === sid && a.staffId === user.id),
+  )
+  if (notMine) return delay(fail('One or more of these classes are not currently allocated to you.'))
+
+  const alreadyPending = db.swapRequests.some(
+    r => r.status === 'PENDING' && r.requestingStaffId === user.id && r.sessionIds.some(sid => sessionIds.includes(sid)),
+  )
+  if (alreadyPending) {
+    return delay(fail('You already have a pending swap request covering one of these classes.'))
+  }
+
+  const swapRequest: MockSwapRequest = {
+    id: db.nextId.swapRequest++,
+    unitId,
+    scope,
+    sessionIds,
+    requestingStaffId: user.id,
+    targetStaffId,
+    reason,
+    status: 'PENDING',
+    createdAt: new Date().toISOString(),
+  }
+  db.swapRequests.push(swapRequest)
+  saveDb()
+  return delay(hydrateSwapRequest(db, swapRequest.id))
+}
+
+export async function respondToSwapRequest(requestId: number, accept: boolean) {
+  const db = getDb()
+  const user = requireCurrentUser()
+  const req = db.swapRequests.find(r => r.id === requestId)
+  if (!req) return delay(fail('Swap request not found.'))
+  if (req.targetStaffId !== user.id) return delay(fail('Only the tutor asked to cover this can respond.'))
+  if (req.status !== 'PENDING') return delay(fail('This request has already been responded to.'))
+
+  req.status = accept ? 'ACCEPTED' : 'DECLINED'
+  req.respondedAt = new Date().toISOString()
+
+  if (accept) {
+    // Move the allocation(s) over. If coordinator activity has meanwhile
+    // reassigned one of these sessions to someone else, just leave it —
+    // this swap no longer applies to it.
+    for (const sessionId of req.sessionIds) {
+      const allocation = db.allocations.find(a => a.sessionId === sessionId && a.staffId === req.requestingStaffId)
+      if (allocation) allocation.staffId = req.targetStaffId
+    }
+
+    const unit = db.units.find(u => u.id === req.unitId)
+    const requester = db.users.find(u => u.id === req.requestingStaffId)
+    const target = db.users.find(u => u.id === req.targetStaffId)
+    const scopeLabel =
+      req.scope === 'SERIES'
+        ? 'the whole session (all remaining classes)'
+        : req.sessionIds.length === 1
+          ? 'a class'
+          : `${req.sessionIds.length} classes`
+
+    db.coordinatorNotices.unshift({
+      id: `swap-${req.id}`,
+      unit: unit?.code ?? 'Unit',
+      title: 'Emergency Swap Completed',
+      message: `${requester?.fullName ?? 'A tutor'} handed off ${scopeLabel} in ${unit?.code ?? 'a unit'} to ${target?.fullName ?? 'another tutor'}${req.reason ? ` (reason: ${req.reason})` : ''}. This is for your information only — no action is needed.`,
+      time: new Date().toISOString(),
+    })
+  }
+
+  saveDb()
+  return delay(hydrateSwapRequest(db, req.id))
 }

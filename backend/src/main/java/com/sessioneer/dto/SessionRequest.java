@@ -13,4 +13,8 @@ public class SessionRequest {
     public void setStartTime(LocalDateTime startTime) { this.startTime = startTime; }
     public String getLocation() { return location; }
     public void setLocation(String location) { this.location = location; }
+    private LocalDateTime endTime;
+
+    public LocalDateTime getEndTime() { return endTime; }
+    public void setEndTime(LocalDateTime endTime) { this.endTime = endTime; }
 }

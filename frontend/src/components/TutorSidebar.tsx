@@ -70,6 +70,7 @@ function StaffSidebar() {
       <nav className="staff-menu">
         <Link className={path === '/staff' ? 'active' : ''} to="/staff">Dashboard</Link>
         <Link className={path === '/staff-units' ? 'active' : ''} to="/staff-units">My Units</Link>
+        <Link className={path === '/staff-swaps' ? 'active' : ''} to="/staff-swaps">Emergency Swap</Link>
         <Link className={path === '/staff-calendar' ? 'active' : ''} to="/staff-calendar">Calendar</Link>
         <Link to="/staff-notifications" className={`notif-nav-link${path === '/staff-notifications' ? ' active' : ''}`}>
           Notifications

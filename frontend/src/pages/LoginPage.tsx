@@ -1,15 +1,10 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { api } from '../services/api'
+import { api, isMockMode } from '../services/api'
 import PasswordInput from '../components/PasswordInput'
 
 
 type Role = 'coordinator' | 'staff'
-
-const MOCK_USERS = [
-  { email: 'coordinator@qut.edu.au', password: 'admin123', role: 'COORDINATOR', fullName: 'Sarah Chen' },
-  { email: 'staff@qut.edu.au',       password: 'staff123',  role: 'STAFF',       fullName: 'Alex Thompson' },
-]
 
 export default function LoginPage() {
   const navigate = useNavigate()
@@ -33,17 +28,11 @@ export default function LoginPage() {
       localStorage.setItem('sessioneer_email', email)
       navigate(res.role === 'COORDINATOR' ? '/coordinator' : '/staff')
     } catch {
-      // Fall back to mock auth when backend is not running
-      const mock = MOCK_USERS.find(u => u.email === email && u.password === password)
-      if (mock) {
-        localStorage.setItem('sessioneer_token', 'mock-token')
-        localStorage.setItem('sessioneer_role', mock.role.toLowerCase())
-        localStorage.setItem('sessioneer_name', mock.fullName)
-        localStorage.setItem('sessioneer_email', mock.email)
-        navigate(mock.role === 'COORDINATOR' ? '/coordinator' : '/staff')
-      } else {
-        setError('Invalid email or password.')
-      }
+      setError(
+        isMockMode()
+          ? 'Invalid email or password.'
+          : 'Invalid email or password, or the backend is not running — try Mock Mode in the bottom-right corner.',
+      )
     }
   }
 

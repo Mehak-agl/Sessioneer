@@ -25,6 +25,7 @@ interface Session {
   location: string;
   status: string;
   mode?: 'on-campus' | 'online';
+  unavailableStaffIds?: number[];
 }
 
 interface Invitation {
@@ -77,6 +78,7 @@ interface SessionGroup {
   mode: Session['mode']
   dayOfWeek: number
   minutesOfDay: number
+  endMinutesOfDay: number
   timeLabel: string
   endTimeLabel?: string
   sessions: Session[]
@@ -97,6 +99,9 @@ function groupSessions(sessions: Session[]): SessionGroup[] {
         mode: s.mode ?? inferMode(s),
         dayOfWeek: d.getDay(),
         minutesOfDay,
+        endMinutesOfDay: s.endTime
+          ? new Date(s.endTime).getHours() * 60 + new Date(s.endTime).getMinutes()
+          : minutesOfDay + 60,
         timeLabel: d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }),
         endTimeLabel: s.endTime
           ? new Date(s.endTime).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
@@ -118,7 +123,7 @@ function groupSessions(sessions: Session[]): SessionGroup[] {
 // ── Auto-allocation ──────────────────────────────────────────────────────
 // Mock weekly availability per tutor (days 1=Mon … 5=Fri).
 // Deterministic on staffId so results are consistent across renders.
-const AVAIL_PATTERNS = [
+/***const AVAIL_PATTERNS = [
   [1, 2, 3, 4, 5],
   [1, 3, 5],
   [2, 4],
@@ -157,6 +162,89 @@ function buildDraft(groups: SessionGroup[], tutors: StaffUser[]): DraftEntry[] {
       accepted: true,
     }
   })
+}***/
+
+// ── Auto-allocation ──────────────────────────────────────────────────────
+// Matches tutors using the availability slots they actually submitted
+// (see TutorAvailabilityModal) — each slot is a day-of-week + hour range
+// for the unit. A tutor is a match when one of their slots overlaps the
+// group's day and time. No fallback to an unavailable tutor anymore —
+// if nobody's actually free, the group is left unmatched.
+interface AvailabilitySlot {
+  id: number
+  staff: StaffUser
+  startTime: string
+  endTime: string
+}
+
+// TutorAvailabilityModal's weekly grid submits placeholder dates in a
+// fixed dummy week (2026-06-01..05, Mon-Fri) that don't mean anything as
+// dates — they just encode "this weekday, every week". Anything else was
+// submitted via "Add Additional Availability", which uses real calendar
+// dates and should only ever match that one specific date.
+function isRecurringPatternSlot(slot: AvailabilitySlot): boolean {
+  const d = new Date(slot.startTime)
+  return d.getFullYear() === 2026 && d.getMonth() === 5 && d.getDate() >= 1 && d.getDate() <= 5
+}
+
+function slotCoversSessionDate(slot: AvailabilitySlot, group: SessionGroup, sessionDate: Date): boolean {
+  const start = new Date(slot.startTime)
+  const end = new Date(slot.endTime)
+  const slotStart = start.getHours() * 60 + start.getMinutes()
+  const slotEnd = end.getHours() * 60 + end.getMinutes()
+  if (!(slotStart < group.endMinutesOfDay && group.minutesOfDay < slotEnd)) return false
+  return isRecurringPatternSlot(slot)
+    ? start.getDay() === sessionDate.getDay()
+    : start.toDateString() === sessionDate.toDateString()
+}
+
+function isStaffAvailableForSession(slots: AvailabilitySlot[], staffId: number, group: SessionGroup, session: Session): boolean {
+  const sessionDate = new Date(session.startTime)
+  return slots.some(s => s.staff.id === staffId && slotCoversSessionDate(s, group, sessionDate))
+}
+
+// Per-occurrence — used for the expanded per-date candidate list.
+function tutorsAvailableForSession(slots: AvailabilitySlot[], tutors: StaffUser[], group: SessionGroup, session: Session): StaffUser[] {
+  return tutors.filter(t =>
+    isStaffAvailableForSession(slots, t.id, group, session) &&
+    !(session.unavailableStaffIds ?? []).includes(t.id)
+  )
+}
+
+// A couple of dates flagged unavailable shouldn't disqualify them
+// from the whole group — handleAllocate skips just those dates.
+// Only fully exclude them if EVERY matching date is flagged.
+function tutorsAvailableForGroup(slots: AvailabilitySlot[], tutors: StaffUser[], group: SessionGroup): StaffUser[] {
+  return tutors.filter(t => {
+    const matching = group.sessions.filter(s => isStaffAvailableForSession(slots, t.id, group, s))
+    if (matching.length === 0) return false
+    return matching.some(s => !(s.unavailableStaffIds ?? []).includes(t.id))
+  })
+}
+
+interface DraftEntry {
+  group: SessionGroup
+  tutor: StaffUser | null
+  matchType: 'availability' | 'none'
+  accepted: boolean
+}
+
+function buildDraft(groups: SessionGroup[], tutors: StaffUser[], slots: AvailabilitySlot[]): DraftEntry[] {
+  if (tutors.length === 0) {
+    return groups.map(g => ({ group: g, tutor: null, matchType: 'none', accepted: true }))
+  }
+  const load = new Map<number, number>()
+  tutors.forEach(t => load.set(t.id, 0))
+
+  return groups.map(group => {
+    const available = tutorsAvailableForGroup(slots, tutors, group)
+    if (available.length === 0) {
+      return { group, tutor: null, matchType: 'none', accepted: true }
+    }
+    const best = available.reduce((a, b) => (load.get(a.id) ?? 0) <= (load.get(b.id) ?? 0) ? a : b)
+    load.set(best.id, (load.get(best.id) ?? 0) + 1)
+    return { group, tutor: best, matchType: 'availability', accepted: true }
+  })
 }
 
 // Coordinator-facing allocation screen: pick a unit → see its sessions,
@@ -190,12 +278,16 @@ export default function CoordinatorAllocations() {
   const [selectedUnit, setSelectedUnit] = useState<Unit | null>(null)
   const [sessions, setSessions] = useState<Session[]>([])
   const [invitations, setInvitations] = useState<Invitation[]>([])
+
   const [allocations, setAllocations] = useState<AllocationInfo[]>([])
+  const [availabilitySlots, setAvailabilitySlots] = useState<AvailabilitySlot[]>([])
   const [loadingDetail, setLoadingDetail] = useState(false)
   const [reassigningKey, setReassigningKey] = useState<string | null>(null)
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set())
   const [allocateError, setAllocateError] = useState('')
   const [allocatingKey, setAllocatingKey] = useState<string | null>(null)
+  const [occurrencePickerId, setOccurrencePickerId] = useState<number | null>(null)
+  const [occurrenceBusyId, setOccurrenceBusyId] = useState<number | null>(null)
 
   // Auto-allocation draft
   const [showDraft, setShowDraft] = useState(false)
@@ -226,14 +318,16 @@ export default function CoordinatorAllocations() {
     setExpandedGroups(new Set())
     setAllocateError('')
     try {
-      const [sess, invites, allocs] = await Promise.all([
+      const [sess, invites, allocs, avail] = await Promise.all([
         api.getSessions(unit.id),
         api.getUnitInvitations(unit.id),
         api.getUnitAllocations(unit.id),
+        api.getUnitAvailability(unit.id),
       ])
-      setSessions(sess.map((s: any) => ({ ...s, mode: inferMode(s) })))
+      setSessions(sess.filter((s: any) => s.status !== 'HOLIDAY').map((s: any) => ({ ...s, mode: inferMode(s) })))      
       setInvitations(invites)
       setAllocations(allocs)
+      setAvailabilitySlots(avail)
     } catch (err) {
       console.error(err)
     } finally {
@@ -246,6 +340,7 @@ export default function CoordinatorAllocations() {
     setSessions([])
     setInvitations([])
     setAllocations([])
+    setAvailabilitySlots([])
   }
 
   const sessionGroups = useMemo(() => groupSessions(sessions), [sessions])
@@ -269,17 +364,32 @@ export default function CoordinatorAllocations() {
     setAllocateError('')
     setAllocatingKey(group.key)
     try {
-      // Assigns every session in the group to the same tutor, one call
-      // per session (the backend only has a per-session allocate
-      // endpoint — there's no bulk/group version), then merges all the
-      // results back into state together so the card updates in one go.
-      const results = await Promise.all(
-        group.sessions.map(s => api.allocate({ sessionId: s.id, staffId: staff.id }))
+      // Skip any date in the group this tutor is flagged unavailable
+      // for — bulk-assigning the group must not override a real
+      // per-session unavailable flag.
+      const allocatable = group.sessions.filter(
+        s => !(s.unavailableStaffIds ?? []).includes(staff.id)
       )
-      const allocatedIds = new Set(group.sessions.map(s => s.id))
+      const skipped = group.sessions.length - allocatable.length
+
+      if (allocatable.length === 0) {
+        setAllocateError(`${staff.fullName} is unavailable for every date in this group.`)
+        return
+      }
+
+      const results = await Promise.all(
+        allocatable.map(s => api.allocate({ sessionId: s.id, staffId: staff.id }))
+      )
+      const allocatedIds = new Set(allocatable.map(s => s.id))
       setAllocations(prev => [...prev.filter(a => !allocatedIds.has(a.session.id)), ...results])
       setSessions(prev => prev.map(s => allocatedIds.has(s.id) ? { ...s, status: 'ALLOCATED' } : s))
       setReassigningKey(null)
+
+      if (skipped > 0) {
+        setAllocateError(
+          `${staff.fullName} was skipped for ${skipped} date${skipped !== 1 ? 's' : ''} they marked unavailable — assign those separately.`
+        )
+      }
     } catch (err: any) {
       console.error(err)
       setAllocateError(err?.message || 'Could not allocate that tutor to this session group.')
@@ -315,8 +425,42 @@ export default function CoordinatorAllocations() {
     }
   }
 
+  // Per-occurrence assign — same as handleAllocate/handleSelfAssign but
+  // scoped to a single session, not the whole recurring group.
+  const handleAllocateOccurrence = async (sessionId: number, staff: StaffUser) => {
+    setAllocateError('')
+    setOccurrenceBusyId(sessionId)
+    try {
+      const result = await api.allocate({ sessionId, staffId: staff.id })
+      setAllocations(prev => [...prev.filter(a => a.session.id !== sessionId), result])
+      setSessions(prev => prev.map(s => s.id === sessionId ? { ...s, status: 'ALLOCATED' } : s))
+      setOccurrencePickerId(null)
+    } catch (err: any) {
+      console.error(err)
+      setAllocateError(err?.message || 'Could not allocate that tutor to this session.')
+    } finally {
+      setOccurrenceBusyId(null)
+    }
+  }
+
+  const handleSelfAssignOccurrence = async (sessionId: number) => {
+    setAllocateError('')
+    setOccurrenceBusyId(sessionId)
+    try {
+      const result = await api.selfAssign({ sessionId, coordinatorName, coordinatorEmail })
+      setAllocations(prev => [...prev.filter(a => a.session.id !== sessionId), result])
+      setSessions(prev => prev.map(s => s.id === sessionId ? { ...s, status: 'ALLOCATED' } : s))
+      setOccurrencePickerId(null)
+    } catch (err: any) {
+      console.error(err)
+      setAllocateError(err?.message || 'Could not self-assign this session.')
+    } finally {
+      setOccurrenceBusyId(null)
+    }
+  }
+
   const openDraft = () => {
-    setDraftEntries(buildDraft(sessionGroups, respondedTutors))
+    setDraftEntries(buildDraft(sessionGroups, respondedTutors, availabilitySlots))
     setShowDraft(true)
   }
 
@@ -329,10 +473,14 @@ export default function CoordinatorAllocations() {
     try {
       for (const entry of draftEntries) {
         if (!entry.accepted || !entry.tutor) continue
-        const results = await Promise.all(
-          entry.group.sessions.map(s => api.allocate({ sessionId: s.id, staffId: entry.tutor!.id }))
+        const allocatable = entry.group.sessions.filter(
+          s => !(s.unavailableStaffIds ?? []).includes(entry.tutor!.id)
         )
-        const ids = new Set(entry.group.sessions.map(s => s.id))
+        if (allocatable.length === 0) continue
+        const results = await Promise.all(
+          allocatable.map(s => api.allocate({ sessionId: s.id, staffId: entry.tutor!.id }))
+        )
+        const ids = new Set(allocatable.map(s => s.id))
         setAllocations(prev => [...prev.filter(a => !ids.has(a.session.id)), ...results])
         setSessions(prev => prev.map(s => ids.has(s.id) ? { ...s, status: 'ALLOCATED' } : s))
       }
@@ -359,7 +507,7 @@ export default function CoordinatorAllocations() {
 
   const handleSendRequest = async (staff: StaffUser) => {
     if (!selectedUnit || !searchGroup) return
-    setRequestError('')
+    setRequestError('');
 
     // Lectures are request-only — no standing unit invitation gets sent,
     // just a direct ask for this specific slot. There's no backend
@@ -476,12 +624,25 @@ export default function CoordinatorAllocations() {
                   // could still be partially/mixed if sessions were allocated
                   // individually before this grouping existed.
                   const groupAllocations = group.sessions.map(s => allocations.find(a => a.session.id === s.id))
+                  const groupAvailableTutors = tutorsAvailableForGroup(availabilitySlots, respondedTutors, group)
                   const firstStaff = groupAllocations[0]?.staff
                   const fullyAssigned = firstStaff != null && groupAllocations.every(a => a?.staff.id === firstStaff.id)
                   const partiallyAssigned = !fullyAssigned && groupAllocations.some(a => a)
 
                   const isReassigning = reassigningKey === group.key
-                  const showCandidates = !fullyAssigned || isReassigning
+                  const showCandidates = (!fullyAssigned && !partiallyAssigned) || isReassigning
+
+                  // One entry per distinct tutor currently covering this
+                  // group — used when dates are assigned per-occurrence
+                  // rather than all to the same tutor.
+                  const distinctAssignedStaff = Array.from(
+                    new Map(
+                      groupAllocations
+                        .filter((a): a is AllocationInfo => !!a)
+                        .map(a => [a.staff.id, a.staff])
+                    ).values()
+                  )
+
                   const isMulti = group.sessions.length > 1
                   const isExpanded = isMulti && expandedGroups.has(group.key)
                   const isAllocating = allocatingKey === group.key
@@ -523,11 +684,26 @@ export default function CoordinatorAllocations() {
                         )}
 
                         {partiallyAssigned && !isReassigning && (
-                          <p className="allocation-mixed-hint">
-                            Only some dates in this group are currently allocated (possibly to
-                            different tutors from before grouping). Assign a tutor below to align
-                            the whole group.
-                          </p>
+                          <div className="allocation-assigned allocation-assigned-mixed">
+                            <div className="allocation-assigned-name">Assigned per session</div>
+                            {distinctAssignedStaff.map(st => (
+                              <div key={st.id} className="allocation-assigned-mixed-row">
+                                <span className="allocation-assigned-name">
+                                  {st.id === SELF_ASSIGN_STAFF_ID ? `🙋 ${st.fullName} (You)` : st.fullName}
+                                </span>
+                                <span className="allocation-assigned-email">
+                                  {st.id === SELF_ASSIGN_STAFF_ID ? 'Self-assigned' : st.email}
+                                </span>
+                              </div>
+                            ))}
+                            <button
+                              type="button"
+                              className="session-edit-btn"
+                              onClick={() => setReassigningKey(group.key)}
+                            >
+                              Reassign whole group
+                            </button>
+                          </div>
                         )}
 
                         {fullyAssigned && !isReassigning && (
@@ -564,11 +740,11 @@ export default function CoordinatorAllocations() {
                               {isAllocating ? 'Assigning...' : '🙋 Assign Myself'}
                             </button>
 
-                            {respondedTutors.length > 0 ? (
+                            {groupAvailableTutors.length > 0 ? (
                               <>
                                 <p className="allocation-candidates-label">Available tutors:</p>
                                 <div className="allocation-candidates-list">
-                                  {respondedTutors.map(t => (
+                                  {groupAvailableTutors.map(t => (
                                     <button
                                       key={t.id}
                                       type="button"
@@ -581,6 +757,10 @@ export default function CoordinatorAllocations() {
                                   ))}
                                 </div>
                               </>
+                            ) : respondedTutors.length > 0 ? (
+                              <p className="allocation-empty-hint">
+                                {respondedTutors.length} tutor{respondedTutors.length !== 1 ? 's' : ''} submitted availability for this unit, but none are free at this day/time.
+                              </p>
                             ) : (
                               <p className="allocation-empty-hint">
                                 No tutor has submitted availability for this unit yet.
@@ -618,16 +798,63 @@ export default function CoordinatorAllocations() {
                         <div className="session-group-body">
                           {group.sessions.map(s => {
                             const a = allocations.find(al => al.session.id === s.id)
+                            const pickerOpen = occurrencePickerId === s.id
+                            const isBusy = occurrenceBusyId === s.id
+                            const occurrenceAvailableTutors = tutorsAvailableForSession(availabilitySlots, respondedTutors, group, s)
                             return (
-                              <div key={s.id} className="session-occurrence-row">
-                                <span className="session-occurrence-date">
-                                  {new Date(s.startTime).toLocaleDateString(undefined, {
-                                    weekday: 'short', day: 'numeric', month: 'short', year: 'numeric',
-                                  })}
-                                </span>
-                                <span className={`status-badge ${a ? 'allocated' : 'pending'} session-occurrence-status`}>
-                                  {a ? `✓ ${a.staff.fullName}` : '⏳ Pending'}
-                                </span>
+                              <div key={s.id} className="session-occurrence-row-wrap">
+                                <div className="session-occurrence-row">
+                                  <span className="session-occurrence-date">
+                                    {new Date(s.startTime).toLocaleDateString(undefined, {
+                                      weekday: 'short', day: 'numeric', month: 'short', year: 'numeric',
+                                    })}
+                                  </span>
+                                  <span className={`status-badge ${a ? 'allocated' : 'pending'} session-occurrence-status`}>
+                                    {a ? `✓ ${a.staff.fullName}` : '⏳ Pending'}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    className="session-edit-btn"
+                                    onClick={() => setOccurrencePickerId(pickerOpen ? null : s.id)}
+                                  >
+                                    {a ? 'Reassign' : 'Assign'}
+                                  </button>
+                                </div>
+
+                                {pickerOpen && (
+                                  <div className="allocation-candidates occurrence-candidates">
+                                    <button
+                                      type="button"
+                                      className="allocation-self-assign-btn"
+                                      disabled={isBusy}
+                                      onClick={() => handleSelfAssignOccurrence(s.id)}
+                                    >
+                                      {isBusy ? 'Assigning...' : '🙋 Assign Myself'}
+                                    </button>
+                                    {occurrenceAvailableTutors.length > 0 ? (
+                                      <div className="allocation-candidates-list">
+                                        {occurrenceAvailableTutors.map(t => (
+                                          <button
+                                            key={t.id}
+                                            type="button"
+                                            className="allocation-candidate-btn"
+                                            disabled={isBusy}
+                                            onClick={() => handleAllocateOccurrence(s.id, t)}
+                                          >
+                                            {isBusy ? 'Assigning...' : t.fullName}
+                                          </button>
+                                        ))}
+                                      </div>
+                                    ) : (
+                                      <p className="allocation-empty-hint">
+                                        {respondedTutors.length > 0
+                                          ? 'None of the tutors who responded are free for this specific date.'
+                                          : 'No tutor has submitted availability for this unit yet.'}
+                                      </p>
+                                    )}
+                                    <button type="button" className="cancel-btn" onClick={() => setOccurrencePickerId(null)}>Cancel</button>
+                                  </div>
+                                )}
                               </div>
                             )
                           })}
@@ -813,4 +1040,3 @@ export default function CoordinatorAllocations() {
     </div>
   )
 }
-

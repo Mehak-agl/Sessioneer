@@ -58,7 +58,7 @@ export default function CoordinatorTutorProfile() {
           </div>
         </header>
 
-        <button className="back-btn" onClick={() => navigate('/coordinator/reports')}>← Back to Reports</button>
+        <button className="back-btn" onClick={() => navigate('/coordinator/reports')}>← Back to Tutor's Resume</button>
 
         {loading ? (
           <p className="tutors-loading">Loading tutor…</p>

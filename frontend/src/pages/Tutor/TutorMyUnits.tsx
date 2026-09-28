@@ -53,6 +53,7 @@ interface SessionInfo {
   // ALLOCATED session — not a guaranteed field, just used as a nicety
   // when available (see "Scheduled Classes" below).
   tutorName?: string
+  unavailableStaffIds?: number[]
 }
 
 interface AllocationInfo {
@@ -302,13 +303,8 @@ export default function TutorMyUnits() {
   const [submittedSessionIds, setSubmittedSessionIds] = useState<Set<number>>(new Set())
   const [classSelectError, setClassSelectError] = useState('')
   const [submittingClasses, setSubmittingClasses] = useState(false)
-  // Local-only — there's no backend endpoint for "I'm declining this
-  // specific session" (the only real signal is submitting availability
-  // FOR one, there's nothing for explicitly saying no to one). Kept here
-  // so a tutor can tell a coordinator "not this date" instead of just
-  // leaving it unselected, which reads as "haven't decided yet" rather
-  // than "no". Resets on refresh, same as the other local-only bits in
-  // this file.
+  // Backed by the real per-session unavailable flag (see
+  // toggleSessionUnavailable) — seeded from the backend, not local-only.
   const [unavailableSessionIds, setUnavailableSessionIds] = useState<Set<number>>(new Set())
   // Cards look and behave like the coordinator's own Sessions cards —
   // collapsed by default, click to reveal the individual dates.
@@ -397,7 +393,6 @@ export default function TutorMyUnits() {
     if (!selectedUnitId) { setUnitSessions([]); return }
     setLoadingSessions(true)
     setSelectedSessionIds(new Set())
-    setUnavailableSessionIds(new Set())
     setExpandedScheduleGroups(new Set())
     setClassSelectError('')
     api.getSessions(selectedUnitId)
@@ -405,6 +400,15 @@ export default function TutorMyUnits() {
       .catch(() => setUnitSessions([]))
       .finally(() => setLoadingSessions(false))
   }, [selectedUnitId])
+
+  // Re-derive from the real backend flag whenever sessions load or the
+  // tutor's own id becomes known — this used to just reset to empty here.
+  useEffect(() => {
+    if (myStaffId == null) return
+    setUnavailableSessionIds(new Set(
+      unitSessions.filter(s => (s.unavailableStaffIds ?? []).includes(myStaffId)).map(s => s.id)
+    ))
+  }, [unitSessions, myStaffId])
 
   const mySessionsForUnit = allocations.filter(a => a.session?.unit?.id === selectedUnitId)
   const myAllocatedSessionIds = new Set(mySessionsForUnit.map(a => a.session.id))
@@ -469,14 +473,17 @@ export default function TutorMyUnits() {
     })
   }
 
-  // Local-only decline for one specific dated session — see the note by
-  // unavailableSessionIds above. Unselecting it if it happened to be
-  // checked, since "unavailable" and "selected" can't both be true.
-  const toggleSessionUnavailable = (sessionId: number) => {
+  // Decline for one specific dated session — calls the same real
+  // /sessions/{id}/unavailable/{staffId} endpoint the coordinator's unit
+  // view already uses, so it now actually reaches them.
+  const toggleSessionUnavailable = async (sessionId: number) => {
+    if (myStaffId == null) return
+    const willBeUnavailable = !unavailableSessionIds.has(sessionId)
+
     setUnavailableSessionIds(prev => {
       const next = new Set(prev)
-      if (next.has(sessionId)) next.delete(sessionId)
-      else next.add(sessionId)
+      if (willBeUnavailable) next.add(sessionId)
+      else next.delete(sessionId)
       return next
     })
     setSelectedSessionIds(prev => {
@@ -485,6 +492,19 @@ export default function TutorMyUnits() {
       next.delete(sessionId)
       return next
     })
+
+    try {
+      await api.markStaffUnavailableForSession(sessionId, myStaffId, willBeUnavailable)
+    } catch (err) {
+      console.error(err)
+      // Revert the optimistic update if it didn't actually save.
+      setUnavailableSessionIds(prev => {
+        const next = new Set(prev)
+        if (willBeUnavailable) next.delete(sessionId)
+        else next.add(sessionId)
+        return next
+      })
+    }
   }
 
   // Selects (or, if every eligible date is already selected, unselects)

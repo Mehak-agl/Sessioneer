@@ -1,17 +1,16 @@
 package com.sessioneer.controller;
 
 import com.sessioneer.dto.AllocationRequest;
-import com.sessioneer.dto.SelfAssignRequest;
 import com.sessioneer.model.Allocation;
 import com.sessioneer.service.AllocationService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/allocations")
-@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:5174"})
 public class AllocationController {
 
     private final AllocationService allocationService;
@@ -25,11 +24,6 @@ public class AllocationController {
         return ResponseEntity.ok(allocationService.allocate(request));
     }
 
-    @PostMapping("/self-assign")
-    public ResponseEntity<Allocation> selfAssign(@RequestBody SelfAssignRequest request) {
-        return ResponseEntity.ok(allocationService.selfAssign(request));
-    }
-
     @GetMapping("/unit/{unitId}")
     public ResponseEntity<List<Allocation>> getAllocationsByUnit(@PathVariable Long unitId) {
         return ResponseEntity.ok(allocationService.getAllocationsByUnit(unitId));
@@ -38,5 +32,12 @@ public class AllocationController {
     @GetMapping("/staff/{staffId}")
     public ResponseEntity<List<Allocation>> getAllocationsByStaff(@PathVariable Long staffId) {
         return ResponseEntity.ok(allocationService.getAllocationsByStaff(staffId));
+    }
+
+    @PostMapping("/self-assign")
+    public ResponseEntity<Allocation> selfAssign(@RequestBody Map<String, Object> body) {
+        Long sessionId = Long.valueOf(body.get("sessionId").toString());
+        String coordinatorName = body.get("coordinatorName").toString();
+        return ResponseEntity.ok(allocationService.selfAssign(sessionId, coordinatorName));
     }
 }

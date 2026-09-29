@@ -35,4 +35,9 @@ public class Unit {
     public void setCoordinator(User coordinator) { this.coordinator = coordinator; }
     public List<Session> getSessions() { return sessions; }
     public void setSessions(List<Session> sessions) { this.sessions = sessions; }
+
+    private java.time.LocalDateTime availabilityDeadline;
+
+    public java.time.LocalDateTime getAvailabilityDeadline() { return availabilityDeadline; }
+    public void setAvailabilityDeadline(java.time.LocalDateTime availabilityDeadline) { this.availabilityDeadline = availabilityDeadline; }
 }

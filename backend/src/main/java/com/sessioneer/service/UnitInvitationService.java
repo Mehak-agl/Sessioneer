@@ -61,11 +61,4 @@ public class UnitInvitationService {
         invitation.setStatus(InvitationStatus.RESPONDED);
         return invitationRepository.save(invitation);
     }
-
-    public UnitInvitation acceptInvitation(Long unitId) {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        User staff = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        return respondToInvitation(unitId, staff.getId());
-    }
 }

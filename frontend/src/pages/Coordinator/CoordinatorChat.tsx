@@ -1,5 +1,6 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
-import CoordinatorSidebar from '../../components/CooordinatorSidebar'
+import CoordinatorSidebar from '../../components/CoordinatorSidebar'
+import { api } from '../../services/api'
 
 type ChatContact = {
   id: string
@@ -10,20 +11,13 @@ type ChatContact = {
 
 type AttachmentType = 'photo' | 'file' | 'document'
 
-// Sent → this mock's version of "delivered" (no real backend to
-// distinguish the two); Read → the other side has opened the
-// conversation. Purely a client-side simulation (see appendMessage)
-// since there's no real read-receipt channel here.
-type MessageStatus = 'sent' | 'read'
-
 type ChatMessage = {
   id: string
   senderId: string
   senderName: string
   text: string
   timestamp: string
-  attachment?: { type: AttachmentType; name: string }
-  status?: MessageStatus
+  attachment?: { type: AttachmentType; name: string; fileData?: string; fileType?: string }
 }
 
 type DMConversation = {
@@ -84,14 +78,9 @@ type GroupConversation = {
 
 type Conversation = DMConversation | GroupConversation
 
-// --- MOCK DATA (stand-in until we wire this to a real backend) ---
-const ALL_PEOPLE: ChatContact[] = [
-  { id: 't1', name: 'Alex Thompson', email: 'alex.thompson@gmail.com', role: 'STAFF' },
-  { id: 't2', name: 'Priya Sharma', email: 'priya.sharma@gmail.com', role: 'STAFF' },
-  { id: 't3', name: 'James Wilson', email: 'j.wilson@outlook.com', role: 'STAFF' },
-  { id: 't4', name: 'Emily Chen', email: 'emily.chen@gmail.com', role: 'STAFF' },
-  { id: 't5', name: 'Rohit Patel', email: 'rohit.patel@gmail.com', role: 'STAFF' },
-]
+// Kept for JUST IN CASE need to use static mock data for all people.
+// Currently using API to get all staff members
+//const ALL_PEOPLE: ChatContact[] = []
 
 const ALL_UNITS = [
   { code: 'CAB302', name: 'Software Development' },
@@ -99,14 +88,14 @@ const ALL_UNITS = [
   { code: 'CAB301', name: 'Algorithms and Complexity' },
 ]
 
-const CURRENT_USER_ID = 'me'
+/***const CURRENT_USER_ID = localStorage.getItem('sessioneer_user_id') || 'me'
 const CURRENT_USER_NAME = 'You'
 const CURRENT_USER_CONTACT: ChatContact = {
   id: CURRENT_USER_ID,
   name: CURRENT_USER_NAME,
   email: '',
   role: 'COORDINATOR',
-}
+}***/
 
 const DEFAULT_PERMISSIONS: GroupPermissions = {
   sendText: true,
@@ -143,23 +132,122 @@ function formatTime(ts: string) {
   return new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 }
 
-// How long a message you sent stays "Sent" before this mock marks it as
-// "Read" — stands in for a real read-receipt event from the other side.
-const SEEN_DELAY_MS = 2000
-
-// WhatsApp-style double tick: gray/white for sent, teal-highlighted for
-// seen. Only ever rendered next to messages the current user sent.
-function MessageTicks({ status }: { status?: MessageStatus }) {
-  const read = status === 'read'
-  return (
-    <span className={`chat-ticks ${read ? 'chat-ticks-read' : ''}`} title={read ? 'Seen' : 'Sent'}>
-      ✓✓
-    </span>
-  )
-}
-
 export default function CoordinatorChat() {
+  const CURRENT_USER_ID = localStorage.getItem('sessioneer_user_id') || 'me'
+  const CURRENT_USER_NAME = 'You'
+
+  /***const CURRENT_USER_CONTACT: ChatContact = {
+    id: CURRENT_USER_ID,
+    name: CURRENT_USER_NAME,
+    email: '',
+    role: 'COORDINATOR',
+  }***/
+
   const [conversations, setConversations] = useState<Conversation[]>([])
+  const [allPeople, setAllPeople] = useState<ChatContact[]>([])
+
+  useEffect(() => {
+    api.getAllStaff().then((staff: any[]) => {
+      setAllPeople(staff.map(s => ({
+        id: String(s.id),
+        name: s.fullName,
+        email: s.email,
+        role: 'STAFF' as const,
+      })))
+    }).catch(console.error)
+  }, [])
+
+  useEffect(() => {
+    if (allPeople.length === 0) return
+    api.getConversations().then(async (partners: any[]) => {
+      const dms: DMConversation[] = await Promise.all(
+        partners.map(async (partner: any) => {
+          const msgs = await api.getMessages(Number(partner.id))
+          const mapped: ChatMessage[] = msgs.map((m: any) => ({
+            id: String(m.id),
+            senderId: String(m.sender.id),
+            senderName: m.sender.fullName,
+            text: m.content,
+            timestamp: m.sentAt,
+            attachment: m.fileName ? {
+              type: m.fileType?.startsWith('image/') ? 'photo' as AttachmentType : 'file' as AttachmentType,
+              name: m.fileName,
+              fileData: m.fileData,
+              fileType: m.fileType,
+            } : undefined,
+          }))
+          return {
+            type: 'dm' as const,
+            id: String(partner.id),
+            contact: {
+              id: String(partner.id),
+              name: partner.fullName,
+              email: partner.email,
+              role: partner.role as 'STAFF' | 'COORDINATOR',
+            },
+            messages: mapped,
+          }
+        })
+      )
+      setConversations(prev => {
+        //const existingIds = new Set(prev.filter(c => c.type === 'group').map(c => c.id))
+        //return [...prev.filter(c => c.type === 'group'), ...dms.filter(d => !existingIds.has(d.id))]
+        return [...prev.filter(c => c.type === 'group'), ...dms]
+      })
+    }).catch(console.error)
+  }, [allPeople])
+
+  useEffect(() => {
+    api.getMyGroups().then(async (groups: any[]) => {
+      const groupConvs: GroupConversation[] = await Promise.all(
+        groups.map(async (g: any) => {
+          const members = await api.getGroupMembers(g.id)
+          const msgs = await api.getGroupMessages(g.id)
+          return {
+            type: 'group' as const,
+            //id: String(g.id),
+            id: `g${g.id}`,
+            name: g.name,
+            unitCode: g.unitCode,
+            creatorId: String(g.creator.id),
+            members: members.map((m: any) => ({
+              contact: {
+                id: String(m.user.id),
+                name: m.user.fullName,
+                email: m.user.email,
+                role: m.user.role as 'STAFF' | 'COORDINATOR',
+              },
+              isAdmin: m.admin,
+              adminPermissions: m.admin ? {
+                manageMembers: m.adminManageMembers,
+                editGroupInfo: m.adminEditGroupInfo,
+                manageMemberPermissions: m.adminManagePermissions,
+              } : undefined,
+            })),
+            permissions: {
+              sendText: g.permSendText,
+              sharePhoto: g.permSharePhoto,
+              shareFile: g.permShareFile,
+              shareDocument: g.permShareDocument,
+              addMembers: g.permAddMembers,
+            },
+            messages: msgs.map((m: any) => ({
+              id: String(m.id),
+              senderId: String(m.sender.id),
+              senderName: m.sender.fullName,
+              text: m.content,
+              timestamp: m.sentAt,
+            })),
+          }
+        })
+      )
+      setConversations(prev => [
+        ...prev.filter(c => c.type === 'dm'),
+        ...groupConvs,
+      ])
+    }).catch(console.error)
+  }, [])
+
   const [activeContactId, setActiveContactId] = useState<string | null>(null)
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
@@ -188,13 +276,13 @@ export default function CoordinatorChat() {
   const searchResults = useMemo(() => {
     if (!searchQuery.trim()) return []
     const existingIds = new Set(dmConversations.map(c => c.contact.id))
-    return ALL_PEOPLE.filter(
+    return allPeople.filter(
       p => !existingIds.has(p.id) && p.name.toLowerCase().includes(searchQuery.toLowerCase())
     )
   }, [searchQuery, dmConversations])
 
   const activeConversation = conversations.find(c => c.id === activeConversationId)
-  const activeContactFromSearch = ALL_PEOPLE.find(p => p.id === activeContactId)
+  const activeContactFromSearch = allPeople.find(p => p.id === activeContactId)
 
   const headerInfo =
     activeConversation?.type === 'group'
@@ -229,22 +317,58 @@ export default function CoordinatorChat() {
     setOpenAdminPermId(null)
   }, [activeConversationId])
 
-  const openDM = (contactId: string) => {
+  const openDM = async (contactId: string) => {
     setActiveContactId(contactId)
     setActiveConversationId(contactId)
     setSearchQuery('')
+
+    try {
+      const msgs = await api.getMessages(Number(contactId))
+      const mapped: ChatMessage[] = msgs.map((m: any) => ({
+        id: String(m.id),
+        senderId: String(m.sender.id),
+        senderName: m.sender.fullName,
+        text: m.content,
+        timestamp: m.sentAt,
+        attachment: m.fileName ? {
+          type: m.fileType?.startsWith('image/') ? 'photo' as AttachmentType : 'file' as AttachmentType,
+          name: m.fileName,
+          fileData: m.fileData,
+          fileType: m.fileType,
+        } : undefined,
+      }))
+
+      const existingConv = conversations.find(c => c.id === contactId)
+      if (existingConv) {
+        setConversations(prev =>
+          prev.map(c => c.id === contactId ? { ...c, messages: mapped } : c)
+        )
+      } else {
+        const contact = allPeople.find(p => p.id === contactId)
+        if (!contact) return
+        const newDM: DMConversation = {
+          type: 'dm',
+          id: contactId,
+          contact,
+          messages: mapped,
+        }
+        setConversations(prev => [newDM, ...prev])
+        setActiveConversationId(contactId)
+      }
+    } catch (err) {
+      console.error(err)
+    }
   }
 
   const openGroup = (groupId: string) => {
+    console.log('opening group:', groupId, 'all convs:', conversations.map(c => c.id + ':' + c.type))
     setActiveContactId(null)
     setActiveConversationId(groupId)
     setSearchQuery('')
   }
 
   const appendMessage = (message: ChatMessage) => {
-    let conversationId: string | null = null
     if (activeConversation) {
-      conversationId = activeConversation.id
       setConversations(prev =>
         prev.map(c => (c.id === activeConversation.id ? { ...c, messages: [...c.messages, message] } : c))
       )
@@ -255,41 +379,51 @@ export default function CoordinatorChat() {
         contact: activeContactFromSearch,
         messages: [message],
       }
-      conversationId = newDM.id
       setConversations(prev => [newDM, ...prev])
       setActiveConversationId(newDM.id)
     }
-
-    // Simulate the other side reading it — there's no real read-receipt
-    // backend behind this chat, so "seen" is just a timed flip of this
-    // one message's status from sent -> read, purely for display.
-    if (message.senderId === CURRENT_USER_ID && conversationId) {
-      const cid = conversationId
-      setTimeout(() => {
-        setConversations(prev =>
-          prev.map(c =>
-            c.id === cid
-              ? { ...c, messages: c.messages.map(m => (m.id === message.id ? { ...m, status: 'read' } : m)) }
-              : c
-          )
-        )
-      }, SEEN_DELAY_MS)
-    }
   }
 
-  const sendMessage = () => {
+  const sendMessage = async () => {
     const text = draft.trim()
     if (!text) return
 
-    appendMessage({
-      id: crypto.randomUUID(),
-      senderId: CURRENT_USER_ID,
-      senderName: CURRENT_USER_NAME,
-      text,
-      timestamp: new Date().toISOString(),
-      status: 'sent',
-    })
-    setDraft('')
+    if (activeConversation?.type === 'group') {
+      try {
+        const saved = await api.sendGroupMessage(Number(activeConversation.id.replace('g', '')), { content: text })
+        appendMessage({
+          id: String(saved.id),
+          senderId: String(saved.sender.id),
+          senderName: saved.sender.fullName,
+          text: saved.content,
+          timestamp: saved.sentAt,
+        })
+        setDraft('')
+      } catch (err) {
+        console.error(err)
+      }
+      return
+    }
+
+    const receiverId = activeConversation?.type === 'dm'
+      ? activeConversation.contact.id
+      : activeContactFromSearch?.id
+
+    if (!receiverId) return
+
+    try {
+      const saved = await api.sendMessage({ receiverId: Number(receiverId), content: text })
+      appendMessage({
+        id: String(saved.id),
+        senderId: CURRENT_USER_ID,
+        senderName: CURRENT_USER_NAME,
+        text: saved.content,
+        timestamp: saved.sentAt,
+      })
+      setDraft('')
+    } catch (err) {
+      console.error(err)
+    }
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -299,22 +433,63 @@ export default function CoordinatorChat() {
     }
   }
 
-  // Mock "attach" — real file upload would replace this prompt() with an
   // actual <input type="file"> + upload call to your backend.
-  const handleAttach = (type: AttachmentType) => {
+  const handleAttach = async (type: AttachmentType) => {
     setShowAttachMenu(false)
-    const name = window.prompt(`Enter a file name for this ${type}:`)
-    if (!name) return
-
-    appendMessage({
-      id: crypto.randomUUID(),
-      senderId: CURRENT_USER_ID,
-      senderName: CURRENT_USER_NAME,
-      text: '',
-      timestamp: new Date().toISOString(),
-      attachment: { type, name },
-      status: 'sent',
-    })
+  
+    const input = document.createElement('input')
+    input.type = 'file'
+    if (type === 'photo') input.accept = 'image/*'
+    else if (type === 'document') input.accept = '.pdf,.doc,.docx,.txt'
+  
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0]
+      if (!file) return
+    
+      const reader = new FileReader()
+      reader.onload = async () => {
+        const base64 = (reader.result as string).split(',')[1]
+      
+        try {
+          let saved
+          if (activeConversation?.type === 'group') {
+            const groupId = activeConversation.id.replace('g', '')
+            saved = await api.sendGroupMessage(Number(groupId), {
+              content: '',
+              fileName: file.name,
+              fileType: file.type,
+              fileData: base64,
+            })
+          } else {
+            const receiverId = activeConversation?.type === 'dm'
+              ? activeConversation.contact.id
+              : activeContactFromSearch?.id
+            if (!receiverId) return
+            saved = await api.sendMessage({
+              receiverId: Number(receiverId),
+              content: '',
+              fileName: file.name,
+              fileType: file.type,
+              fileData: base64,
+            })
+          }
+        
+          appendMessage({
+            id: String(saved.id),
+            senderId: CURRENT_USER_ID,
+            senderName: CURRENT_USER_NAME,
+            text: '',
+            timestamp: saved.sentAt,
+            attachment: { type, name: file.name },
+          })
+        } catch (err) {
+          console.error(err)
+        }
+      }
+      reader.readAsDataURL(file)
+    }
+  
+    input.click()
   }
 
   // ── Create group modal logic ─────────────────────────────
@@ -333,29 +508,45 @@ export default function CoordinatorChat() {
     setSelectedMemberIds(new Set())
   }
 
-  const handleCreateGroup = (e: React.FormEvent) => {
+  const handleCreateGroup = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!groupName.trim() || selectedMemberIds.size === 0) return
 
-    const chosenMembers: GroupMember[] = ALL_PEOPLE
-      .filter(p => selectedMemberIds.has(p.id))
-      .map(contact => ({ contact, isAdmin: false }))
+    try {
+      const saved = await api.createGroup({
+        name: groupName.trim(),
+        unitCode: groupUnitCode,
+        memberIds: Array.from(selectedMemberIds).map(Number),
+      })
 
-    const newGroup: GroupConversation = {
-      type: 'group',
-      id: crypto.randomUUID(),
-      name: groupName.trim(),
-      unitCode: groupUnitCode,
-      creatorId: CURRENT_USER_ID,
-      members: [{ contact: CURRENT_USER_CONTACT, isAdmin: true }, ...chosenMembers],
-      permissions: { ...DEFAULT_PERMISSIONS },
-      messages: [],
+      const members = await api.getGroupMembers(saved.id)
+      const newGroup: GroupConversation = {
+        type: 'group',
+        //id: String(saved.id),
+        id: `g${saved.id}`,
+        name: saved.name,
+        unitCode: saved.unitCode,
+        creatorId: String(saved.creator.id),
+        members: members.map((m: any) => ({
+          contact: {
+            id: String(m.user.id),
+            name: m.user.fullName,
+            email: m.user.email,
+            role: m.user.role as 'STAFF' | 'COORDINATOR',
+          },
+          isAdmin: m.admin,
+        })),
+        permissions: { ...DEFAULT_PERMISSIONS },
+        messages: [],
+      }
+
+      setConversations(prev => [newGroup, ...prev])
+      setShowGroupModal(false)
+      resetGroupForm()
+      openGroup(String(saved.id))
+    } catch (err) {
+      console.error(err)
     }
-
-    setConversations(prev => [newGroup, ...prev])
-    setShowGroupModal(false)
-    resetGroupForm()
-    openGroup(newGroup.id)
   }
 
   // ── Group info panel actions ──────────────────────────────
@@ -365,51 +556,94 @@ export default function CoordinatorChat() {
     )
   }
 
-  const saveGroupName = () => {
-    if (!nameDraft.trim()) return
-    updateActiveGroup(g => ({ ...g, name: nameDraft.trim() }))
-    setEditingName(false)
+  const reloadGroupMembers = async (groupId: number) => {
+    console.log('reloading members for group:', groupId)
+    try {
+      const members = await api.getGroupMembers(groupId)
+      console.log('got members:', members)
+      setConversations(prev => {
+        console.log('looking for:', `g${groupId}`, 'convs:', prev.map(c => c.id))
+        return prev.map(c => {
+          if (c.id !== `g${groupId}` || c.type !== 'group') return c
+          return {
+            ...c,
+            members: members.map((m: any) => ({
+              contact: {
+                id: String(m.user.id),
+                name: m.user.fullName,
+                email: m.user.email,
+                role: m.user.role as 'STAFF' | 'COORDINATOR',
+              },
+              isAdmin: m.admin,
+              adminPermissions: m.admin ? {
+                manageMembers: m.adminManageMembers,
+                editGroupInfo: m.adminEditGroupInfo,
+                manageMemberPermissions: m.adminManagePermissions,
+              } : undefined,
+            })),
+          }
+        })
+      })
+      setActiveConversationId(prev => prev)
+    } catch (err) {
+      console.error(err)
+    }
   }
 
-  const togglePermission = (key: keyof GroupPermissions) => {
-    updateActiveGroup(g => ({ ...g, permissions: { ...g.permissions, [key]: !g.permissions[key] } }))
+  const saveGroupName = async () => {
+    if (!nameDraft.trim() || activeConversation?.type !== 'group') return
+    const groupId = Number(activeConversation.id.replace('g', ''))
+    try {
+      await api.renameGroup(groupId, nameDraft.trim())
+      updateActiveGroup(g => ({ ...g, name: nameDraft.trim() }))
+      setEditingName(false)
+    } catch (err) {
+      console.error(err)
+    }
   }
 
-  const toggleAdmin = (memberId: string) => {
-    updateActiveGroup(g => ({
-      ...g,
-      members: g.members.map(m =>
-        m.contact.id === memberId
-          ? {
-              ...m,
-              isAdmin: !m.isAdmin,
-              // give a freshly-promoted admin the full default set of
-              // admin permissions — the owner can then dial these back
-              adminPermissions: !m.isAdmin ? { ...DEFAULT_ADMIN_PERMISSIONS } : m.adminPermissions,
-            }
-          : m
-      ),
-    }))
-    setOpenMemberMenuId(null)
+  const togglePermission = async (key: keyof GroupPermissions) => {
+    if (activeConversation?.type !== 'group') return
+    const groupId = Number(activeConversation.id.replace('g', ''))
+    const newValue = !activeConversation.permissions[key]
+    try {
+      await api.updateGroupPermissions(groupId, { [key]: newValue })
+      updateActiveGroup(g => ({ ...g, permissions: { ...g.permissions, [key]: newValue } }))
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  const toggleAdmin = async (memberId: string) => {
+    if (activeConversation?.type !== 'group') return
+    const groupId = Number(activeConversation.id.replace('g', ''))
+    const member = activeConversation.members.find(m => m.contact.id === memberId)
+    if (!member) return
+    const newIsAdmin = !member.isAdmin
+    try {
+      await api.setGroupMemberAdmin(groupId, Number(memberId), newIsAdmin)
+      await reloadGroupMembers(groupId)
+      setOpenMemberMenuId(null)
+    } catch (err) {
+      console.error(err)
+    }
   }
 
   // Owner-only: grant/revoke a specific capability for a specific admin,
   // without touching any other admin's permissions.
-  const updateAdminPermission = (adminId: string, key: keyof AdminPermissions) => {
-    updateActiveGroup(g => ({
-      ...g,
-      members: g.members.map(m =>
-        m.contact.id === adminId && m.isAdmin
-          ? {
-              ...m,
-              adminPermissions: {
-                ...(m.adminPermissions ?? DEFAULT_ADMIN_PERMISSIONS),
-                [key]: !(m.adminPermissions ?? DEFAULT_ADMIN_PERMISSIONS)[key],
-              },
-            }
-          : m
-      ),
-    }))
+  const updateAdminPermission = async (adminId: string, key: keyof AdminPermissions) => {
+    if (activeConversation?.type !== 'group') return
+    const groupId = Number(activeConversation.id.replace('g', ''))
+    const member = activeConversation.members.find(m => m.contact.id === adminId)
+    if (!member?.isAdmin) return
+    const currentPerms = member.adminPermissions ?? DEFAULT_ADMIN_PERMISSIONS
+    const newValue = !currentPerms[key]
+    try {
+      await api.updateAdminPermissions(groupId, Number(adminId), { [key]: newValue })
+      await reloadGroupMembers(groupId)
+    } catch (err) {
+      console.error(err)
+    }
   }
 
   // Admin action: override one message/share permission for ONE member,
@@ -438,13 +672,27 @@ export default function CoordinatorChat() {
     }))
   }
 
-  const removeMember = (memberId: string) => {
-    updateActiveGroup(g => ({ ...g, members: g.members.filter(m => m.contact.id !== memberId) }))
-    setOpenMemberMenuId(null)
+  const removeMember = async (memberId: string) => {
+    if (activeConversation?.type !== 'group') return
+    const groupId = Number(activeConversation.id.replace('g', ''))
+    try {
+      await api.removeGroupMember(groupId, Number(memberId))
+      await reloadGroupMembers(groupId)
+      setOpenMemberMenuId(null)
+    } catch (err) {
+      console.error(err)
+    }
   }
 
-  const addMemberToGroup = (contact: ChatContact) => {
-    updateActiveGroup(g => ({ ...g, members: [...g.members, { contact, isAdmin: false }] }))
+  const addMemberToGroup = async (contact: ChatContact) => {
+    if (activeConversation?.type !== 'group') return
+    const groupId = Number(activeConversation.id.replace('g', ''))
+    try {
+      await api.addGroupMember(groupId, Number(contact.id))
+      await reloadGroupMembers(groupId)
+    } catch (err) {
+      console.error(err)
+    }
   }
 
   const handleExitGroup = () => {
@@ -458,7 +706,7 @@ export default function CoordinatorChat() {
 
   const groupNonMembers =
     activeConversation?.type === 'group'
-      ? ALL_PEOPLE.filter(p => !activeConversation.members.some(m => m.contact.id === p.id))
+      ? allPeople.filter(p => !activeConversation.members.some(m => m.contact.id === p.id))
       : []
 
   const sharedMedia =
@@ -602,14 +850,28 @@ export default function CoordinatorChat() {
                           <span className="chat-bubble-sender">{msg.senderName}</span>
                         )}
                         {msg.attachment ? (
-                          <span className="chat-attachment-tag">📎 {msg.attachment.name}</span>
+                          msg.attachment.fileType?.startsWith('image/') && msg.attachment.fileData ? (
+                            <div>
+                              <img
+                                src={`data:${msg.attachment.fileType};base64,${msg.attachment.fileData}`}
+                                alt={msg.attachment.name}
+                                style={{ maxWidth: '200px', maxHeight: '200px', borderRadius: '8px' }}
+                              />
+                              <div style={{ fontSize: '12px', marginTop: '4px' }}>{msg.attachment.name}</div>
+                            </div>
+                          ) : (
+                            <a
+                              href={msg.attachment.fileData ? `data:${msg.attachment.fileType};base64,${msg.attachment.fileData}` : '#'}
+                              download={msg.attachment.name}
+                              style={{ color: 'inherit' }}
+                            >
+                              📎 {msg.attachment.name}
+                            </a>
+                          )
                         ) : (
                           <span>{msg.text}</span>
                         )}
-                        <span className="chat-bubble-meta">
-                          <span className="chat-bubble-time">{formatTime(msg.timestamp)}</span>
-                          {msg.senderId === CURRENT_USER_ID && <MessageTicks status={msg.status} />}
-                        </span>
+                        <span className="chat-bubble-time">{formatTime(msg.timestamp)}</span>
                       </div>
                     </div>
                   ))}
@@ -921,7 +1183,7 @@ export default function CoordinatorChat() {
               <div className="chat-form-field">
                 <label>Add people ({selectedMemberIds.size} selected)</label>
                 <div className="chat-member-checklist">
-                  {ALL_PEOPLE.map(person => {
+                  {allPeople.map(person => {
                     const checked = selectedMemberIds.has(person.id)
                     return (
                       <label key={person.id} className={`chat-member-row ${checked ? 'checked' : ''}`}>

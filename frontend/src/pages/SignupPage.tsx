@@ -25,6 +25,8 @@ export default function SignupPage() {
       localStorage.setItem('sessioneer_token', res.token)
       localStorage.setItem('sessioneer_role', res.role.toLowerCase())
       localStorage.setItem('sessioneer_name', res.fullName)
+      // Store user ID in localStorage for testing purposes (not secure for production)
+      localStorage.setItem('sessioneer_user_id', String(res.userId))
       navigate(res.role === 'COORDINATOR' ? '/coordinator' : '/staff')
     } catch {
       setError('Signup failed. Email may already be registered.')
@@ -74,29 +76,24 @@ export default function SignupPage() {
               <input id="fullName" type="text" placeholder="Enter your full name"
                 value={fullName} onChange={e => setFullName(e.target.value)} required />
             </div>
-
             <div className="form-group">
               <label htmlFor="email">Email</label>
               <input id="email" type="email" placeholder="Enter your email address"
                 value={email} onChange={e => setEmail(e.target.value)} required />
             </div>
-
             <div className="form-row">
               <div className="form-group">
                 <label htmlFor="password">Password</label>
                 <input id="password" type="password" placeholder="Min. 6 characters"
                   value={password} onChange={e => setPassword(e.target.value)} required />
               </div>
-
               <div className="form-group">
                 <label htmlFor="confirmPassword">Confirm Password</label>
                 <input id="confirmPassword" type="password" placeholder="Re-enter password"
                   value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required />
               </div>
             </div>
-
             {error && <p className="signup-error">{error}</p>}
-
             <button type="submit" className="signup-btn">Create Account</button>
           </form>
 

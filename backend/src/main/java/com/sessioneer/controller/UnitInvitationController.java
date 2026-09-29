@@ -40,13 +40,7 @@ public class UnitInvitationController {
     }
 
     @PostMapping("/units/{unitId}/invite/{staffId}/respond")
-    public ResponseEntity<UnitInvitation> respond(@PathVariable Long unitId,
-                                                   @PathVariable Long staffId) {
+    public ResponseEntity<UnitInvitation> respond(@PathVariable Long unitId, @PathVariable Long staffId) {
         return ResponseEntity.ok(invitationService.respondToInvitation(unitId, staffId));
-    }
-
-    @PostMapping("/units/{unitId}/invitations/accept")
-    public ResponseEntity<UnitInvitation> accept(@PathVariable Long unitId) {
-        return ResponseEntity.ok(invitationService.acceptInvitation(unitId));
     }
 }

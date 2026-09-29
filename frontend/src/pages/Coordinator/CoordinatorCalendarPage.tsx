@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { api } from "../../services/api";
-import CoordinatorSidebar from "../../components/CooordinatorSidebar";
+import CoordinatorSidebar from "../../components/CoordinatorSidebar";
 
 interface Session {
   id: number;
@@ -19,13 +19,6 @@ interface Unit {
 }
 
 type FilterMode = "all" | "unit" | "personal";
-
-const months = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
-];
-
-const years = Array.from({ length: 1001 }, (_, i) => 2000 + i);
 
 function CalendarPage() {
   const [sessions, setSessions] = useState<Session[]>([]);
@@ -80,7 +73,7 @@ function CalendarPage() {
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
-  const monthName = months[month];
+  const monthName = currentDate.toLocaleString('default', { month: 'long' });
 
   // ── Filters ───────────────────────────────────────────────────────────
   // All Classes: every session under every unit this coordinator owns.
@@ -113,16 +106,12 @@ function CalendarPage() {
     }
   }
 
+  const allocated = filteredSessions.filter(s => s.status === "ALLOCATED").length;
+  const pending = filteredSessions.filter(s => s.status === "PENDING").length;
+  const conflict = filteredSessions.filter(s => s.status === "CONFLICT").length;
+
   const prevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
   const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
-
-  const handleMonthChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setCurrentDate(new Date(year, Number(e.target.value), 1));
-  };
-
-  const handleYearChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setCurrentDate(new Date(Number(e.target.value), month, 1));
-  };
 
   return (
     <div className="calendar-page">
@@ -136,6 +125,10 @@ function CalendarPage() {
               <h1>{monthName} {year} Calendar</h1>
               <p>Class allocation overview for coordinator</p>
             </div>
+          </div>
+          <div style={{display:'flex', gap:'12px', alignItems:'center'}}>
+            <button className="publish-btn" onClick={prevMonth}>← Prev</button>
+            <button className="publish-btn" onClick={nextMonth}>Next →</button>
           </div>
         </header>
 
@@ -178,26 +171,28 @@ function CalendarPage() {
           )}
         </section>
 
-        <section className="month-calendar">
-          <div className="calendar-box-header">
-            <button className="calendar-nav-btn" onClick={prevMonth}>← Prev Month</button>
-
-            <div className="calendar-select-group">
-              <select value={month} onChange={handleMonthChange}>
-                {months.map((m, index) => (
-                  <option key={m} value={index}>{m}</option>
-                ))}
-              </select>
-              <select value={year} onChange={handleYearChange}>
-                {years.map((y) => (
-                  <option key={y} value={y}>{y}</option>
-                ))}
-              </select>
-            </div>
-
-            <button className="calendar-nav-btn" onClick={nextMonth}>Next Month →</button>
+        <section className="calendar-summary">
+          <div className="summary-card allocated-card">
+            <h2>{allocated}</h2>
+            <p>Allocated Classes</p>
           </div>
+          <div className="summary-card pending-card">
+            <h2>{pending}</h2>
+            <p>Pending Classes</p>
+          </div>
+          <div className="summary-card conflict-card">
+            <h2>{conflict}</h2>
+            <p>Conflicts</p>
+          </div>
+        </section>
 
+        <section className="legend">
+          <span><b className="dot allocated-dot"></b> Allocated</span>
+          <span><b className="dot pending-dot"></b> Pending</span>
+          <span><b className="dot conflict-dot"></b> Conflict</span>
+        </section>
+
+        <section className="month-calendar">
           <div className="weekdays">
             <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div>
             <div>Thu</div><div>Fri</div><div>Sat</div>

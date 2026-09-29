@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { api } from '../services/api'
 
+
 type Role = 'coordinator' | 'staff'
 
 const MOCK_USERS = [
@@ -19,12 +20,13 @@ export default function LoginPage() {
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setError('')
-
     try {
       const res = await api.login({ email, password })
       localStorage.setItem('sessioneer_token', res.token)
       localStorage.setItem('sessioneer_role', res.role.toLowerCase())
       localStorage.setItem('sessioneer_name', res.fullName)
+      // Store user ID in localStorage for testing purposes (not secure for production)
+      localStorage.setItem('sessioneer_user_id', String(res.userId))
       navigate(res.role === 'COORDINATOR' ? '/coordinator' : '/staff')
     } catch {
       // Fall back to mock auth when backend is not running
@@ -42,7 +44,6 @@ export default function LoginPage() {
 
   return (
     <div className="login-wrapper">
-
       <div className="login-brand">
         <div className="brand-content">
           <img src="/sessioneer-logo.png" alt="Sessioneer" className="brand-logo" />
@@ -72,12 +73,8 @@ export default function LoginPage() {
               onClick={() => { setRole('coordinator'); setError('') }} type="button">
               Unit Coordinator
             </button>
-
-            <button
-              className={`role-btn ${role === 'staff' ? 'active' : ''}`}
-              onClick={() => { setRole('staff'); setError('') }}
-              type="button"
-            >
+            <button className={`role-btn ${role === 'staff' ? 'active' : ''}`}
+              onClick={() => { setRole('staff'); setError('') }} type="button">
               Sessional Staff
             </button>
           </div>
@@ -88,15 +85,12 @@ export default function LoginPage() {
               <input id="email" type="email" placeholder="Enter your email address"
                 value={email} onChange={e => setEmail(e.target.value)} required />
             </div>
-
             <div className="form-group">
               <label htmlFor="password">Password</label>
               <input id="password" type="password" placeholder="Enter your password"
                 value={password} onChange={e => setPassword(e.target.value)} required />
             </div>
-
             {error && <p className="login-error">{error}</p>}
-
             <button type="submit" className="login-btn">Sign In</button>
           </form>
 

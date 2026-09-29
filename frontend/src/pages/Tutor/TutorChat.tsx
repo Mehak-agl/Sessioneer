@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
 import StaffSidebar from '../../components/TutorSidebar'
-
+import { api } from '../../services/api'
 
 type ChatContact = {
   id: string
@@ -11,20 +11,13 @@ type ChatContact = {
 
 type AttachmentType = 'photo' | 'file' | 'document'
 
-// Sent → this mock's version of "delivered" (no real backend to
-// distinguish the two); Read → the other side has opened the
-// conversation. Purely a client-side simulation (see appendMessage)
-// since there's no real read-receipt channel here.
-type MessageStatus = 'sent' | 'read'
-
 type ChatMessage = {
   id: string
   senderId: string
   senderName: string
   text: string
   timestamp: string
-  attachment?: { type: AttachmentType; name: string }
-  status?: MessageStatus
+  attachment?: { type: AttachmentType; name: string; fileData?: string; fileType?: string }
 }
 
 type DMConversation = {
@@ -37,6 +30,8 @@ type DMConversation = {
 type GroupMember = {
   contact: ChatContact
   isAdmin: boolean
+  adminPermissions?: AdminPermissions
+  overrides?: MemberOverrides
 }
 
 type GroupPermissions = {
@@ -57,32 +52,44 @@ type GroupConversation = {
   messages: ChatMessage[]
 }
 
+type AdminPermissions = {
+  manageMembers: boolean
+  editGroupInfo: boolean
+  manageMemberPermissions: boolean
+}
+
 type Conversation = DMConversation | GroupConversation
 
-// --- MOCK DATA (UI only — no connection to coordinator's chat) ---
-const CURRENT_USER_ID = 'me'
-const CURRENT_USER_NAME = localStorage.getItem('sessioneer_name') || 'You'
+type MemberOverrides = Partial<Pick<GroupPermissions, 'sendText' | 'sharePhoto' | 'shareFile' | 'shareDocument'>>
 
-const CURRENT_USER: ChatContact = {
+const PERMISSION_LABELS: Record<keyof GroupPermissions, string> = {
+  sendText: 'Send text messages',
+  sharePhoto: 'Share photos',
+  shareFile: 'Share files',
+  shareDocument: 'Share documents',
+  addMembers: 'Add members',
+}
+
+const OVERRIDABLE_KEYS: (keyof MemberOverrides)[] = ['sendText', 'sharePhoto', 'shareFile', 'shareDocument']
+
+//const CURRENT_USER_ID = localStorage.getItem('sessioneer_user_id') || 'me'
+//const CURRENT_USER_NAME = localStorage.getItem('sessioneer_name') || 'You'
+
+/***const CURRENT_USER: ChatContact = {
   id: CURRENT_USER_ID,
   name: CURRENT_USER_NAME,
   email: '',
   role: 'STAFF',
-}
+}***/
 
-// People the tutor can search for and message directly
-const ALL_PEOPLE: ChatContact[] = [
-  { id: 'c1', name: 'Sarah Chen', email: 'coordinator@qut.edu.au', role: 'COORDINATOR' },
-  { id: 't2', name: 'Priya Sharma', email: 'priya.sharma@gmail.com', role: 'STAFF' },
-  { id: 't3', name: 'James Wilson', email: 'j.wilson@outlook.com', role: 'STAFF' },
-  { id: 't4', name: 'Emily Chen', email: 'emily.chen@gmail.com', role: 'STAFF' },
-  { id: 't5', name: 'Rohit Patel', email: 'rohit.patel@gmail.com', role: 'STAFF' },
-]
+// Kept for JUST IN CASE need to use static mock data for all people.
+// Currently using API to get all staff members
+//const ALL_PEOPLE: ChatContact[] = []
 
 // Pretend the coordinator already added this tutor to these groups.
 // This is static mock data just so the UI has something to show —
 // it is NOT linked to the real coordinator chat in any way.
-const MOCK_GROUPS: GroupConversation[] = [
+/***const MOCK_GROUPS: GroupConversation[] = [
   {
     type: 'group',
     id: 'g1',
@@ -90,7 +97,7 @@ const MOCK_GROUPS: GroupConversation[] = [
     unitCode: 'CAB302',
     members: [
       { contact: { id: 'c1', name: 'Sarah Chen', email: 'coordinator@qut.edu.au', role: 'COORDINATOR' }, isAdmin: true },
-      { contact: CURRENT_USER, isAdmin: false },
+      //{ contact: CURRENT_USER, isAdmin: false },
       { contact: { id: 't2', name: 'Priya Sharma', email: 'priya.sharma@gmail.com', role: 'STAFF' }, isAdmin: false },
     ],
     permissions: {
@@ -110,7 +117,7 @@ const MOCK_GROUPS: GroupConversation[] = [
       },
     ],
   },
-]
+]***/
 
 function getInitials(name: string) {
   return name.split(' ').filter(Boolean).map(n => n[0]).join('').toUpperCase()
@@ -120,23 +127,112 @@ function formatTime(ts: string) {
   return new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 }
 
-// How long a message you sent stays "Sent" before this mock marks it as
-// "Read" — stands in for a real read-receipt event from the other side.
-const SEEN_DELAY_MS = 2000
-
-// WhatsApp-style double tick: gray/white for sent, teal-highlighted for
-// seen. Only ever rendered next to messages the current user sent.
-function MessageTicks({ status }: { status?: MessageStatus }) {
-  const read = status === 'read'
-  return (
-    <span className={`chat-ticks ${read ? 'chat-ticks-read' : ''}`} title={read ? 'Seen' : 'Sent'}>
-      ✓✓
-    </span>
-  )
-}
-
 export default function TutorChat() {
-  const [conversations, setConversations] = useState<Conversation[]>(MOCK_GROUPS)
+  const CURRENT_USER_ID = localStorage.getItem('sessioneer_user_id') || 'me'
+  const CURRENT_USER_NAME = localStorage.getItem('sessioneer_name') || 'You'
+  const [conversations, setConversations] = useState<Conversation[]>([])
+  const [allPeople, setAllPeople] = useState<ChatContact[]>([])
+
+  useEffect(() => {
+    api.getAllStaff().then((staff: any[]) => {
+      setAllPeople(staff.map(s => ({
+        id: String(s.id),
+        name: s.fullName,
+        email: s.email,
+        role: 'STAFF' as const,
+      })))
+    }).catch(console.error)
+  }, [])
+
+  useEffect(() => {
+    api.getMyGroups().then(async (groups: any[]) => {
+      const groupConvs: GroupConversation[] = await Promise.all(
+        groups.map(async (g: any) => {
+          const members = await api.getGroupMembers(g.id)
+          const msgs = await api.getGroupMessages(g.id)
+          return {
+            type: 'group' as const,
+            id: `g${g.id}`,
+            name: g.name,
+            unitCode: g.unitCode,
+            members: members.map((m: any) => ({
+              contact: {
+                id: String(m.user.id),
+                name: m.user.fullName,
+                email: m.user.email,
+                role: m.user.role as 'STAFF' | 'COORDINATOR',
+              },
+              isAdmin: m.admin,
+              adminPermissions: m.admin ? {
+                manageMembers: m.adminManageMembers ?? true,
+                editGroupInfo: m.adminEditGroupInfo ?? true,
+                manageMemberPermissions: m.adminManagePermissions ?? true,
+              } : undefined,
+            })),
+            permissions: {
+              sendText: g.permSendText,
+              sharePhoto: g.permSharePhoto,
+              shareFile: g.permShareFile,
+              shareDocument: g.permShareDocument,
+              addMembers: g.permAddMembers,
+            },
+            messages: msgs.map((m: any) => ({
+              id: String(m.id),
+              senderId: String(m.sender.id),
+              senderName: m.sender.fullName,
+             text: m.content,
+              timestamp: m.sentAt,
+            })),
+          }
+        })
+      )
+      setConversations(prev => [
+        ...prev.filter(c => c.type === 'dm'),
+        ...groupConvs,
+      ])
+    }).catch(console.error)
+  }, [])
+
+  useEffect(() => {
+    if (allPeople.length === 0) return
+    api.getConversations().then(async (partners: any[]) => {
+      const dms: DMConversation[] = await Promise.all(
+        partners.map(async (partner: any) => {
+          const msgs = await api.getMessages(Number(partner.id))
+          const mapped: ChatMessage[] = msgs.map((m: any) => ({
+            id: String(m.id),
+            senderId: String(m.sender.id),
+            senderName: m.sender.fullName,
+            text: m.content,
+            timestamp: m.sentAt,
+            attachment: m.fileName ? {
+              type: m.fileType?.startsWith('image/') ? 'photo' as AttachmentType : 'file' as AttachmentType,
+              name: m.fileName,
+              fileData: m.fileData,
+              fileType: m.fileType,
+            } : undefined,
+          }))
+          return {
+            type: 'dm' as const,
+            id: String(partner.id),
+            contact: {
+              id: String(partner.id),
+              name: partner.fullName,
+              email: partner.email,
+              role: partner.role as 'STAFF' | 'COORDINATOR',
+            },
+            messages: mapped,
+          }
+        })
+      )
+      setConversations(prev => {
+        //const existingIds = new Set(prev.filter(c => c.type === 'group').map(c => c.id))
+        //return [...prev.filter(c => c.type === 'group'), ...dms.filter(d => !existingIds.has(d.id))]
+        return [...prev.filter(c => c.type === 'group'), ...dms]
+      })
+    }).catch(console.error)
+  }, [allPeople])
+
   const [activeContactId, setActiveContactId] = useState<string | null>(null)
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
@@ -144,6 +240,12 @@ export default function TutorChat() {
 
   const [showGroupInfo, setShowGroupInfo] = useState(false)
   const [showAttachMenu, setShowAttachMenu] = useState(false)
+
+  const [showAddMembers, setShowAddMembers] = useState(false)
+  const [editingName, setEditingName] = useState(false)
+  const [nameDraft, setNameDraft] = useState('')
+  const [openMemberMenuId, setOpenMemberMenuId] = useState<string | null>(null)
+  const [openMemberPermId, setOpenMemberPermId] = useState<string | null>(null)
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
@@ -153,13 +255,13 @@ export default function TutorChat() {
   const searchResults = useMemo(() => {
     if (!searchQuery.trim()) return []
     const existingIds = new Set(dmConversations.map(c => c.contact.id))
-    return ALL_PEOPLE.filter(
+    return allPeople.filter(
       p => !existingIds.has(p.id) && p.name.toLowerCase().includes(searchQuery.toLowerCase())
     )
   }, [searchQuery, dmConversations])
 
   const activeConversation = conversations.find(c => c.id === activeConversationId)
-  const activeContactFromSearch = ALL_PEOPLE.find(p => p.id === activeContactId)
+  const activeContactFromSearch = allPeople.find(p => p.id === activeContactId)
 
   const headerInfo =
     activeConversation?.type === 'group'
@@ -193,10 +295,47 @@ export default function TutorChat() {
     setShowGroupInfo(false)
   }, [activeConversationId])
 
-  const openDM = (contactId: string) => {
+  const openDM = async (contactId: string) => {
     setActiveContactId(contactId)
     setActiveConversationId(contactId)
     setSearchQuery('')
+
+    try {
+      const msgs = await api.getMessages(Number(contactId))
+      const mapped: ChatMessage[] = msgs.map((m: any) => ({
+        id: String(m.id),
+        senderId: String(m.sender.id),
+        senderName: m.sender.fullName,
+        text: m.content,
+        timestamp: m.sentAt,
+        attachment: m.fileName ? {
+          type: m.fileType?.startsWith('image/') ? 'photo' as AttachmentType : 'file' as AttachmentType,
+          name: m.fileName,
+          fileData: m.fileData,
+          fileType: m.fileType,
+        } : undefined,
+      }))
+
+      const existingConv = conversations.find(c => c.id === contactId)
+      if (existingConv) {
+        setConversations(prev =>
+          prev.map(c => c.id === contactId ? { ...c, messages: mapped } : c)
+        )
+      } else {
+        const contact = allPeople.find(p => p.id === contactId)
+        if (!contact) return
+        const newDM: DMConversation = {
+          type: 'dm',
+          id: contactId,
+          contact,
+          messages: mapped,
+        }
+        setConversations(prev => [newDM, ...prev])
+        setActiveConversationId(contactId)
+      }
+    } catch (err) {
+      console.error(err)
+    }
   }
 
   const openGroup = (groupId: string) => {
@@ -206,9 +345,7 @@ export default function TutorChat() {
   }
 
   const appendMessage = (message: ChatMessage) => {
-    let conversationId: string | null = null
     if (activeConversation) {
-      conversationId = activeConversation.id
       setConversations(prev =>
         prev.map(c => (c.id === activeConversation.id ? { ...c, messages: [...c.messages, message] } : c))
       )
@@ -219,42 +356,159 @@ export default function TutorChat() {
         contact: activeContactFromSearch,
         messages: [message],
       }
-      conversationId = newDM.id
       setConversations(prev => [newDM, ...prev])
       setActiveConversationId(newDM.id)
     }
-
-    // Simulate the other side reading it — there's no real read-receipt
-    // backend behind this chat, so "seen" is just a timed flip of this
-    // one message's status from sent -> read, purely for display.
-    if (message.senderId === CURRENT_USER_ID && conversationId) {
-      const cid = conversationId
-      setTimeout(() => {
-        setConversations(prev =>
-          prev.map(c =>
-            c.id === cid
-              ? { ...c, messages: c.messages.map(m => (m.id === message.id ? { ...m, status: 'read' } : m)) }
-              : c
-          )
-        )
-      }, SEEN_DELAY_MS)
-    }
   }
 
-  const sendMessage = () => {
+  const sendMessage = async () => {
+    console.log('sendMessage called, canSendText:', canSendText, 'group:', activeConversation?.type)
     const text = draft.trim()
     if (!text || !canSendText) return
 
-    appendMessage({
-      id: crypto.randomUUID(),
-      senderId: CURRENT_USER_ID,
-      senderName: CURRENT_USER_NAME,
-      text,
-      timestamp: new Date().toISOString(),
-      status: 'sent',
-    })
-    setDraft('')
+    if (activeConversation?.type === 'group') {
+      try {
+        const groupId = activeConversation.id.replace('g', '')
+        const saved = await api.sendGroupMessage(Number(groupId), { content: text })
+        appendMessage({
+          id: String(saved.id),
+          senderId: String(saved.sender.id),
+          senderName: saved.sender.fullName,
+          text: saved.content,
+          timestamp: saved.sentAt,
+        })
+        setDraft('')
+      } catch (err) {
+        console.error(err)
+      }
+      return
+    }
+
+    const receiverId = activeConversation?.type === 'dm'
+      ? activeConversation.contact.id
+      : activeContactFromSearch?.id
+
+    if (!receiverId) return
+
+    try {
+    const saved = await api.sendMessage({ receiverId: Number(receiverId), content: text })
+      appendMessage({
+        id: String(saved.id),
+        senderId: CURRENT_USER_ID,
+        senderName: CURRENT_USER_NAME,
+        text: saved.content,
+        timestamp: saved.sentAt,
+      })
+      setDraft('')
+    } catch (err) {
+      console.error(err)
+    }
   }
+
+  const reloadGroupMembers = async (groupId: number) => {
+    try {
+      const members = await api.getGroupMembers(groupId)
+      setConversations(prev => prev.map(c => {
+        if (c.id !== `g${groupId}` || c.type !== 'group') return c
+        return {
+          ...c,
+          members: members.map((m: any) => ({
+            contact: {
+              id: String(m.user.id),
+              name: m.user.fullName,
+              email: m.user.email,
+              role: m.user.role as 'STAFF' | 'COORDINATOR',
+            },
+            isAdmin: m.admin,
+            adminPermissions: m.admin ? {
+              manageMembers: m.adminManageMembers ?? true,
+              editGroupInfo: m.adminEditGroupInfo ?? true,
+              manageMemberPermissions: m.adminManagePermissions ?? true,
+            } : undefined,
+          })),
+        }
+      }))
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  const updateActiveGroup = (updater: (g: GroupConversation) => GroupConversation) => {
+    setConversations(prev =>
+      prev.map(c => (c.id === activeConversationId && c.type === 'group' ? updater(c) : c))
+    )
+  }
+
+  const saveGroupName = async () => {
+    if (!nameDraft.trim() || activeConversation?.type !== 'group') return
+    const groupId = Number(activeConversation.id.replace('g', ''))
+    try {
+      await api.renameGroup(groupId, nameDraft.trim())
+      updateActiveGroup(g => ({ ...g, name: nameDraft.trim() }))
+      setEditingName(false)
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  const removeMember = async (memberId: string) => {
+    if (activeConversation?.type !== 'group') return
+    const groupId = Number(activeConversation.id.replace('g', ''))
+    try {
+      await api.removeGroupMember(groupId, Number(memberId))
+      await reloadGroupMembers(groupId)
+      setOpenMemberMenuId(null)
+    } catch (err) {
+    console.error(err)
+    }
+  }
+
+  const addMemberToGroup = async (contact: ChatContact) => {
+    if (activeConversation?.type !== 'group') return
+    const groupId = Number(activeConversation.id.replace('g', ''))
+    try {
+      await api.addGroupMember(groupId, Number(contact.id))
+      await reloadGroupMembers(groupId)
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  const setMemberOverride = async (memberId: string, key: keyof MemberOverrides, value: boolean) => {
+    if (activeConversation?.type !== 'group') return
+    const groupId = Number(activeConversation.id.replace('g', ''))
+    try {
+      await api.updateGroupPermissions(groupId, { [key]: value })
+      updateActiveGroup(g => ({
+        ...g,
+        members: g.members.map(m =>
+          m.contact.id === memberId
+            ? { ...m, overrides: { ...m.overrides, [key]: value } }
+            : m
+        ),
+      }))
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  const clearMemberOverride = (memberId: string, key: keyof MemberOverrides) => {
+    updateActiveGroup(g => ({
+      ...g,
+      members: g.members.map(m => {
+        if (m.contact.id !== memberId || !m.overrides) return m
+        const nextOverrides = { ...m.overrides }
+        delete nextOverrides[key]
+        return { ...m, overrides: nextOverrides }
+      }),
+    }))
+  }
+
+  const currentMember = activeConversation?.type === 'group'
+  ? activeConversation.members.find(m => m.contact.id === CURRENT_USER_ID)
+  : null
+
+  const myAdminPermissions = currentMember?.adminPermissions
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -263,21 +517,62 @@ export default function TutorChat() {
     }
   }
 
-  const handleAttach = (type: AttachmentType) => {
+  const handleAttach = async (type: AttachmentType) => {
     setShowAttachMenu(false)
-    if (!canShare(type)) return
-    const name = window.prompt(`Enter a file name for this ${type}:`)
-    if (!name) return
-
-    appendMessage({
-      id: crypto.randomUUID(),
-      senderId: CURRENT_USER_ID,
-      senderName: CURRENT_USER_NAME,
-      text: '',
-      timestamp: new Date().toISOString(),
-      attachment: { type, name },
-      status: 'sent',
-    })
+  
+    const input = document.createElement('input')
+    input.type = 'file'
+    if (type === 'photo') input.accept = 'image/*'
+    else if (type === 'document') input.accept = '.pdf,.doc,.docx,.txt'
+  
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0]
+      if (!file) return
+    
+      const reader = new FileReader()
+      reader.onload = async () => {
+        const base64 = (reader.result as string).split(',')[1]
+      
+        try {
+          let saved
+          if (activeConversation?.type === 'group') {
+            const groupId = activeConversation.id.replace('g', '')
+            saved = await api.sendGroupMessage(Number(groupId), {
+              content: '',
+              fileName: file.name,
+              fileType: file.type,
+              fileData: base64,
+            })
+          } else {
+            const receiverId = activeConversation?.type === 'dm'
+              ? activeConversation.contact.id
+              : activeContactFromSearch?.id
+            if (!receiverId) return
+            saved = await api.sendMessage({
+              receiverId: Number(receiverId),
+              content: '',
+              fileName: file.name,
+              fileType: file.type,
+              fileData: base64,
+            })
+          }
+        
+          appendMessage({
+            id: String(saved.id),
+            senderId: CURRENT_USER_ID,
+            senderName: CURRENT_USER_NAME,
+            text: '',
+            timestamp: saved.sentAt,
+            attachment: { type, name: file.name },
+          })
+        } catch (err) {
+          console.error(err)
+        }
+      }
+      reader.readAsDataURL(file)
+    }
+  
+    input.click()
   }
 
   const sharedMedia = activeConversation?.messages.filter(m => m.attachment).map(m => m.attachment!) ?? []
@@ -404,14 +699,28 @@ export default function TutorChat() {
                           <span className="chat-bubble-sender">{msg.senderName}</span>
                         )}
                         {msg.attachment ? (
-                          <span className="chat-attachment-tag">📎 {msg.attachment.name}</span>
+                          msg.attachment.fileType?.startsWith('image/') && msg.attachment.fileData ? (
+                            <div>
+                              <img
+                                src={`data:${msg.attachment.fileType};base64,${msg.attachment.fileData}`}
+                                alt={msg.attachment.name}
+                                style={{ maxWidth: '200px', maxHeight: '200px', borderRadius: '8px' }}
+                              />
+                              <div style={{ fontSize: '12px', marginTop: '4px' }}>{msg.attachment.name}</div>
+                            </div>
+                          ) : (
+                            <a
+                              href={msg.attachment.fileData ? `data:${msg.attachment.fileType};base64,${msg.attachment.fileData}` : '#'}
+                              download={msg.attachment.name}
+                              style={{ color: 'inherit' }}
+                            >
+                              📎 {msg.attachment.name}
+                            </a>
+                          )
                         ) : (
                           <span>{msg.text}</span>
                         )}
-                        <span className="chat-bubble-meta">
-                          <span className="chat-bubble-time">{formatTime(msg.timestamp)}</span>
-                          {msg.senderId === CURRENT_USER_ID && <MessageTicks status={msg.status} />}
-                        </span>
+                        <span className="chat-bubble-time">{formatTime(msg.timestamp)}</span>
                       </div>
                     </div>
                   ))}
@@ -458,11 +767,33 @@ export default function TutorChat() {
                 </div>
 
                 <div className="group-info-scroll">
+                  {/* Name */}
                   <section className="group-info-section">
-                    <div className="group-info-name">{activeConversation.name}</div>
-                    <div className="group-info-unit">{activeConversation.unitCode}</div>
+                    {isCurrentUserAdmin && myAdminPermissions?.editGroupInfo && editingName ? (
+                      <div className="group-name-edit-row">
+                        <input value={nameDraft} onChange={e => setNameDraft(e.target.value)} />
+                        <button className="chat-confirm-btn" onClick={saveGroupName}>Save</button>
+                        <button className="chat-cancel-btn" onClick={() => setEditingName(false)}>Cancel</button>
+                      </div>
+                    ) : (
+                      <div className="group-name-row">
+                        <div>
+                          <div className="group-info-name">{activeConversation.name}</div>
+                          <div className="group-info-unit">{activeConversation.unitCode}</div>
+                        </div>
+                        {isCurrentUserAdmin && myAdminPermissions?.editGroupInfo && (
+                          <button
+                            className="chat-cancel-btn"
+                            onClick={() => { setEditingName(true); setNameDraft(activeConversation.name) }}
+                          >
+                            Edit
+                          </button>
+                        )}
+                      </div>
+                    )}
                   </section>
 
+                  {/* Shared media */}
                   <section className="group-info-section">
                     <h3>Shared media</h3>
                     {sharedMedia.length === 0 && <div className="chat-empty-hint">Nothing shared yet.</div>}
@@ -474,9 +805,10 @@ export default function TutorChat() {
                     ))}
                   </section>
 
+                  {/* Permissions — read only for tutor */}
                   <section className="group-info-section">
                     <h3>Permissions</h3>
-                    <p className="chat-empty-hint">Only group admins can change these.</p>
+                    <p className="chat-empty-hint">Only the group owner can change these.</p>
                     <div className="group-permission-row"><span>Send text messages</span><span>{activeConversation.permissions.sendText ? 'Allowed' : 'Admins only'}</span></div>
                     <div className="group-permission-row"><span>Share photos</span><span>{activeConversation.permissions.sharePhoto ? 'Allowed' : 'Admins only'}</span></div>
                     <div className="group-permission-row"><span>Share files</span><span>{activeConversation.permissions.shareFile ? 'Allowed' : 'Admins only'}</span></div>
@@ -484,30 +816,119 @@ export default function TutorChat() {
                     <div className="group-permission-row"><span>Add members</span><span>{activeConversation.permissions.addMembers ? 'Allowed' : 'Admins only'}</span></div>
                   </section>
 
+                  {/* Admins */}
                   <section className="group-info-section">
                     <h3>Admins</h3>
                     {activeConversation.members.filter(m => m.isAdmin).map(m => (
                       <div key={m.contact.id} className="group-member-row">
                         <div className="chat-avatar chat-avatar-sm">{getInitials(m.contact.name)}</div>
-                        <span>{m.contact.name}</span>
+                        <span>{m.contact.name}{m.contact.id === CURRENT_USER_ID ? ' (you)' : ''}</span>
                       </div>
                     ))}
                   </section>
 
+                  {/* Members */}
                   <section className="group-info-section">
                     <h3>Members ({activeConversation.members.length})</h3>
-                    {activeConversation.members.map(m => (
-                      <div key={m.contact.id} className="group-member-row">
-                        <div className="chat-avatar chat-avatar-sm">{getInitials(m.contact.name)}</div>
-                        <div className="chat-list-item-info">
-                          <span className="chat-list-item-name">
-                            {m.contact.name}{m.contact.id === CURRENT_USER_ID ? ' (you)' : ''}
-                          </span>
-                          <span className="chat-list-item-sub">{m.isAdmin ? 'Admin' : 'Member'}</span>
+                    {activeConversation.members.map(m => {
+                      const isSelf = m.contact.id === CURRENT_USER_ID
+                      return (
+                        <div key={m.contact.id} className="group-member-row-wrapper">
+                          <button
+                            className="group-member-row group-member-row-clickable"
+                            onClick={() => isCurrentUserAdmin && myAdminPermissions?.manageMembers && !isSelf
+                              ? setOpenMemberMenuId(v => v === m.contact.id ? null : m.contact.id)
+                              : undefined
+                            }
+                          >
+                            <div className="chat-avatar chat-avatar-sm">{getInitials(m.contact.name)}</div>
+                            <div className="chat-list-item-info">
+                              <span className="chat-list-item-name">
+                                {m.contact.name}{isSelf ? ' (you)' : ''}
+                              </span>
+                              <span className="chat-list-item-sub">{m.isAdmin ? 'Admin' : 'Member'}</span>
+                            </div>
+                          </button>
+
+                          {openMemberMenuId === m.contact.id && isCurrentUserAdmin && myAdminPermissions?.manageMembers && !isSelf && (
+                            <div className="group-member-menu">
+                              {myAdminPermissions?.manageMemberPermissions && !m.isAdmin && (
+                                <button onClick={() => {
+                                  setOpenMemberPermId(m.contact.id)
+                                  setOpenMemberMenuId(null)
+                                }}>
+                                  Manage permissions
+                                </button>
+                              )}
+                              <button className="group-member-menu-danger" onClick={() => removeMember(m.contact.id)}>
+                                Remove from group
+                              </button>
+                            </div>
+                          )}
+
+                          {openMemberPermId === m.contact.id && !m.isAdmin && myAdminPermissions?.manageMemberPermissions && (
+                            <div className="member-perm-panel">
+                              <div className="member-perm-header">
+                                <span>Permissions for {m.contact.name}</span>
+                                <button className="group-info-close member-perm-close" onClick={() => setOpenMemberPermId(null)}>×</button>
+                              </div>
+                              {OVERRIDABLE_KEYS.map(key => {
+                                const hasOverride = m.overrides?.[key] !== undefined
+                                const effectiveValue = hasOverride
+                                  ? (m.overrides![key] as boolean)
+                                  : activeConversation.permissions[key]
+                                return (
+                                  <div key={key} className="member-perm-row">
+                                    <label className="group-permission-row member-perm-checkbox-row">
+                                      <span>{PERMISSION_LABELS[key]}</span>
+                                      <input
+                                        type="checkbox"
+                                        checked={effectiveValue}
+                                        onChange={e => setMemberOverride(m.contact.id, key, e.target.checked)}
+                                      />
+                                    </label>
+                                    {hasOverride ? (
+                                      <button className="member-perm-reset" onClick={() => clearMemberOverride(m.contact.id, key)}>
+                                        Custom — reset to group default
+                                      </button>
+                                    ) : (
+                                      <span className="member-perm-default-hint">Using group default</span>
+                                    )}
+                                  </div>
+                                )
+                              })}
+                            </div>
+                          )}
+
                         </div>
-                      </div>
-                    ))}
+                      )
+                    })}
                   </section>
+
+                  {/* Add members */}
+                  {isCurrentUserAdmin && myAdminPermissions?.manageMembers && (
+                    <section className="group-info-section">
+                      <button className="chat-add-group-btn chat-add-group-btn-wide" onClick={() => setShowAddMembers(v => !v)}>
+                        + Add members
+                      </button>
+                      {showAddMembers && (
+                        <div className="group-add-list">
+                          {allPeople.filter(p => !activeConversation.members.some(m => m.contact.id === p.id)).length === 0 && (
+                            <div className="chat-empty-hint">Everyone is already in this group.</div>
+                          )}
+                          {allPeople
+                            .filter(p => !activeConversation.members.some(m => m.contact.id === p.id))
+                            .map(p => (
+                              <div key={p.id} className="group-member-row">
+                                <div className="chat-avatar chat-avatar-sm">{getInitials(p.name)}</div>
+                                <span className="group-add-name">{p.name}</span>
+                                <button className="chat-confirm-btn" onClick={() => addMemberToGroup(p)}>Add</button>
+                              </div>
+                            ))}
+                        </div>
+                      )}
+                    </section>
+                  )}
                 </div>
               </aside>
             </>

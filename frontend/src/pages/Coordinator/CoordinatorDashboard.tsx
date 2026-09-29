@@ -6,7 +6,9 @@ import autoTable from "jspdf-autotable";
 import { api } from "../../services/api";
 import MyUnitsView from "./CoordinatorMyUnitsView";
 import UnitDetailView from "./CoordinatorUnitDetailView";
-import CoordinatorSidebar from "../../components/CooordinatorSidebar";
+import CoordinatorSidebar from "../../components/CoordinatorSidebar";
+
+
 
 interface Unit {
   id: number;
@@ -31,6 +33,8 @@ function CoordinatorDashboard() {
   const [importWorkbook, setImportWorkbook] = useState<any>(null)
   const [exportMenuUnit, setExportMenuUnit] = useState<Unit | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -245,6 +249,7 @@ function CoordinatorDashboard() {
     setPendingCount(pending)
   }
 
+
   useEffect(() => {
     loadUnits()
   }, [])
@@ -264,14 +269,6 @@ function CoordinatorDashboard() {
     }
   }
 
-  // There's no backend DELETE endpoint for units yet — this only removes
-  // the unit from local state (what's currently shown). It's still in the
-  // real database and will reappear next time loadUnits() runs (e.g. on
-  // next visit to this page), until a real delete endpoint exists.
-  const handleUnitDeleted = (unitId: number) => {
-    setUnits(prev => prev.filter(u => u.id !== unitId))
-  }
-
   return (
     <div className="dashboard-page">
       <CoordinatorSidebar />
@@ -289,6 +286,7 @@ function CoordinatorDashboard() {
               </div>
               <div style={{display:'flex', gap:'12px'}}>
                 <button className="new-unit-btn" onClick={() => setShowImportModal(true)}>↑ Import Tutors</button>
+                <button className="new-unit-btn" onClick={() => setView('units')}>+ New Unit</button>
                 <button className="logout-btn" onClick={handleLogout}>Logout</button>
               </div>
             </header>
@@ -416,7 +414,6 @@ function CoordinatorDashboard() {
             units={units}
             onUnitCreated={loadUnits}
             onSelectUnit={handleSelectUnit}
-            onUnitDeleted={handleUnitDeleted}
           />
         )}
 

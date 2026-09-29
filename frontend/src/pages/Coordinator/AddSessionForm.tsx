@@ -186,8 +186,7 @@ export default function AddSessionForm({ unitId, unitLabel, onClose, onSessionsC
 
         for (const date of occurrenceDates) {
           const startTime = formatDateTime(date, draft.startTime)
-          const endTime = formatDateTime(date, draft.endTime)
-          await api.createSession(unitId, { title, startTime, endTime, location })
+          await api.createSession(unitId, { title, startTime, location })
           done += 1
           setProgress({ done, total: totalOccurrences })
         }
@@ -217,9 +216,9 @@ export default function AddSessionForm({ unitId, unitLabel, onClose, onSessionsC
       </div>
 
       <p className="avail-range-hint add-session-disclosure">
-        Note: class type, calculated start/end time, and location are saved per session created —
-        the recurrence pattern itself isn't stored, so each occurrence is saved as its own
-        independent session.
+        Note: only the class type, calculated start time, and location are saved per session created —
+        end time, duration, and schedule pattern are shown here for planning but aren't stored by the
+        backend yet, so they won't be visible again after you refresh.
       </p>
 
       {drafts.map((draft, index) => {

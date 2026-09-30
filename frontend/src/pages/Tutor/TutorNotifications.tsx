@@ -63,12 +63,10 @@ export default function TutorNotifications() {
   const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set())
 
   const markRead = (id: string) => {
-    setReadIds(prev => {
-      const next = new Set(prev)
-      next.add(id)
-      saveReadIds(next)
-      return next
-    })
+    if (readIds.has(id)) return
+    const next = new Set(readIds).add(id)
+    setReadIds(next)
+    saveReadIds(next)
   }
 
   const markAllRead = () => {

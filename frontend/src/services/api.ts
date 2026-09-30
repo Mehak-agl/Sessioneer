@@ -17,8 +17,8 @@ export function setMockMode(on: boolean) {
   localStorage.setItem(MOCK_MODE_KEY, String(on))
 }
 
-function mockOnly(feature: string): Promise<never> {
-  return Promise.reject(new Error(`${feature} is only available in Mock Mode for now.`))
+function mockOnly<Args extends unknown[]>(feature: string): (...args: Args) => Promise<never> {
+  return () => Promise.reject(new Error(`${feature} is only available in Mock Mode for now.`))
 }
 
 function getToken() {
@@ -153,10 +153,10 @@ const realApi = {
   getAllTutors: () => request('GET', '/tutors'),
   getTutorProfile: (id: number) => request('GET', `/tutors/${id}`),
   // No swap endpoints on the backend yet, so these only work in mock mode.
-  getUnitTutors: (_unitId: number) => mockOnly('Emergency Swap'),
-  getMySwapRequests: () => mockOnly('Emergency Swap'),
-  createSwapRequest: (_data: object) => mockOnly('Emergency Swap'),
-  respondToSwapRequest: (_requestId: number, _accept: boolean) => mockOnly('Emergency Swap'),
+  getUnitTutors: mockOnly<[unitId: number]>('Emergency Swap'),
+  getMySwapRequests: mockOnly<[]>('Emergency Swap'),
+  createSwapRequest: mockOnly<[data: object]>('Emergency Swap'),
+  respondToSwapRequest: mockOnly<[requestId: number, accept: boolean]>('Emergency Swap'),
 }
 
 // In mock mode, each call goes to the same-named function in mockApi.ts;

@@ -1,5 +1,25 @@
+import * as mockApi from './mockApi'
+
 const BASE_URL = 'http://localhost:8080/api'
 export const SELF_ASSIGN_STAFF_ID = 0
+
+const MOCK_MODE_KEY = 'sessioneer_mock_mode'
+
+export function isMockMode(): boolean {
+  try {
+    return localStorage.getItem(MOCK_MODE_KEY) === 'true'
+  } catch {
+    return false
+  }
+}
+
+export function setMockMode(on: boolean) {
+  localStorage.setItem(MOCK_MODE_KEY, String(on))
+}
+
+function mockOnly(feature: string): Promise<never> {
+  return Promise.reject(new Error(`${feature} is only available in Mock Mode for now.`))
+}
 
 function getToken() {
   return localStorage.getItem('sessioneer_token')
@@ -81,7 +101,7 @@ async function requestText(method: string, path: string, body?: object) {
   return text
 }
 
-export const api = {
+const realApi = {
   signup: (data: object) => request('POST', '/auth/signup', data),
   login: (data: object) => request('POST', '/auth/login', data),
   getUnits: () => request('GET', '/units'),
@@ -132,4 +152,22 @@ export const api = {
   acceptInvitation: (unitId: number, staffId: number) => requestEmptyResponse('POST', `/units/${unitId}/invite/${staffId}/respond`, {}),
   getAllTutors: () => request('GET', '/tutors'),
   getTutorProfile: (id: number) => request('GET', `/tutors/${id}`),
+  // No swap endpoints on the backend yet, so these only work in mock mode.
+  getUnitTutors: (_unitId: number) => mockOnly('Emergency Swap'),
+  getMySwapRequests: () => mockOnly('Emergency Swap'),
+  createSwapRequest: (_data: object) => mockOnly('Emergency Swap'),
+  respondToSwapRequest: (_requestId: number, _accept: boolean) => mockOnly('Emergency Swap'),
 }
+
+// In mock mode, each call goes to the same-named function in mockApi.ts;
+// calls with no mock version still hit the real backend.
+export const api = Object.fromEntries(
+  Object.entries(realApi).map(([name, real]) => [
+    name,
+    (...args: unknown[]) => {
+      const mock = (mockApi as Record<string, unknown>)[name]
+      const fn = isMockMode() && typeof mock === 'function' ? mock : real
+      return (fn as (...a: unknown[]) => Promise<unknown>)(...args)
+    },
+  ]),
+) as typeof realApi

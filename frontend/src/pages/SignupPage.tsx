@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { api } from '../services/api'
+import PasswordInput from '../components/PasswordInput'
 
 
 type Role = 'coordinator' | 'staff'
@@ -25,6 +26,11 @@ export default function SignupPage() {
       localStorage.setItem('sessioneer_token', res.token)
       localStorage.setItem('sessioneer_role', res.role.toLowerCase())
       localStorage.setItem('sessioneer_name', res.fullName)
+      // Store user ID in localStorage for testing purposes (not secure for production)
+      localStorage.setItem('sessioneer_user_id', String(res.userId))
+      // Save the email that was just registered so the Profile pages can
+      // display the account's actual email address.
+      localStorage.setItem('sessioneer_email', email)
       navigate(res.role === 'COORDINATOR' ? '/coordinator' : '/staff')
     } catch {
       setError('Signup failed. Email may already be registered.')
@@ -68,53 +74,48 @@ export default function SignupPage() {
             </button>
           </div>
 
-          {role === 'staff' ? (
-            <div className="signup-staff-notice">
-              <div className="signup-staff-notice-icon">✉</div>
-              <h3>Check your email</h3>
-              <p>
-                Tutor accounts are created by your unit coordinator.
-                Your login credentials will be sent to your university
-                email address once your coordinator registers you in Sessioneer.
-              </p>
-              <p className="signup-staff-notice-sub">
-                Already received your credentials? <Link to="/">Sign in here</Link>
-              </p>
+          <form className="signup-form" onSubmit={handleSignup}>
+            <div className="form-group">
+              <label htmlFor="fullName">Full Name</label>
+              <input id="fullName" type="text" placeholder="Enter your full name"
+                value={fullName} onChange={e => setFullName(e.target.value)} required />
             </div>
-          ) : (
-            <>
-              <form className="signup-form" onSubmit={handleSignup}>
-                <div className="form-group">
-                  <label htmlFor="fullName">Full Name</label>
-                  <input id="fullName" type="text" placeholder="Enter your full name"
-                    value={fullName} onChange={e => setFullName(e.target.value)} required />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="email">Email</label>
-                  <input id="email" type="email" placeholder="Enter your email address"
-                    value={email} onChange={e => setEmail(e.target.value)} required />
-                </div>
-                <div className="form-row">
-                  <div className="form-group">
-                    <label htmlFor="password">Password</label>
-                    <input id="password" type="password" placeholder="Min. 6 characters"
-                      value={password} onChange={e => setPassword(e.target.value)} required />
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="confirmPassword">Confirm Password</label>
-                    <input id="confirmPassword" type="password" placeholder="Re-enter password"
-                      value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required />
-                  </div>
-                </div>
-                {error && <p className="signup-error">{error}</p>}
-                <button type="submit" className="signup-btn">Create Account</button>
-              </form>
+            <div className="form-group">
+              <label htmlFor="email">Email</label>
+              <input id="email" type="email" placeholder="Enter your email address"
+                value={email} onChange={e => setEmail(e.target.value)} required />
+            </div>
+            <div className="form-row">
+              <div className="form-group">
+                <label htmlFor="password">Password</label>
+                <PasswordInput
+                  id="password"
+                  placeholder="Min. 6 characters"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  autoComplete="new-password"
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="confirmPassword">Confirm Password</label>
+                <PasswordInput
+                  id="confirmPassword"
+                  placeholder="Re-enter password"
+                  value={confirmPassword}
+                  onChange={e => setConfirmPassword(e.target.value)}
+                  autoComplete="new-password"
+                  required
+                />
+              </div>
+            </div>
+            {error && <p className="signup-error">{error}</p>}
+            <button type="submit" className="signup-btn">Create Account</button>
+          </form>
 
-              <p className="signup-login-link">
-                Already have an account? <Link to="/">Sign in</Link>
-              </p>
-            </>
-          )}
+          <p className="signup-login-link">
+            Already have an account? <Link to="/">Sign in</Link>
+          </p>
         </div>
       </div>
     </div>

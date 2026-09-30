@@ -1,27 +1,6 @@
-/* ==========================================================================
-   GLOBAL.CSS — merged from all page-level .css files
-   ==========================================================================
-   See chat for the full list of conflicts found + how they were resolved.
-   Quick summary of the non-obvious decisions (search these tags below):
-     [CONFLICT: body/*]        one canonical body/reset block, not one per page
-     [CONFLICT: calendar]      coordinator + tutor calendar used the same
-                                class names with different values — merged
-                                using the coordinator version (more complete)
-     [CONFLICT: modal h2]      margin-bottom 8px vs 24px — kept 24px
-     [CONFLICT: empty-state]   two different designs under the same name —
-                                renamed the tutor-dashboard one
-   ========================================================================== */
-
-/* ── 1. Root variables + base reset [CONFLICT: body/*] ───────────────────
-   index.css, CoordinatorCalendarPage.css, CoordinatorDashboard.css, and
-   TutorCalendar.css EACH declared their own `body { ... }` / `* { ... }`.
-   Only the LAST one in the file would have actually applied, silently,
-   to the WHOLE app (not just that page) — different font-family (Arial
-   vs Lato) and background depending on import order. Keeping exactly one
-   copy here, taken from index.css since it's the real app-wide stylesheet.
-   Each page's own background color is still applied via its wrapper div
-   (.dashboard-page, .calendar-page, .login-wrapper, etc.) further down,
-   so nothing changes visually — this just makes it not order-dependent. */
+/* ==================================================================
+   1. ROOT VARIABLES & BASE RESET
+   ================================================================== */
 
 :root {
   --primary: #0097B2;
@@ -36,6 +15,10 @@
 
   --font-heading: 'Montserrat', sans-serif;
   --font-body: 'Lato', sans-serif;
+
+  --app-heading: #1f3550;
+  --app-text: #657985;
+  --app-muted: #99adb6;
 }
 
 *, *::before, *::after {
@@ -64,10 +47,9 @@ p {
   min-height: 100vh;
 }
 
-
-/* ── 2. Login + Signup (shared brand panel, role selector, form fields) ──
-   These two files declared identical rules for .brand-*, .role-selector,
-   .role-btn, .form-group — deduped cleanly, no conflicts, just merged. */
+/* ==================================================================
+   2. LOGIN & SIGNUP PAGES
+   ================================================================== */
 
 .login-wrapper,
 .signup-wrapper {
@@ -165,7 +147,7 @@ p {
 }
 
 .brand-features li::before {
-  content: '✓';
+  content: '\2713';
   font-size: 13px;
   color: #378ADD;
   font-weight: 700;
@@ -336,6 +318,7 @@ p {
   padding: 8px 12px;
 }
 
+/* ----- Signup - tutor accounts not self-serve notice ----- */
 .signup-staff-notice {
   text-align: center;
   padding: 32px 16px;
@@ -354,7 +337,7 @@ p {
 .signup-staff-notice h3 {
   font-family: var(--font-heading);
   font-size: 18px;
-  color: #1f3550;
+  color: var(--app-heading);
   margin-bottom: 10px;
 }
 
@@ -367,7 +350,7 @@ p {
 
 .signup-staff-notice-sub {
   font-size: 13px;
-  color: #657985;
+  color: var(--app-text);
 }
 
 .signup-staff-notice-sub a {
@@ -376,6 +359,7 @@ p {
   text-decoration: none;
 }
 
+/* ----- Create tutor account - generated credentials ----- */
 .create-tutor-success-icon {
   width: 52px;
   height: 52px;
@@ -419,7 +403,7 @@ p {
 .create-tutor-cred-label {
   font-size: 12px;
   font-weight: 700;
-  color: #8fa8b8;
+  color: var(--app-muted);
   text-transform: uppercase;
   letter-spacing: 0.06em;
   flex-shrink: 0;
@@ -427,7 +411,7 @@ p {
 
 .create-tutor-cred-value {
   font-size: 14px;
-  color: #1f3550;
+  color: var(--app-heading);
   font-weight: 500;
   word-break: break-all;
 }
@@ -442,11 +426,12 @@ p {
 
 .create-tutor-note {
   font-size: 12px;
-  color: #8fa8b8;
+  color: var(--app-muted);
   text-align: center;
   margin-bottom: 20px;
 }
 
+/* ----- Sign in / sign up buttons ----- */
 .login-btn,
 .signup-btn {
   padding: 13px;
@@ -473,6 +458,7 @@ p {
   transform: scale(0.99);
 }
 
+/* ----- Demo login hint ----- */
 .login-hint {
   margin-top: 20px;
   font-size: 12px;
@@ -521,6 +507,7 @@ p {
   text-decoration: underline;
 }
 
+/* ----- Login / signup - mobile ----- */
 @media (max-width: 768px) {
   .login-wrapper,
   .signup-wrapper {
@@ -547,8 +534,9 @@ p {
   }
 }
 
-
-/* ── 3. Coordinator sidebar ────────────────────────────────────────────── */
+/* ==================================================================
+   3. COORDINATOR SIDEBAR
+   ================================================================== */
 
 .coord-sidebar {
   width: 285px;
@@ -696,8 +684,9 @@ p {
   font-size: 16px;
 }
 
-
-/* ── 4. Tutor / staff sidebar ─────────────────────────────────────────── */
+/* ==================================================================
+   4. TUTOR / STAFF SIDEBAR
+   ================================================================== */
 
 .staff-sidebar {
   width: 285px;
@@ -791,15 +780,9 @@ p {
   color: white;
 }
 
-
-/* ── 5. Coordinator dashboard shell (also reused by MyUnitsView) ─────────
-   NOTE: .sidebar / .sidebar-logo / .profile / .menu below look like
-   leftovers from before CoordinatorSidebar.tsx was split into its own
-   component (which now uses .coord-sidebar instead). They don't appear
-   to be used anywhere anymore — left in as dead weight rather than
-   deleted, since removing them isn't a CSS-merge decision to make
-   silently. Safe to delete later once you confirm nothing references
-   them. */
+/* ==================================================================
+   5. COORDINATOR DASHBOARD
+   ================================================================== */
 
 .dashboard-page {
   display: flex;
@@ -947,13 +930,13 @@ p {
 .page-title h1 {
   margin: 0;
   font-family: "Montserrat", sans-serif;
-  color: #1f3550;
+  color: var(--app-heading);
   font-size: 34px;
 }
 
 .page-title p {
   margin: 6px 0 0;
-  color: #657985;
+  color: var(--app-text);
   font-size: 17px;
 }
 
@@ -974,6 +957,7 @@ p {
   transform: translateY(-2px);
 }
 
+/* ----- Stat cards ----- */
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -996,157 +980,15 @@ p {
   box-shadow: 0 18px 42px rgba(31, 53, 80, 0.12);
 }
 
-.stat-card--clickable {
-  cursor: pointer;
-}
-
-.stat-card--clickable.active {
-  border-color: var(--primary);
-  background: #f0fafd;
-}
-
-.pending-breakdown {
-  background: white;
-  border: 1.5px solid #d7eaf1;
-  border-radius: 16px;
-  padding: 20px 24px;
-  margin-bottom: 24px;
-  animation: notif-fade-in 0.15s ease;
-}
-
-.pending-breakdown-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-}
-
-.pending-breakdown-header h3 {
-  font-family: var(--font-heading);
-  font-size: 15px;
-  color: #1f3550;
-}
-
-.pending-breakdown-deadline {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--primary);
-}
-
-.pending-breakdown-empty {
-  color: #657985;
-  font-size: 14px;
-}
-
-.pending-breakdown-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 0;
-  border-top: 1px solid #f0f7fa;
-  gap: 12px;
-}
-
-.pending-breakdown-unit {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.pending-breakdown-name {
-  font-size: 14px;
-  color: #1f3550;
-  font-weight: 500;
-}
-
-.pending-breakdown-meta {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-shrink: 0;
-}
-
-.pending-breakdown-count {
-  font-size: 13px;
-  font-weight: 700;
-  color: #e97316;
-}
-
-.pending-breakdown-days {
-  font-size: 12px;
-  color: #657985;
-}
-
-.conflict-count-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 4px 12px;
-  background: #fee2e2;
-  color: #dc2626;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.conflict-type-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 4px 10px;
-  border-radius: 10px;
-  font-size: 11px;
-  font-weight: 700;
-  white-space: nowrap;
-}
-
-.conflict-type-badge.conflict {
-  background: #fee2e2;
-  color: #dc2626;
-}
-
-.conflict-type-badge.dayoff {
-  background: #fef3c7;
-  color: #d97706;
-}
-
-.invite-progress-bar-wrap {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.invite-progress-bar {
-  flex: 1;
-  height: 8px;
-  background: #e8f4f8;
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.invite-progress-fill {
-  height: 100%;
-  background: var(--primary);
-  border-radius: 4px;
-  transition: width 0.4s ease;
-}
-
-.invite-progress-pct {
-  font-size: 12px;
-  font-weight: 700;
-  color: #657985;
-  flex-shrink: 0;
-  width: 32px;
-  text-align: right;
-}
-
 .stat-card span {
-  color: #657985;
+  color: var(--app-text);
   font-weight: 700;
   font-size: 14px;
 }
 
 .stat-card h2 {
   margin: 14px 0 6px;
-  color: #1f3550;
+  color: var(--app-heading);
   font-family: "Montserrat", sans-serif;
   font-size: 42px;
 }
@@ -1165,6 +1007,7 @@ p {
   border-left: 7px solid #0097b2;
 }
 
+/* ----- Alert banner ----- */
 .alert-box {
   background: #fff8dc;
   color: #745a00;
@@ -1177,6 +1020,7 @@ p {
   box-shadow: 0 10px 24px rgba(251, 191, 36, 0.12);
 }
 
+/* ----- Units panel ----- */
 .units-panel {
   background: white;
   border-radius: 24px;
@@ -1195,13 +1039,13 @@ p {
 .panel-heading h2 {
   margin: 0;
   font-family: "Montserrat", sans-serif;
-  color: #1f3550;
+  color: var(--app-heading);
   font-size: 26px;
 }
 
 .panel-heading p {
   margin: 5px 0 0;
-  color: #657985;
+  color: var(--app-text);
   font-size: 16px;
 }
 
@@ -1213,6 +1057,7 @@ p {
   font-weight: 700;
 }
 
+/* ----- Unit cards ----- */
 .unit-card {
   background: #f8fcfd;
   border: 1px solid #d7eaf1;
@@ -1232,14 +1077,14 @@ p {
 
 .unit-card h3 {
   margin: 0;
-  color: #1f3550;
+  color: var(--app-heading);
   font-family: "Montserrat", sans-serif;
   font-size: 21px;
 }
 
 .unit-card p {
   margin: 8px 0 0;
-  color: #657985;
+  color: var(--app-text);
   font-size: 16px;
 }
 
@@ -1252,7 +1097,7 @@ p {
 .unit-actions button,
 .calendar-btn {
   background: white;
-  color: #1f3550;
+  color: var(--app-heading);
   border: 1.5px solid #425868;
   border-radius: 10px;
   padding: 11px 18px;
@@ -1284,10 +1129,11 @@ p {
   background: #007f96;
 }
 
+/* ----- Logout button ----- */
 .logout-btn {
   padding: 10px 20px;
   background: transparent;
-  color: #657985;
+  color: var(--app-text);
   border: 1.5px solid #d7eaf1;
   border-radius: 10px;
   font-family: 'Montserrat', sans-serif;
@@ -1303,6 +1149,7 @@ p {
   color: #e53935;
 }
 
+/* ----- Dashboard - tablet layout ----- */
 @media (max-width: 950px) {
   .dashboard-page {
     flex-direction: column;
@@ -1335,15 +1182,9 @@ p {
   }
 }
 
-
-/* ── 6. Tutor / staff dashboard [CONFLICT: empty-state] ──────────────────
-   StaffDashboard.css had its own `.empty-state` (yellow warning box) that
-   is a DIFFERENT design from MyUnitsView's `.empty-state` (dashed grey
-   call-to-action box, in section 8 below). They mean different things —
-   "here's a warning" vs "click here to create something" — so merging
-   them under one name would visibly break one of the two pages. Renamed
-   this one to `.empty-state-warning`. You'll need to update the tutor
-   dashboard .tsx — see the "exact changes" list in chat. */
+/* ==================================================================
+   6. TUTOR DASHBOARD
+   ================================================================== */
 
 .staff-dashboard-page {
   display: flex;
@@ -1383,13 +1224,13 @@ p {
 .staff-page-title h1 {
   margin: 0;
   font-family: "Montserrat", sans-serif;
-  color: #1f3550;
+  color: var(--app-heading);
   font-size: 34px;
 }
 
 .staff-page-title p {
   margin: 6px 0 0;
-  color: #657985;
+  color: var(--app-text);
   font-size: 17px;
 }
 
@@ -1410,14 +1251,14 @@ p {
 }
 
 .staff-stat-card span {
-  color: #657985;
+  color: var(--app-text);
   font-weight: 700;
   font-size: 14px;
 }
 
 .staff-stat-card h2 {
   margin: 14px 0 6px;
-  color: #1f3550;
+  color: var(--app-heading);
   font-size: 34px;
 }
 
@@ -1449,13 +1290,13 @@ p {
 
 .staff-panel-heading h2 {
   margin: 0;
-  color: #1f3550;
+  color: var(--app-heading);
   font-size: 26px;
 }
 
 .staff-panel-heading p {
   margin: 5px 0 0;
-  color: #657985;
+  color: var(--app-text);
   font-size: 16px;
 }
 
@@ -1469,6 +1310,7 @@ p {
   cursor: pointer;
 }
 
+/* ----- Teaching preference cards ----- */
 .preference-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -1484,14 +1326,15 @@ p {
 
 .preference-card h3 {
   margin: 0;
-  color: #1f3550;
+  color: var(--app-heading);
 }
 
 .preference-card p {
   margin: 8px 0 0;
-  color: #657985;
+  color: var(--app-text);
 }
 
+/* ----- Class cards ----- */
 .staff-class-card {
   background: #f8fcfd;
   border: 1px solid #d7eaf1;
@@ -1505,13 +1348,13 @@ p {
 
 .staff-class-card h3 {
   margin: 0;
-  color: #1f3550;
+  color: var(--app-heading);
   font-size: 21px;
 }
 
 .staff-class-card p {
   margin: 8px 0 0;
-  color: #657985;
+  color: var(--app-text);
 }
 
 .staff-class-card.allocated {
@@ -1555,7 +1398,7 @@ p {
   cursor: pointer;
 }
 
-/* renamed from .empty-state — see conflict note above */
+/* ----- Empty state - warning box ----- */
 .empty-state-warning {
   background: #fff8dc;
   color: #745a00;
@@ -1564,13 +1407,15 @@ p {
   font-weight: bold;
 }
 
-
-/* ── 7. Coordinator unit detail view ──────────────────────────────────── */
+/* ==================================================================
+   7. COORDINATOR - UNIT DETAIL PAGE
+   ================================================================== */
 
 .unit-detail {
   padding: 0;
 }
 
+/* ----- Back link ----- */
 .back-btn {
   background: none;
   border: none;
@@ -1611,16 +1456,17 @@ p {
 .detail-title h1 {
   font-family: 'Montserrat', sans-serif;
   font-size: 28px;
-  color: #1f3550;
+  color: var(--app-heading);
   margin: 0 0 4px;
 }
 
 .detail-title p {
   margin: 0;
-  color: #657985;
+  color: var(--app-text);
   font-size: 14px;
 }
 
+/* ----- Section card ----- */
 .detail-section {
   background: white;
   border: 1.5px solid #d7eaf1;
@@ -1639,13 +1485,13 @@ p {
 .section-header h2 {
   font-family: 'Montserrat', sans-serif;
   font-size: 20px;
-  color: #1f3550;
+  color: var(--app-heading);
   margin: 0 0 4px;
 }
 
 .section-header p {
   margin: 0;
-  color: #657985;
+  color: var(--app-text);
   font-size: 13px;
 }
 
@@ -1666,7 +1512,7 @@ p {
 .add-btn:hover { background: #007f96; }
 
 .empty-info {
-  color: #657985;
+  color: var(--app-text);
   font-size: 14px;
   background: #f8fcfd;
   border: 1.5px dashed #d7eaf1;
@@ -1675,6 +1521,7 @@ p {
   text-align: center;
 }
 
+/* ----- Session cards ----- */
 .sessions-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
@@ -1701,6 +1548,40 @@ p {
   margin-bottom: 10px;
 }
 
+.session-card-top-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.session-group-select-all-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #0097b2;
+  background: #e0f5f9;
+  padding: 4px 9px 4px 7px;
+  border-radius: 999px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.session-group-select-all-checkbox input[type='checkbox'] {
+  width: 14px;
+  height: 14px;
+  accent-color: #0097b2;
+  cursor: pointer;
+  margin: 0;
+}
+
+body.dark-theme .session-group-select-all-checkbox {
+  background: #16323a;
+  color: #4fc3d9;
+}
+
+/* ----- Online / on-campus badge ----- */
 .mode-badge {
   font-size: 11px;
   font-weight: 700;
@@ -1715,7 +1596,7 @@ p {
   font-family: 'Montserrat', sans-serif;
   font-size: 16px;
   font-weight: 700;
-  color: #1f3550;
+  color: var(--app-heading);
 }
 
 .session-time {
@@ -1727,16 +1608,13 @@ p {
 
 .session-location {
   font-size: 12px;
-  color: #657985;
+  color: var(--app-text);
   margin-top: 4px;
 }
 
-/* ── shared modal styling [CONFLICT: modal h2] ────────────────────────────
-   .modal h2 had margin-bottom: 8px here (unit detail modal, which is
-   always followed by a .modal-sub subtitle) vs margin-bottom: 24px in
-   MyUnitsView (which has no subtitle). Kept 24px — for the unit-detail
-   modal this just adds ~16px more space above .modal-sub, which reads
-   fine; nothing overlaps or breaks. */
+/* ==================================================================
+   8. SHARED MODALS & FORM FIELDS
+   ================================================================== */
 
 .modal-overlay {
   position: fixed;
@@ -1766,16 +1644,17 @@ p {
 .modal h2 {
   font-family: 'Montserrat', sans-serif;
   font-size: 22px;
-  color: #1f3550;
+  color: var(--app-heading);
   margin-bottom: 24px;
 }
 
 .modal-sub {
-  color: #657985;
+  color: var(--app-text);
   font-size: 14px;
   margin-bottom: 20px;
 }
 
+/* ----- Form fields ----- */
 .form-field {
   display: flex;
   flex-direction: column;
@@ -1785,7 +1664,7 @@ p {
 .form-field label {
   font-size: 13px;
   font-weight: 600;
-  color: #1f3550;
+  color: var(--app-heading);
 }
 
 .form-field input,
@@ -1795,7 +1674,7 @@ p {
   border-radius: 10px;
   font-family: 'Lato', sans-serif;
   font-size: 14px;
-  color: #1f3550;
+  color: var(--app-heading);
   outline: none;
   background: #f8fcfd;
   transition: border-color 0.2s;
@@ -1814,6 +1693,7 @@ p {
   margin-top: 8px;
 }
 
+/* ----- Modal buttons ----- */
 .cancel-btn {
   padding: 11px 22px;
   background: transparent;
@@ -1821,7 +1701,7 @@ p {
   border-radius: 10px;
   font-family: 'Lato', sans-serif;
   font-weight: 600;
-  color: #657985;
+  color: var(--app-text);
   cursor: pointer;
   transition: 0.2s;
 }
@@ -1861,6 +1741,7 @@ p {
   gap: 12px;
 }
 
+/* ----- Invited tutors list ----- */
 .tutors-list {
   display: flex;
   flex-direction: column;
@@ -1907,17 +1788,18 @@ p {
 .tutor-name {
   font-weight: 700;
   font-size: 15px;
-  color: #1f3550;
+  color: var(--app-heading);
 }
 
 .tutor-email {
   font-size: 12px;
-  color: #657985;
+  color: var(--app-text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
+/* ----- Status badges ----- */
 .status-badge {
   font-size: 12px;
   font-weight: 700;
@@ -1930,11 +1812,12 @@ p {
 .status-badge.pending   { background: #fff8dc; color: #745a00; }
 .status-badge.allocated { background: #eef6ee; color: #2e7d32; }
 .status-badge.holiday   { background: #f3e8ff; color: #7c3aed; }
+.status-badge.unavailable { background: #fdecea; color: #c62828; }
 
 .remove-tutor-btn {
   background: none;
   border: 1.5px solid #d7eaf1;
-  color: #657985;
+  color: var(--app-text);
   padding: 6px 14px;
   border-radius: 8px;
   font-size: 12px;
@@ -1949,8 +1832,7 @@ p {
   color: #e53935;
 }
 
-/* ── Simulate accept/decline (testing-only, Invited Tutors section) ────── */
-
+/* ----- Simulate accept / decline (testing only) ----- */
 .simulate-accept-btn,
 .simulate-decline-btn {
   background: none;
@@ -1987,8 +1869,6 @@ p {
   cursor: default;
 }
 
-/* ── Availability submission countdown (Invited Tutors section) ───────── */
-
 .section-header-actions {
   display: flex;
   align-items: center;
@@ -1997,11 +1877,12 @@ p {
 
 .countdown-none-hint {
   margin: 6px 0 0;
-  color: #97a6b0;
+  color: var(--app-muted);
   font-size: 12px;
   font-style: italic;
 }
 
+/* ----- Availability deadline countdown ----- */
 .countdown-badge {
   display: inline-flex;
   flex-direction: column;
@@ -2026,8 +1907,7 @@ p {
   opacity: 0.8;
 }
 
-/* ── Recurring session grouping (Sessions section) ─────────────────────── */
-
+/* ----- Recurring session groups ----- */
 .session-group-card {
   padding: 0;
   overflow: hidden;
@@ -2092,7 +1972,7 @@ button.session-group-count {
 }
 
 .session-group-range {
-  color: #657985 !important;
+  color: var(--app-text) !important;
   font-weight: 500 !important;
 }
 
@@ -2124,7 +2004,7 @@ button.session-group-count {
 }
 
 .session-occurrence-date {
-  color: #1f3550;
+  color: var(--app-heading);
   font-weight: 600;
   white-space: nowrap;
   flex: 1 1 170px;
@@ -2143,12 +2023,11 @@ button.session-group-count {
   margin-left: 14px;
 }
 
-/* ── Holiday marking (per dated occurrence) ─────────────────────────────── */
-
+/* ----- Mark occurrence as holiday ----- */
 .session-holiday-btn {
   background: none;
   border: 1.5px solid #d7eaf1;
-  color: #657985;
+  color: var(--app-text);
   font-size: 11px;
   font-weight: 700;
   padding: 5px 10px;
@@ -2172,7 +2051,7 @@ button.session-group-count {
 
 .session-occurrence-date.holiday {
   text-decoration: line-through;
-  color: #97a6b0;
+  color: var(--app-muted);
   font-weight: 500;
 }
 
@@ -2189,8 +2068,7 @@ button.session-group-count {
   margin-left: 2px;
 }
 
-/* ── Deleting sessions (single occurrence or whole recurring series) ───── */
-
+/* ----- Delete session / series ----- */
 .session-delete-btn {
   background: none;
   border: none;
@@ -2222,10 +2100,50 @@ button.session-group-count {
   gap: 8px;
 }
 
+.session-group-status-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.session-group-status-summary .status-badge {
+  font-size: 10px;
+  padding: 3px 9px;
+}
+
+.session-select-all-btn {
+  background: none;
+  border: 1.5px solid #b7e0e9;
+  color: #0097b2;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 5px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: 0.2s;
+}
+
+.session-select-all-btn:hover {
+  background: #e0f5f9;
+}
+
+body.dark-theme .session-select-all-btn {
+  border-color: #2a3b52;
+  color: #4fc3d9;
+}
+
+body.dark-theme .status-badge.unavailable {
+  background: #3a1f1f;
+  color: #f28b82;
+}
+
 .session-group-body-label {
   font-size: 12px;
   font-weight: 600;
-  color: #657985;
+  color: var(--app-text);
 }
 
 .session-edit-series-btn {
@@ -2266,8 +2184,9 @@ button.session-group-count {
   color: white;
 }
 
-
-/* ── 8. My Units view [CONFLICT: modal h2 — see note in section 7] ────── */
+/* ==================================================================
+   9. COORDINATOR - MY UNITS PAGE
+   ================================================================== */
 
 .my-units {
   padding: 0;
@@ -2283,14 +2202,87 @@ button.session-group-count {
 .my-units-header h1 {
   font-family: 'Montserrat', sans-serif;
   font-size: 32px;
-  color: #1f3550;
+  color: var(--app-heading);
   margin-bottom: 4px;
 }
 
 .my-units-header p {
-  color: #657985;
+  color: var(--app-text);
   font-size: 15px;
   margin: 0;
+}
+
+/* ----- My Units - subject/year/semester filter bar ----- */
+.units-filter-bar {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+  padding: 16px 18px;
+  background: #f6fcfd;
+  border: 1.5px solid #d7eaf1;
+  border-radius: 14px;
+}
+
+.units-filter-bar .form-field {
+  min-width: 160px;
+}
+
+.clear-filters-btn {
+  background: none;
+  border: 1.5px solid #d7eaf1;
+  color: var(--app-text);
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.clear-filters-btn:hover {
+  border-color: #0097b2;
+  color: #0097b2;
+}
+
+.link-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #0097b2;
+  font-weight: 600;
+  font-size: inherit;
+  font-family: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+body.dark-theme .units-filter-bar {
+  background: #182437;
+  border-color: #2a3b52;
+}
+
+body.dark-theme .clear-filters-btn {
+  border-color: #2a3b52;
+  color: var(--app-muted);
+}
+
+body.dark-theme .clear-filters-btn:hover {
+  border-color: #7fd7e8;
+  color: #7fd7e8;
+}
+
+@media (max-width: 600px) {
+  .units-filter-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .units-filter-bar .form-field {
+    min-width: 0;
+  }
 }
 
 .create-btn {
@@ -2330,17 +2322,17 @@ button.session-group-count {
   gap: 16px;
 }
 
-/* NOTE: this is the "no units yet" call-to-action style — different from
-   .empty-state-warning in section 6, kept as its original name/design. */
+/* ----- Empty state - create prompt ----- */
 .empty-state {
   text-align: center;
   padding: 60px 20px;
-  color: #657985;
+  color: var(--app-text);
   background: white;
   border-radius: 18px;
   border: 1.5px dashed #d7eaf1;
 }
 
+/* ----- Unit rows ----- */
 .unit-row {
   background: white;
   border: 1.5px solid #d7eaf1;
@@ -2381,13 +2373,13 @@ button.session-group-count {
 .unit-row-info h3 {
   font-family: 'Montserrat', sans-serif;
   font-size: 17px;
-  color: #1f3550;
+  color: var(--app-heading);
   margin: 0 0 4px;
 }
 
 .unit-meta {
   font-size: 13px;
-  color: #657985;
+  color: var(--app-text);
 }
 
 .unit-row-actions {
@@ -2414,18 +2406,9 @@ button.session-group-count {
   background: #0097b2;
 }
 
-
-/* ── 9. Calendar (coordinator + tutor) [CONFLICT: calendar] ──────────────
-   Both calendar pages used the exact same class names with different
-   values (padding, border-radius, whether events show a colored left
-   border + text color, whether the legend is a styled bar, etc).
-   Merged using the coordinator version everywhere, since it was the
-   more "finished" one (drop shadows, colored event borders, styled
-   legend bar) and the tutor version's differences read like an earlier
-   draft rather than an intentional design choice. Net effect: the
-   tutor/staff calendar page will pick up nicer-looking day cells,
-   events, and legend than it currently has. Tutor-only additions
-   (month/year dropdowns, unit filter) are kept as-is below. */
+/* ==================================================================
+   10. CALENDAR PAGE (COORDINATOR + TUTOR)
+   ================================================================== */
 
 .calendar-page {
   display: flex;
@@ -2468,7 +2451,7 @@ button.session-group-count {
 
 .page-heading h1 {
   margin: 0;
-  color: #1f3550;
+  color: var(--app-heading);
   font-size: 30px;
 }
 
@@ -2504,7 +2487,7 @@ button.session-group-count {
 
 .summary-card h2 {
   margin: 0;
-  color: #1f3550;
+  color: var(--app-heading);
   font-size: 36px;
 }
 
@@ -2526,6 +2509,7 @@ button.session-group-count {
   border-left: 7px solid #ef4444;
 }
 
+/* ----- Calendar legend ----- */
 .legend {
   width: 100%;
   display: flex;
@@ -2563,6 +2547,7 @@ button.session-group-count {
   background: #ef4444;
 }
 
+/* ----- Month grid ----- */
 .month-calendar {
   width: 100%;
   background: white;
@@ -2608,10 +2593,11 @@ button.session-group-count {
 
 .day-number {
   font-weight: bold;
-  color: #1f3550;
+  color: var(--app-heading);
   margin-bottom: 8px;
 }
 
+/* ----- Calendar events ----- */
 .class-event {
   padding: 8px;
   border-radius: 10px;
@@ -2662,9 +2648,7 @@ button.session-group-count {
   border-left: 5px solid #ef4444;
 }
 
-/* Thin yellow strip showing the tutor's own submitted availability for a
-   day — deliberately much slimmer than .class-event (which represents an
-   actual scheduled session), so the two are never visually confused. */
+/* ----- Tutor submitted-availability strip ----- */
 .availability-strip {
   margin-top: 6px;
   padding: 3px 6px;
@@ -2683,8 +2667,7 @@ button.session-group-count {
   background: #fbbf24;
 }
 
-/* tutor-only additions (no coordinator equivalent, kept as-is) */
-
+/* ----- Month / year controls ----- */
 .calendar-box-header {
   display: flex;
   align-items: center;
@@ -2706,7 +2689,7 @@ button.session-group-count {
   border-radius: 12px;
   border: 1px solid #cfe3eb;
   background: white;
-  color: #1f3550;
+  color: var(--app-heading);
   font-weight: bold;
   font-size: 15px;
   cursor: pointer;
@@ -2743,7 +2726,7 @@ button.session-group-count {
 }
 
 .unit-filter-box label {
-  color: #1f3550;
+  color: var(--app-heading);
   font-weight: bold;
   font-size: 15px;
 }
@@ -2754,11 +2737,12 @@ button.session-group-count {
   border-radius: 12px;
   border: 1px solid #cfe3eb;
   background: white;
-  color: #1f3550;
+  color: var(--app-heading);
   font-weight: bold;
   cursor: pointer;
 }
 
+/* ----- Calendar - tablet layout ----- */
 @media (max-width: 1000px) {
   .calendar-page {
     flex-direction: column;
@@ -2791,6 +2775,7 @@ button.session-group-count {
   }
 }
 
+/* ----- Calendar - small screens ----- */
 @media (max-width: 800px) {
   .calendar-box-header {
     flex-direction: column;
@@ -2813,9 +2798,7 @@ button.session-group-count {
   }
 }
 
-/* Leftover sidebar wrapper class from an earlier calendar layout —
-   referenced in the media query above but not currently used by any
-   element; harmless, left in rather than silently deleting it. */
+/* ----- Legacy calendar sidebar (unused) ----- */
 .calendar-sidebar {
   width: 285px;
   min-height: 100vh;
@@ -2880,11 +2863,9 @@ button.session-group-count {
   color: white;
 }
 
-
-/* ── 10. Chat (coordinator + tutor — identical, deduped cleanly) ─────────
-   These two files were the same rule-for-rule, no conflicts. TutorChat.css
-   just had one extra block (.chat-permission-notice) that CoordinatorChat
-   didn't need — included below, harmless either way. */
+/* ==================================================================
+   11. CHAT PAGE
+   ================================================================== */
 
 .chat-page {
   display: flex;
@@ -2914,6 +2895,7 @@ button.session-group-count {
   flex-direction: column;
 }
 
+/* ----- Search box ----- */
 .chat-search-box {
   padding: 18px;
   border-bottom: 1.5px solid #d7eaf1;
@@ -2938,7 +2920,7 @@ button.session-group-count {
   padding: 14px 18px 6px;
   font-size: 12px;
   font-weight: 700;
-  color: #99adb6;
+  color: var(--app-muted);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -2951,9 +2933,10 @@ button.session-group-count {
 .chat-empty-hint {
   padding: 12px 18px;
   font-size: 13px;
-  color: #99adb6;
+  color: var(--app-muted);
 }
 
+/* ----- Conversation list ----- */
 .chat-list-item {
   width: 100%;
   display: flex;
@@ -2999,12 +2982,12 @@ button.session-group-count {
 .chat-list-item-name {
   font-weight: 700;
   font-size: 14px;
-  color: #1f3550;
+  color: var(--app-heading);
 }
 
 .chat-list-item-sub {
   font-size: 12px;
-  color: #657985;
+  color: var(--app-text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -3021,7 +3004,7 @@ button.session-group-count {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #99adb6;
+  color: var(--app-muted);
   font-size: 14px;
 }
 
@@ -3037,12 +3020,12 @@ button.session-group-count {
 .chat-window-name {
   font-weight: 700;
   font-size: 15px;
-  color: #1f3550;
+  color: var(--app-heading);
 }
 
 .chat-window-sub {
   font-size: 12px;
-  color: #657985;
+  color: var(--app-text);
 }
 
 .chat-messages {
@@ -3071,6 +3054,7 @@ button.session-group-count {
   justify-content: flex-start;
 }
 
+/* ----- Message bubbles ----- */
 .chat-bubble {
   max-width: 60%;
   padding: 10px 14px;
@@ -3089,7 +3073,7 @@ button.session-group-count {
 
 .chat-bubble-row.theirs .chat-bubble {
   background: #f0f7fa;
-  color: #1f3550;
+  color: var(--app-heading);
   border-bottom-left-radius: 4px;
 }
 
@@ -3099,6 +3083,30 @@ button.session-group-count {
   align-self: flex-end;
 }
 
+.chat-bubble-meta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  align-self: flex-end;
+}
+
+.chat-bubble-meta .chat-bubble-time {
+  align-self: auto;
+}
+
+/* ----- Sent / seen double ticks ----- */
+.chat-ticks {
+  font-size: 12px;
+  line-height: 1;
+  letter-spacing: -2px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.chat-ticks-read {
+  color: #6fe6ff;
+}
+
+/* ----- Message input ----- */
 .chat-input-row {
   display: flex;
   gap: 12px;
@@ -3184,6 +3192,7 @@ button.session-group-count {
   opacity: 0.8;
 }
 
+/* ----- New group modal ----- */
 .chat-modal-overlay {
   position: fixed;
   inset: 0;
@@ -3207,13 +3216,13 @@ button.session-group-count {
 
 .chat-modal h2 {
   margin: 0 0 6px;
-  color: #1f3550;
+  color: var(--app-heading);
   font-size: 20px;
 }
 
 .chat-modal-sub {
   margin: 0 0 20px;
-  color: #657985;
+  color: var(--app-text);
   font-size: 13px;
 }
 
@@ -3232,7 +3241,7 @@ button.session-group-count {
 .chat-form-field label {
   font-size: 13px;
   font-weight: 600;
-  color: #1f3550;
+  color: var(--app-heading);
 }
 
 .chat-form-field input[type="text"],
@@ -3296,7 +3305,7 @@ button.session-group-count {
   border: 1.5px solid #d7eaf1;
   border-radius: 10px;
   font-weight: 600;
-  color: #657985;
+  color: var(--app-text);
   cursor: pointer;
 }
 
@@ -3325,7 +3334,7 @@ button.session-group-count {
   border-radius: 50%;
   border: 1.5px solid #d7eaf1;
   background: white;
-  color: #1f3550;
+  color: var(--app-heading);
   font-weight: 700;
   font-style: italic;
   cursor: pointer;
@@ -3336,6 +3345,7 @@ button.session-group-count {
   color: #0097b2;
 }
 
+/* ----- Attachments ----- */
 .chat-attach-wrapper {
   position: relative;
 }
@@ -3348,7 +3358,7 @@ button.session-group-count {
   background: white;
   font-size: 18px;
   font-weight: 700;
-  color: #1f3550;
+  color: var(--app-heading);
   cursor: pointer;
 }
 
@@ -3373,7 +3383,7 @@ button.session-group-count {
   text-align: left;
   cursor: pointer;
   font-size: 13px;
-  color: #1f3550;
+  color: var(--app-heading);
 }
 
 .chat-attach-menu button:hover {
@@ -3391,6 +3401,7 @@ button.session-group-count {
   z-index: 150;
 }
 
+/* ----- Group info side panel ----- */
 .group-info-panel {
   position: fixed;
   top: 0;
@@ -3415,7 +3426,7 @@ button.session-group-count {
 .group-info-header h2 {
   margin: 0;
   font-size: 18px;
-  color: #1f3550;
+  color: var(--app-heading);
 }
 
 .group-info-close {
@@ -3423,7 +3434,7 @@ button.session-group-count {
   border: none;
   font-size: 22px;
   cursor: pointer;
-  color: #657985;
+  color: var(--app-text);
 }
 
 .group-info-scroll {
@@ -3441,7 +3452,7 @@ button.session-group-count {
   margin: 0 0 12px;
   font-size: 13px;
   font-weight: 700;
-  color: #99adb6;
+  color: var(--app-muted);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -3455,12 +3466,12 @@ button.session-group-count {
 .group-info-name {
   font-size: 17px;
   font-weight: 700;
-  color: #1f3550;
+  color: var(--app-heading);
 }
 
 .group-info-unit {
   font-size: 12px;
-  color: #657985;
+  color: var(--app-text);
   margin-top: 2px;
 }
 
@@ -3482,7 +3493,7 @@ button.session-group-count {
   gap: 10px;
   padding: 8px 0;
   font-size: 13px;
-  color: #1f3550;
+  color: var(--app-heading);
 }
 
 .group-media-type {
@@ -3499,7 +3510,7 @@ button.session-group-count {
   justify-content: space-between;
   padding: 8px 0;
   font-size: 14px;
-  color: #1f3550;
+  color: var(--app-heading);
   cursor: pointer;
 }
 
@@ -3554,7 +3565,7 @@ button.session-group-count {
   text-align: left;
   cursor: pointer;
   font-size: 13px;
-  color: #1f3550;
+  color: var(--app-heading);
 }
 
 .group-member-menu button:hover {
@@ -3582,7 +3593,7 @@ button.session-group-count {
 .group-add-name {
   flex: 1;
   font-size: 13px;
-  color: #1f3550;
+  color: var(--app-heading);
 }
 
 .group-exit-btn {
@@ -3608,8 +3619,9 @@ button.session-group-count {
   text-align: center;
 }
 
-
-/* ── 11. Tutor availability view ──────────────────────────────────────── */
+/* ==================================================================
+   12. TUTOR - AVAILABILITY PAGE
+   ================================================================== */
 
 .tutor-availability {
   padding: 0;
@@ -3641,13 +3653,13 @@ button.session-group-count {
 .avail-header h1 {
   font-family: 'Montserrat', sans-serif;
   font-size: 28px;
-  color: #1f3550;
+  color: var(--app-heading);
   margin: 0 0 6px;
 }
 
 .avail-header > div:first-child p {
   margin: 0;
-  color: #657985;
+  color: var(--app-text);
   font-size: 14px;
   line-height: 1.5;
 }
@@ -3691,13 +3703,13 @@ button.session-group-count {
 .avail-units-panel h2 {
   font-family: 'Montserrat', sans-serif;
   font-size: 18px;
-  color: #1f3550;
+  color: var(--app-heading);
   margin: 0 0 4px;
 }
 
 .avail-units-panel > p {
   margin: 0 0 16px;
-  color: #657985;
+  color: var(--app-text);
   font-size: 13px;
 }
 
@@ -3708,12 +3720,13 @@ button.session-group-count {
 }
 
 .avail-no-units {
-  color: #99adb6;
+  color: var(--app-muted);
   font-size: 14px;
   font-style: italic;
   margin: 0;
 }
 
+/* ----- Unit tabs ----- */
 .avail-unit-tab {
   display: flex;
   align-items: center;
@@ -3757,12 +3770,12 @@ button.session-group-count {
 .avail-tab-name {
   font-size: 14px;
   font-weight: 600;
-  color: #1f3550;
+  color: var(--app-heading);
 }
 
 .avail-tab-sem {
   font-size: 12px;
-  color: #99adb6;
+  color: var(--app-muted);
 }
 
 .avail-tab-badge {
@@ -3794,20 +3807,20 @@ button.session-group-count {
 .avail-grid-heading h2 {
   font-family: 'Montserrat', sans-serif;
   font-size: 20px;
-  color: #1f3550;
+  color: var(--app-heading);
   margin: 0 0 4px;
 }
 
 .avail-grid-heading > div p {
   margin: 0;
-  color: #657985;
+  color: var(--app-text);
   font-size: 13px;
 }
 
 .avail-slot-count {
   font-size: 12px;
   font-weight: 700;
-  color: #99adb6;
+  color: var(--app-muted);
   background: #f0f5f7;
   padding: 5px 14px;
   border-radius: 999px;
@@ -3822,6 +3835,7 @@ button.session-group-count {
   background: #e7f6fa;
 }
 
+/* ----- Week availability grid ----- */
 .avail-grid {
   display: grid;
   grid-template-columns: 52px repeat(5, 1fr);
@@ -3869,7 +3883,7 @@ button.session-group-count {
 .avail-day-label {
   font-size: 12px;
   font-weight: 700;
-  color: #1f3550;
+  color: var(--app-heading);
 }
 
 .avail-day-count {
@@ -3885,7 +3899,7 @@ button.session-group-count {
   display: flex;
   align-items: center;
   font-size: 11px;
-  color: #99adb6;
+  color: var(--app-muted);
   font-weight: 600;
   padding-right: 4px;
   height: 40px;
@@ -3915,6 +3929,7 @@ button.session-group-count {
   background: #007f96;
 }
 
+/* ----- Teaching preferences ----- */
 .avail-prefs-section {
   background: white;
   border: 1.5px solid #d7eaf1;
@@ -3929,12 +3944,12 @@ button.session-group-count {
 .avail-prefs-section h2 {
   font-family: 'Montserrat', sans-serif;
   font-size: 20px;
-  color: #1f3550;
+  color: var(--app-heading);
   margin: 0 0 2px;
 }
 
 .avail-prefs-section > p {
-  color: #657985;
+  color: var(--app-text);
   font-size: 13px;
   margin: -14px 0 0;
 }
@@ -3948,7 +3963,7 @@ button.session-group-count {
 .avail-pref-field label {
   font-size: 13px;
   font-weight: 600;
-  color: #1f3550;
+  color: var(--app-heading);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -3978,7 +3993,7 @@ button.session-group-count {
   font-family: 'Lato', sans-serif;
   font-size: 13px;
   font-weight: 600;
-  color: #657985;
+  color: var(--app-text);
   cursor: pointer;
   transition: 0.15s;
 }
@@ -4003,12 +4018,12 @@ button.session-group-count {
   justify-content: space-between;
   max-width: 360px;
   font-size: 12px;
-  color: #99adb6;
+  color: var(--app-muted);
 }
 
 .avail-optional {
   font-weight: 400;
-  color: #99adb6;
+  color: var(--app-muted);
   font-size: 12px;
 }
 
@@ -4018,7 +4033,7 @@ button.session-group-count {
   border-radius: 12px;
   font-family: 'Lato', sans-serif;
   font-size: 14px;
-  color: #1f3550;
+  color: var(--app-heading);
   background: #f8fcfd;
   resize: vertical;
   outline: none;
@@ -4033,6 +4048,7 @@ button.session-group-count {
   background: white;
 }
 
+/* ----- Submit & summary ----- */
 .avail-submit-section {
   background: white;
   border: 1.5px solid #d7eaf1;
@@ -4055,7 +4071,7 @@ button.session-group-count {
 
 .avail-summary-empty {
   margin: 0;
-  color: #99adb6;
+  color: var(--app-muted);
   font-size: 14px;
   font-style: italic;
 }
@@ -4089,7 +4105,7 @@ button.session-group-count {
 
 .avail-summary-name {
   font-size: 14px;
-  color: #1f3550;
+  color: var(--app-heading);
   font-weight: 600;
   flex: 1;
 }
@@ -4106,7 +4122,7 @@ button.session-group-count {
   align-items: flex-start;
   gap: 12px;
   cursor: pointer;
-  color: #1f3550;
+  color: var(--app-heading);
   font-size: 14px;
   line-height: 1.6;
 }
@@ -4147,6 +4163,7 @@ button.session-group-count {
   transform: none;
 }
 
+/* ----- Submitted confirmation screen ----- */
 .avail-success {
   display: flex;
   flex-direction: column;
@@ -4173,12 +4190,12 @@ button.session-group-count {
 .avail-success h2 {
   font-family: 'Montserrat', sans-serif;
   font-size: 28px;
-  color: #1f3550;
+  color: var(--app-heading);
   margin: 0 0 12px;
 }
 
 .avail-success p {
-  color: #657985;
+  color: var(--app-text);
   font-size: 15px;
   margin: 0 0 32px;
   line-height: 1.6;
@@ -4234,7 +4251,7 @@ button.session-group-count {
 .avail-success-unit-name {
   font-size: 14px;
   font-weight: 600;
-  color: #1f3550;
+  color: var(--app-heading);
   flex: 1;
 }
 
@@ -4248,19 +4265,13 @@ button.session-group-count {
 .avail-success-total {
   text-align: center;
   font-size: 13px;
-  color: #657985;
+  color: var(--app-text);
   padding: 6px 0 2px;
 }
 
-
-/* ── 12. Tutor "My Units" page ─────────────────────────────────────────────
-   New for this page only. Reuses a lot of existing classes directly:
-   .chat-search-box / .chat-lists-scroll / .chat-empty-hint / .chat-window-empty
-   (from the chat page's list panel), .unit-code-badge (from MyUnitsView),
-   .detail-section / .section-header / .sessions-grid / .session-card
-   (from the coordinator's unit detail view), and .accept-btn / .decline-btn
-   / .status-badge (from the staff dashboard + unit detail view). Only the
-   genuinely new bits are below. */
+/* ==================================================================
+   13. TUTOR - MY UNITS PAGE
+   ================================================================== */
 
 .myunits-workspace {
   display: flex;
@@ -4335,12 +4346,12 @@ button.session-group-count {
 .myunits-unit-name {
   font-weight: 700;
   font-size: 14px;
-  color: #1f3550;
+  color: var(--app-heading);
 }
 
 .myunits-unit-sem {
   font-size: 12px;
-  color: #657985;
+  color: var(--app-text);
 }
 
 .announcement-card {
@@ -4360,22 +4371,23 @@ button.session-group-count {
 
 .announcement-title {
   font-weight: 700;
-  color: #1f3550;
+  color: var(--app-heading);
   font-size: 14px;
 }
 
 .announcement-date {
   font-size: 12px;
-  color: #99adb6;
+  color: var(--app-muted);
 }
 
 .announcement-card p {
   margin: 0;
-  color: #657985;
+  color: var(--app-text);
   font-size: 13px;
   line-height: 1.5;
 }
 
+/* ----- Tutor my units - stack panels ----- */
 @media (max-width: 1000px) {
   .myunits-workspace {
     flex-direction: column;
@@ -4386,12 +4398,9 @@ button.session-group-count {
   }
 }
 
-
-/* ── 13. Tutor availability modal (opened from Calendar) ────────────────
-   Reuses .modal-overlay / .modal / .form-field / .modal-actions /
-   .cancel-btn / .confirm-btn from section 7, and .avail-grid / .avail-cell
-   / .avail-day-header etc from section 11 (same grid styling as the old
-   dashboard availability view). Only the header + saved-message are new. */
+/* ==================================================================
+   14. TUTOR - AVAILABILITY MODAL
+   ================================================================== */
 
 .avail-modal {
   max-width: 680px;
@@ -4402,7 +4411,7 @@ button.session-group-count {
 .avail-period-estimate {
   margin: 0 0 16px;
   font-size: 12px;
-  color: #657985;
+  color: var(--app-text);
   font-style: italic;
 }
 
@@ -4424,6 +4433,7 @@ button.session-group-count {
   margin: 0;
 }
 
+/* ----- Saved / error messages ----- */
 .avail-saved-message {
   margin: 14px 0 0;
   color: #166534;
@@ -4431,9 +4441,6 @@ button.session-group-count {
   font-size: 13px;
 }
 
-/* was missing before — the modal was reusing .avail-saved-message (green)
-   for error text too, which is why "Something went wrong" showed in green.
-   Errors now use this instead. */
 .avail-error-message {
   margin: 14px 0 0;
   color: #991b1b;
@@ -4443,15 +4450,13 @@ button.session-group-count {
 
 .avail-range-hint {
   margin: 8px 0 0;
-  color: #657985;
+  color: var(--app-text);
   font-size: 12px;
 }
 
-
-/* ── 14. QUT Tutor Directory ──────────────────────────────────────────────
-   Reuses .tutors-list / .tutor-row / .tutor-avatar / .tutor-info /
-   .tutor-name / .tutor-email from section 7 (coordinator's invited-tutors
-   list) directly — only the teaching-info row below each tutor is new. */
+/* ==================================================================
+   15. TUTOR DIRECTORY
+   ================================================================== */
 
 .directory-tutor-row {
   align-items: flex-start;
@@ -4471,16 +4476,14 @@ button.session-group-count {
 
 .directory-teaching-unknown {
   font-size: 12px;
-  color: #99adb6;
+  color: var(--app-muted);
   font-style: italic;
   margin-top: 8px;
 }
 
-
-/* ── 15. Coordinator Calendar filter tabs ─────────────────────────────────
-   Reuses .avail-pill-row / .avail-pill (section 11) for the three filter
-   buttons, and .unit-filter-box (section 9) for the unit dropdown — only
-   the wrapping layout below is new. */
+/* ==================================================================
+   16. COORDINATOR - CALENDAR FILTER TABS
+   ================================================================== */
 
 .calendar-filter-tabs {
   display: flex;
@@ -4507,10 +4510,9 @@ button.session-group-count {
   margin-top: 18px;
 }
 
-
-/* ── 16. Chat: Admin & Member Permission management ──────────────────────
-   Reuses .group-permission-row (already defined in section 10) for every
-   checkbox row — only the expand/collapse wrappers below are new. */
+/* ==================================================================
+   17. CHAT - GROUP PERMISSIONS
+   ================================================================== */
 
 .perm-section-hint {
   padding: 0 0 8px;
@@ -4534,7 +4536,7 @@ button.session-group-count {
   cursor: pointer;
   font-size: 13px;
   font-weight: 600;
-  color: #1f3550;
+  color: var(--app-heading);
 }
 
 .admin-perm-name {
@@ -4545,7 +4547,7 @@ button.session-group-count {
 
 .admin-perm-chevron {
   font-size: 10px;
-  color: #99adb6;
+  color: var(--app-muted);
 }
 
 .admin-perm-panel {
@@ -4567,7 +4569,7 @@ button.session-group-count {
   justify-content: space-between;
   font-size: 13px;
   font-weight: 700;
-  color: #1f3550;
+  color: var(--app-heading);
   margin-bottom: 8px;
 }
 
@@ -4591,7 +4593,7 @@ button.session-group-count {
 
 .member-perm-default-hint {
   font-size: 11px;
-  color: #99adb6;
+  color: var(--app-muted);
   font-style: italic;
 }
 
@@ -4605,12 +4607,9 @@ button.session-group-count {
   text-decoration: underline;
 }
 
-
-/* ── 17. Profile pages (Coordinator + Tutor) ──────────────────────────────
-   Reuses .detail-section / .section-header / .add-btn / .form-field /
-   .form-row-2 / .detail-form / .confirm-btn from section 7, and
-   .avail-saved-message / .avail-error-message from section 11/13. Only
-   the profile-card and settings-specific pieces below are new. */
+/* ==================================================================
+   18. PROFILE PAGES & TUTOR REPORT
+   ================================================================== */
 
 .profile-card-section {
   background: white;
@@ -4632,6 +4631,7 @@ button.session-group-count {
   margin-bottom: 16px;
 }
 
+/* ----- Profile photo ----- */
 .profile-photo-circle {
   width: 120px;
   height: 120px;
@@ -4671,8 +4671,15 @@ button.session-group-count {
 
 .profile-name {
   margin: 0 0 8px;
-  color: #1f3550;
+  color: var(--app-heading);
   font-size: 24px;
+}
+
+.profile-email {
+  margin: 0 0 14px;
+  color: var(--app-text);
+  font-size: 14px;
+  word-break: break-word;
 }
 
 .profile-position-badge {
@@ -4684,6 +4691,55 @@ button.session-group-count {
   border-radius: 999px;
 }
 
+.tutor-report-email {
+  color: var(--app-muted);
+  font-size: 14px;
+  margin: 0;
+}
+
+/* ----- Tutor report - summary stats ----- */
+.tutor-report-stats {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.tutor-report-stat {
+  flex: 1;
+  min-width: 140px;
+  background: #f6fcfd;
+  border: 1.5px solid #d7eaf1;
+  border-radius: 16px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  text-align: center;
+}
+
+.tutor-report-stat-value {
+  font-family: var(--font-heading);
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--app-heading);
+}
+
+.tutor-report-stat-label {
+  font-size: 13px;
+  color: var(--app-muted);
+}
+
+body.dark-theme .tutor-report-stat {
+  background: #182437;
+  border-color: #2a3b52;
+}
+
+body.dark-theme .tutor-report-stat-value {
+  color: #e0eaf0;
+}
+
+/* ----- Resume - upload / view / delete ----- */
 .resume-row {
   display: flex;
   align-items: center;
@@ -4694,10 +4750,64 @@ button.session-group-count {
 .resume-filename {
   flex: 1;
   min-width: 160px;
-  color: #657985;
+  color: var(--app-text);
   font-size: 14px;
 }
 
+.resume-view-btn {
+  background: #e7f6fa;
+  color: #0097b2;
+  border: 1.5px solid #b7e4ee;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-weight: bold;
+  font-size: 14px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.resume-view-btn:hover {
+  background: #d6eef5;
+}
+
+.resume-delete-btn {
+  background: #fee2e2;
+  color: #991b1b;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-weight: bold;
+  font-size: 14px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.resume-delete-btn:hover {
+  background: #fecaca;
+}
+
+body.dark-theme .resume-view-btn {
+  background: #10202a;
+  color: #7fd7e8;
+  border-color: #1e4060;
+}
+
+body.dark-theme .resume-view-btn:hover {
+  background: #14283a;
+}
+
+body.dark-theme .resume-delete-btn {
+  background: #2a1616;
+  color: #f0a0a0;
+}
+
+body.dark-theme .resume-delete-btn:hover {
+  background: #3a1e1e;
+}
+
+/* ----- Settings rows ----- */
 .settings-row {
   display: flex;
   align-items: center;
@@ -4708,13 +4818,13 @@ button.session-group-count {
 
 .settings-row-title {
   margin: 0 0 4px;
-  color: #1f3550;
+  color: var(--app-heading);
   font-size: 16px;
 }
 
 .settings-row-sub {
   margin: 0;
-  color: #657985;
+  color: var(--app-text);
   font-size: 13px;
 }
 
@@ -4723,6 +4833,7 @@ button.session-group-count {
   margin: 20px 0;
 }
 
+/* ----- Dark mode toggle ----- */
 .theme-toggle-btn {
   background: #1f3550;
   color: white;
@@ -4740,6 +4851,7 @@ button.session-group-count {
   background: #0097b2;
 }
 
+/* ----- Change password form ----- */
 .password-form {
   margin-top: 14px;
 }
@@ -4748,17 +4860,17 @@ button.session-group-count {
   align-self: flex-start;
 }
 
-
-/* ── 18. Dark theme ────────────────────────────────────────────────────
-   Applied via a `dark-theme` class toggled on <body> from the Profile
-   pages. This is a first pass covering the main page backgrounds, cards,
-   modals, and form inputs across the app — not every single element has
-   been hand-checked, so if something looks off in dark mode on a page
-   not listed here, it just needs its own override added below. */
+/* ==================================================================
+   19. DARK MODE
+   ================================================================== */
 
 body.dark-theme {
   background: #0f1b2b;
   color: #e2e8f0;
+
+  --app-heading: #f8fafc;
+  --app-text: #c7d6df;
+  --app-muted: #93a9b5;
 }
 
 body.dark-theme .dashboard-page,
@@ -4910,6 +5022,23 @@ body.dark-theme .chat-input-row textarea {
   color: #e2e8f0;
 }
 
+body.dark-theme .avail-saved-message {
+  color: #4ade80;
+}
+
+body.dark-theme .avail-error-message {
+  color: #f87171;
+}
+
+body.dark-theme .form-field input::placeholder,
+body.dark-theme .form-group input::placeholder,
+body.dark-theme .chat-search-box input::placeholder,
+body.dark-theme .avail-notes::placeholder,
+body.dark-theme .chat-input-row textarea::placeholder,
+body.dark-theme .tutor-search-input::placeholder {
+  color: #6b7f90;
+}
+
 body.dark-theme .avail-cell {
   background: #131f30;
   border-color: #2a3b52;
@@ -4936,9 +5065,6 @@ body.dark-theme .empty-state-warning {
   object-fit: cover;
 }
 
-/* Teaching Preferences, scoped down slightly when it's inside the modal
-   rather than sitting on its own full page (less padding, no card shadow
-   since the modal itself already has one). */
 .avail-prefs-in-modal {
   border: none;
   border-top: 1.5px solid #d7eaf1;
@@ -4947,7 +5073,9 @@ body.dark-theme .empty-state-warning {
   margin: 20px 0 0;
 }
 
-/* ── 18. Notifications page ──────────────────────────────────────────────── */
+/* ==================================================================
+   20. NOTIFICATIONS
+   ================================================================== */
 
 .sidebar-notif-badge {
   display: inline-flex;
@@ -4971,6 +5099,7 @@ body.dark-theme .empty-state-warning {
   gap: 8px;
 }
 
+/* ----- Filter tabs ----- */
 .notif-filter-tabs {
   display: flex;
   gap: 10px;
@@ -4985,7 +5114,7 @@ body.dark-theme .empty-state-warning {
   border: 1.5px solid #d7eaf1;
   border-radius: 20px;
   background: white;
-  color: #1f3550;
+  color: var(--app-heading);
   font-family: var(--font-body);
   font-size: 14px;
   font-weight: 600;
@@ -5030,7 +5159,7 @@ body.dark-theme .empty-state-warning {
 
 .notif-type-label {
   font-size: 13px;
-  color: #657985;
+  color: var(--app-text);
   font-weight: 600;
   flex-shrink: 0;
   margin-right: 4px;
@@ -5044,7 +5173,7 @@ body.dark-theme .empty-state-warning {
   border: 1.5px solid #d7eaf1;
   border-radius: 16px;
   background: white;
-  color: #1f3550;
+  color: var(--app-heading);
   font-family: var(--font-body);
   font-size: 13px;
   font-weight: 600;
@@ -5073,7 +5202,7 @@ body.dark-theme .empty-state-warning {
   border: 1.5px solid #d7eaf1;
   border-radius: 16px;
   background: white;
-  color: #1f3550;
+  color: var(--app-heading);
   font-family: var(--font-body);
   font-size: 13px;
   font-weight: 600;
@@ -5098,13 +5227,14 @@ body.dark-theme .empty-state-warning {
   font-family: var(--font-heading);
   font-size: 11px;
   font-weight: 700;
-  color: #8fa8b8;
+  color: var(--app-muted);
   text-transform: uppercase;
   letter-spacing: 0.09em;
   padding: 4px 2px 8px;
   margin-top: 4px;
 }
 
+/* ----- Notification cards ----- */
 .notif-item {
   display: flex;
   align-items: flex-start;
@@ -5185,12 +5315,12 @@ body.dark-theme .empty-state-warning {
   font-family: var(--font-heading);
   font-size: 15px;
   font-weight: 700;
-  color: #1f3550;
+  color: var(--app-heading);
 }
 
 .notif-time {
   font-size: 12px;
-  color: #657985;
+  color: var(--app-text);
   flex-shrink: 0;
 }
 
@@ -5256,7 +5386,7 @@ body.dark-theme .empty-state-warning {
   border-radius: 16px;
   padding: 48px;
   text-align: center;
-  color: #657985;
+  color: var(--app-text);
   font-size: 15px;
 }
 
@@ -5288,7 +5418,10 @@ body.dark-theme .notif-tab.active {
   background: var(--primary);
   color: white;
 }
-/* ── 19. Unit three-dot menu + year grouping (My Units page) ────────────── */
+
+/* ==================================================================
+   21. UNIT THREE-DOT MENU & YEAR GROUPING
+   ================================================================== */
 
 .unit-menu-wrapper {
   position: relative;
@@ -5297,7 +5430,7 @@ body.dark-theme .notif-tab.active {
 .unit-menu-btn {
   background: white;
   border: 1.5px solid #d7eaf1;
-  color: #657985;
+  color: var(--app-text);
   width: 38px;
   height: 38px;
   border-radius: 10px;
@@ -5334,7 +5467,7 @@ body.dark-theme .notif-tab.active {
   text-align: left;
   cursor: pointer;
   font-size: 13px;
-  color: #1f3550;
+  color: var(--app-heading);
 }
 
 .unit-menu-dropdown button:hover {
@@ -5365,8 +5498,9 @@ body.dark-theme .notif-tab.active {
   margin: 0 0 14px;
 }
 
-
-/* ── 20. Session edit button (Unit Detail page) ───────────────────────── */
+/* ==================================================================
+   22. SESSION EDIT BUTTON
+   ================================================================== */
 
 .session-edit-btn {
   background: none;
@@ -5382,11 +5516,12 @@ body.dark-theme .notif-tab.active {
   opacity: 0.7;
 }
 
-
-/* ── 20b. Coordinator Allocations page ──────────────────────────────────── */
+/* ==================================================================
+   23. COORDINATOR - ALLOCATIONS PAGE
+   ================================================================== */
 
 .allocations-page {
-  max-width: 1100px;
+  padding: 0;
 }
 
 .allocation-back-btn {
@@ -5398,6 +5533,7 @@ body.dark-theme .notif-tab.active {
   flex-direction: column;
 }
 
+/* ----- Assigned tutor ----- */
 .allocation-assigned {
   margin-top: 12px;
   padding-top: 12px;
@@ -5412,7 +5548,7 @@ body.dark-theme .notif-tab.active {
   font-family: 'Montserrat', sans-serif;
   font-weight: 700;
   font-size: 14px;
-  color: #1f3550;
+  color: var(--app-heading);
 }
 
 .allocation-assigned.self .allocation-assigned-name {
@@ -5421,10 +5557,39 @@ body.dark-theme .notif-tab.active {
 
 .allocation-assigned-email {
   font-size: 12px;
-  color: #657985;
+  color: var(--app-text);
   margin: 2px 0 8px;
 }
 
+/* ----- Assigned tutor (mixed / per-session) ----- */
+.allocation-assigned-mixed-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  column-gap: 10px;
+  padding: 4px 0;
+  border-bottom: 1px dashed #e5eef1;
+}
+
+.allocation-assigned-mixed-row:last-of-type {
+  border-bottom: none;
+}
+
+.allocation-assigned-mixed-row .allocation-assigned-name {
+  font-size: 13px;
+}
+
+.allocation-assigned-mixed-row .allocation-assigned-email {
+  margin: 0;
+  opacity: 0.85;
+}
+
+.allocation-assigned-mixed .session-edit-btn {
+  margin-top: 10px;
+}
+
+/* ----- Self-assign ----- */
 .allocation-self-assign-btn {
   display: block;
   width: 100%;
@@ -5450,6 +5615,7 @@ body.dark-theme .notif-tab.active {
   cursor: default;
 }
 
+/* ----- Suggested tutors ----- */
 .allocation-candidates {
   margin-top: 12px;
   padding-top: 12px;
@@ -5459,7 +5625,7 @@ body.dark-theme .notif-tab.active {
 .allocation-candidates-label {
   font-size: 12px;
   font-weight: 700;
-  color: #657985;
+  color: var(--app-text);
   margin: 0 0 8px;
   text-transform: uppercase;
   letter-spacing: 0.03em;
@@ -5480,7 +5646,7 @@ body.dark-theme .notif-tab.active {
   padding: 8px 12px;
   font-size: 13px;
   font-weight: 600;
-  color: #1f3550;
+  color: var(--app-heading);
   cursor: pointer;
   transition: 0.2s;
 }
@@ -5507,14 +5673,14 @@ body.dark-theme .notif-tab.active {
 
 .allocation-lecture-hint {
   font-size: 11px;
-  color: #97a6b0;
+  color: var(--app-muted);
   font-style: italic;
   margin: 6px 0 0;
 }
 
 .allocation-empty-hint {
   font-size: 12px;
-  color: #97a6b0;
+  color: var(--app-muted);
   font-style: italic;
   margin: 0 0 10px;
 }
@@ -5542,6 +5708,7 @@ body.dark-theme .notif-tab.active {
   background: #e0f5f9;
 }
 
+/* ----- Tutor search ----- */
 .allocation-search-results {
   max-height: 320px;
   overflow-y: auto;
@@ -5566,16 +5733,17 @@ body.dark-theme .notif-tab.active {
 .allocation-search-row strong {
   display: block;
   font-size: 14px;
-  color: #1f3550;
+  color: var(--app-heading);
 }
 
 .allocation-search-row span {
   font-size: 12px;
-  color: #657985;
+  color: var(--app-text);
 }
 
-
-/* ── 21. Scroll wheel time picker (Google-Maps-style "Leave at") ────────── */
+/* ==================================================================
+   24. TIME PICKER
+   ================================================================== */
 
 .time-wheel-picker {
   display: flex;
@@ -5586,7 +5754,7 @@ body.dark-theme .notif-tab.active {
 .time-wheel-picker label {
   font-size: 12px;
   font-weight: 600;
-  color: #1f3550;
+  color: var(--app-heading);
 }
 
 .time-wheel-columns {
@@ -5601,7 +5769,7 @@ body.dark-theme .notif-tab.active {
 
 .time-wheel-colon {
   font-weight: 700;
-  color: #1f3550;
+  color: var(--app-heading);
   font-size: 13px;
 }
 
@@ -5627,7 +5795,7 @@ body.dark-theme .notif-tab.active {
   justify-content: center;
   scroll-snap-align: center;
   font-size: 12px;
-  color: #99adb6;
+  color: var(--app-muted);
   cursor: pointer;
   font-weight: 600;
   transition: color 0.15s, font-size 0.15s;
@@ -5674,12 +5842,9 @@ body.dark-theme .notif-tab.active {
   font-size: 13px;
 }
 
-
-/* ── 22. Multi-session Add Session form (full-width page) ───────────────
-   Mirrors .unit-detail: this view takes over the whole .main-content
-   area beside the sidebar instead of opening as a centered modal, with
-   a .back-btn ("Back to Manage") matching the Manage page's own
-   "Back to My Units" button. */
+/* ==================================================================
+   25. ADD SESSION FORM
+   ================================================================== */
 
 .add-session-page {
   padding: 0;
@@ -5689,6 +5854,7 @@ body.dark-theme .notif-tab.active {
   margin-bottom: 24px;
 }
 
+/* ----- Session draft card ----- */
 .session-draft-block {
   background: white;
   border: 1.5px solid #d7eaf1;
@@ -5710,7 +5876,7 @@ body.dark-theme .notif-tab.active {
   margin: 0;
   font-size: 16px;
   font-family: 'Montserrat', sans-serif;
-  color: #1f3550;
+  color: var(--app-heading);
   display: flex;
   align-items: center;
   gap: 10px;
@@ -5730,9 +5896,6 @@ body.dark-theme .notif-tab.active {
   font-weight: 700;
 }
 
-/* Groups a labeled cluster of fields (Time & Type / Location / Schedule)
-   within a session card, so the form reads as organized sections rather
-   than one long stack of inputs. */
 .form-subsection {
   margin-bottom: 24px;
 }
@@ -5750,8 +5913,6 @@ body.dark-theme .notif-tab.active {
   margin-bottom: 12px;
 }
 
-/* Session Schedule gets its own soft-shaded container so it stands out
-   as a distinct, self-contained block within the session card. */
 .schedule-box {
   background: #f8fcfd;
   border: 1.5px solid #e5f1f5;
@@ -5763,9 +5924,7 @@ body.dark-theme .notif-tab.active {
   margin: 16px 0 0;
 }
 
-/* Segmented control — replaces free-floating pill rows for mutually
-   exclusive choices (campus, schedule type, week pattern) with a single
-   bordered strip, closer to a modern toggle group. */
+/* ----- Segmented control ----- */
 .segmented-row {
   display: flex;
   gap: 6px;
@@ -5786,7 +5945,7 @@ body.dark-theme .notif-tab.active {
   font-family: 'Lato', sans-serif;
   font-size: 13px;
   font-weight: 600;
-  color: #657985;
+  color: var(--app-text);
   cursor: pointer;
   transition: 0.15s;
   text-align: center;
@@ -5818,6 +5977,18 @@ body.dark-theme .notif-tab.active {
   font-weight: 600;
 }
 
+.myunits-add-days-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.myunits-add-days-row .segmented-btn {
+  flex: initial;
+  min-width: 64px;
+}
+
+/* ----- Specific dates ----- */
 .specific-dates-row {
   display: flex;
   gap: 10px;
@@ -5860,7 +6031,9 @@ body.dark-theme .notif-tab.active {
   padding: 0;
 }
 
-/* ── 19. Staff sidebar extras (logout, clickable profile, divider) ──────── */
+/* ==================================================================
+   26. TUTOR SIDEBAR - PROFILE & LOGOUT
+   ================================================================== */
 
 .staff-profile.clickable {
   cursor: pointer;
@@ -5888,14 +6061,14 @@ body.dark-theme .notif-tab.active {
   align-items: center;
   gap: 10px;
   width: 100%;
-  padding: 12px 18px;
-  background: transparent;
-  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  background: none;
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  color: #f1c9c9;
+  padding: 14px 18px;
   border-radius: 14px;
-  color: #d5e5ee;
-  font-family: var(--font-body);
+  font-weight: bold;
   font-size: 14px;
-  font-weight: 600;
+  font-family: inherit;
   cursor: pointer;
   transition: 0.2s ease;
 }
@@ -5910,7 +6083,9 @@ body.dark-theme .notif-tab.active {
   font-size: 16px;
 }
 
-/* ── 20. Coming Soon pages ──────────────────────────────────────────────── */
+/* ==================================================================
+   27. COMING SOON PAGES
+   ================================================================== */
 
 .coming-soon-card {
   background: white;
@@ -5930,13 +6105,13 @@ body.dark-theme .notif-tab.active {
 .coming-soon-card h2 {
   font-family: var(--font-heading);
   font-size: 24px;
-  color: #1f3550;
+  color: var(--app-heading);
   margin-bottom: 12px;
 }
 
 .coming-soon-card p {
   font-size: 15px;
-  color: #657985;
+  color: var(--app-text);
   line-height: 1.6;
   margin-bottom: 10px;
 }
@@ -5946,7 +6121,9 @@ body.dark-theme .notif-tab.active {
   color: #0097b2 !important;
 }
 
-/* ── 21. Coordinator Tutors page ─────────────────────────────────────────── */
+/* ==================================================================
+   28. TUTOR TABLES (TUTORS PAGE + TUTOR REPORT)
+   ================================================================== */
 
 .tutor-search-input {
   padding: 9px 16px;
@@ -5954,7 +6131,7 @@ body.dark-theme .notif-tab.active {
   border-radius: 10px;
   font-family: var(--font-body);
   font-size: 14px;
-  color: #1f3550;
+  color: var(--app-heading);
   outline: none;
   width: 260px;
   transition: border-color 0.2s;
@@ -5966,7 +6143,7 @@ body.dark-theme .notif-tab.active {
 
 .tutors-loading,
 .tutors-empty {
-  color: #657985;
+  color: var(--app-text);
   font-size: 14px;
   padding: 24px 0;
 }
@@ -5980,7 +6157,7 @@ body.dark-theme .notif-tab.active {
 .tutors-empty-state {
   text-align: center;
   padding: 48px 24px;
-  color: #657985;
+  color: var(--app-text);
 }
 
 .tutors-empty-icon {
@@ -5991,7 +6168,7 @@ body.dark-theme .notif-tab.active {
 .tutors-empty-state h3 {
   font-family: var(--font-heading);
   font-size: 17px;
-  color: #1f3550;
+  color: var(--app-heading);
   margin-bottom: 8px;
 }
 
@@ -6008,7 +6185,7 @@ body.dark-theme .notif-tab.active {
   font-family: var(--font-heading);
   font-size: 12px;
   font-weight: 700;
-  color: #657985;
+  color: var(--app-text);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   border-bottom: 1.5px solid #d7eaf1;
@@ -6016,6 +6193,10 @@ body.dark-theme .notif-tab.active {
 
 .tutors-table-header--4col {
   grid-template-columns: 1fr 1fr auto;
+}
+
+.tutors-table-header--5col {
+  grid-template-columns: 1.4fr 1.4fr 0.7fr 1fr 0.9fr;
 }
 
 .tutors-table-row {
@@ -6031,9 +6212,17 @@ body.dark-theme .notif-tab.active {
   grid-template-columns: 1fr 1fr auto;
 }
 
+.tutors-table-row--5col {
+  grid-template-columns: 1.4fr 1.4fr 0.7fr 1fr 0.9fr;
+}
+
+.tutors-table-row-clickable {
+  cursor: pointer;
+}
+
 .tutors-date {
   font-size: 13px;
-  color: #8fa8b8;
+  color: var(--app-muted);
   white-space: nowrap;
 }
 
@@ -6068,13 +6257,13 @@ body.dark-theme .notif-tab.active {
 
 .tutors-name {
   font-weight: 600;
-  color: #1f3550;
+  color: var(--app-heading);
   font-size: 14px;
 }
 
 .tutors-email {
   font-size: 14px;
-  color: #657985;
+  color: var(--app-text);
 }
 
 body.dark-theme .coming-soon-card {
@@ -6104,7 +6293,9 @@ body.dark-theme .tutor-search-input {
   color: #e0eaf0;
 }
 
-/* ── 22. Auto Allocate ───────────────────────────────────────────────────── */
+/* ==================================================================
+   29. AUTO ALLOCATE
+   ================================================================== */
 
 .auto-allocate-btn {
   display: flex;
@@ -6130,6 +6321,7 @@ body.dark-theme .tutor-search-input {
   box-shadow: 0 8px 24px rgba(0, 151, 178, 0.45);
 }
 
+/* ----- Auto allocate modal ----- */
 .auto-alloc-modal {
   max-width: 680px !important;
   width: 95vw;
@@ -6141,7 +6333,7 @@ body.dark-theme .tutor-search-input {
   border-radius: 12px;
   padding: 28px;
   text-align: center;
-  color: #657985;
+  color: var(--app-text);
   font-size: 14px;
   margin: 16px 0;
   line-height: 1.7;
@@ -6189,6 +6381,7 @@ body.dark-theme .tutor-search-input {
   padding-right: 4px;
 }
 
+/* ----- Suggested allocation rows ----- */
 .auto-alloc-row {
   display: flex;
   align-items: center;
@@ -6222,12 +6415,12 @@ body.dark-theme .tutor-search-input {
   font-family: var(--font-heading);
   font-size: 14px;
   font-weight: 700;
-  color: #1f3550;
+  color: var(--app-heading);
 }
 
 .auto-alloc-session-time {
   font-size: 12px;
-  color: #657985;
+  color: var(--app-text);
 }
 
 .auto-alloc-session-count {
@@ -6252,7 +6445,7 @@ body.dark-theme .tutor-search-input {
 .auto-alloc-tutor-name {
   font-size: 14px;
   font-weight: 600;
-  color: #1f3550;
+  color: var(--app-heading);
 }
 
 .auto-alloc-match-badge {
@@ -6316,4 +6509,1850 @@ body.dark-theme .auto-alloc-row.skipped {
 body.dark-theme .auto-alloc-session-title,
 body.dark-theme .auto-alloc-tutor-name {
   color: #e0eaf0;
+}
+
+/* ==================================================================
+   30. TUTOR CALENDAR - EVENT COLOURS
+   ================================================================== */
+
+.class-event.invitation {
+  background: #dbeafe;
+  color: #1e40af;
+  border-left: 5px solid #3b82f6;
+}
+
+.class-event.submitted {
+  background: #dcfce7;
+  color: #166534;
+  border-left: 5px solid #22c55e;
+}
+
+.class-event.extra-availability {
+  background: #e0f5f9;
+  color: #00707f;
+  border-left: 5px solid #0097b2;
+}
+
+.class-event-tag {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  font-size: 10px !important;
+  opacity: 0.85;
+}
+
+/* ==================================================================
+   31. TUTOR - SCHEDULED CLASSES & EXTRA AVAILABILITY
+   ================================================================== */
+
+.myunits-class-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.myunits-class-list-in-card {
+  gap: 0;
+}
+
+.myunits-class-list-in-card .myunits-class-row {
+  border-radius: 0;
+  border-left: none;
+  border-right: none;
+  border-top: none;
+  border-bottom: 1px solid #eef6f9;
+  background: transparent;
+  padding: 12px 20px;
+}
+
+.myunits-class-list-in-card .myunits-class-row:last-child {
+  border-bottom: none;
+}
+
+/* ----- Class rows ----- */
+.myunits-class-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  padding: 12px 16px;
+  background: #f8fcfd;
+  border: 1.5px solid #d7eaf1;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.myunits-class-row:hover {
+  border-color: #0097b2;
+}
+
+.myunits-class-row.disabled {
+  cursor: default;
+  opacity: 0.65;
+}
+
+.myunits-class-row.unavailable {
+  opacity: 0.6;
+  background: #fdf2f2;
+  border-color: #f3c8c8;
+}
+
+.myunits-class-row.holiday {
+  opacity: 0.6;
+  background: #f3e8ff;
+  border-color: #e0c8fa;
+  cursor: default;
+}
+
+.myunits-class-row input[type='checkbox'] {
+  width: 18px;
+  height: 18px;
+  accent-color: #0097b2;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.myunits-class-row input[type='checkbox']:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.myunits-class-status-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: var(--app-muted);
+}
+
+.myunits-class-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.myunits-class-title {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--app-heading);
+}
+
+.myunits-class-time {
+  font-size: 12px;
+  color: #0097b2;
+  font-weight: 600;
+}
+
+.myunits-class-location {
+  font-size: 12px;
+  color: var(--app-text);
+}
+
+.myunits-class-conflict-note {
+  font-size: 11px;
+  color: #b91c1c;
+  font-style: italic;
+  margin-top: 2px;
+}
+
+.myunits-class-unavailable-btn {
+  background: none;
+  border: 1.5px solid #d7eaf1;
+  color: var(--app-text);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: 0.2s;
+}
+
+.myunits-class-unavailable-btn:hover {
+  border-color: #e53935;
+  color: #e53935;
+}
+
+.myunits-class-row.unavailable .myunits-class-unavailable-btn {
+  border-color: #e53935;
+  color: #e53935;
+}
+
+/* ----- Extra availability ----- */
+.myunits-additional-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1.5px solid #eef3f5;
+}
+
+.myunits-additional-row {
+  background: #f8fcfd;
+  border: 1.5px solid #d7eaf1;
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 13px;
+  color: var(--app-heading);
+}
+
+.myunits-additional-row strong {
+  color: var(--app-heading);
+}
+
+.myunits-additional-notes {
+  margin: 6px 0 0;
+  color: var(--app-text);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+body.dark-theme .myunits-class-row,
+body.dark-theme .myunits-additional-row {
+  background: #182437;
+  border-color: #2a3b52;
+}
+
+body.dark-theme .myunits-class-row.unavailable {
+  background: #2a1616;
+  border-color: #5c2424;
+}
+
+body.dark-theme .myunits-class-row.holiday {
+  background: #241733;
+  border-color: #4c2f6e;
+}
+
+body.dark-theme .myunits-class-list-in-card .myunits-class-row {
+  border-bottom-color: #2a3b52;
+}
+
+body.dark-theme .myunits-class-title,
+body.dark-theme .myunits-additional-row strong {
+  color: #f1f5f9;
+}
+
+/* ==================================================================
+   32. PASSWORD SHOW / HIDE TOGGLE
+   ================================================================== */
+
+.password-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.password-input-wrapper input {
+  width: 100%;
+  padding-right: 42px !important;
+}
+
+.password-toggle-btn {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  padding: 4px;
+  margin: 0;
+  cursor: pointer;
+  color: #97a6b0;
+  line-height: 0;
+}
+
+.password-toggle-btn:hover,
+.password-toggle-btn:focus-visible {
+  color: var(--primary);
+}
+
+.password-toggle-btn:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+body.dark-theme .password-toggle-btn {
+  color: var(--app-muted);
+}
+
+body.dark-theme .password-toggle-btn:hover,
+body.dark-theme .password-toggle-btn:focus-visible {
+  color: #7fd7e8;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* ==================================================================
+   33. RESPONSIVE / MOBILE LAYOUT
+   ================================================================== */
+
+html,
+body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+img,
+svg,
+video,
+canvas {
+  max-width: 100%;
+}
+
+p,
+h1, h2, h3, h4,
+span,
+label,
+td, th,
+li {
+  overflow-wrap: break-word;
+}
+
+input,
+select,
+textarea,
+button {
+  font-family: inherit;
+  max-width: 100%;
+}
+
+.form-group input,
+.form-field input,
+.form-field select,
+.chat-form-field input[type='text'],
+.chat-form-field select,
+.specific-dates-row input,
+.avail-notes,
+.chat-input-row textarea {
+  width: 100%;
+}
+
+.coord-sidebar,
+.staff-sidebar,
+.calendar-sidebar {
+  height: 100vh;
+  height: 100dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.staff-sidebar::-webkit-scrollbar,
+.calendar-sidebar::-webkit-scrollbar {
+  display: none;
+}
+
+.staff-sidebar,
+.calendar-sidebar {
+  scrollbar-width: none;
+}
+
+.unit-actions,
+.unit-row-actions,
+.request-actions,
+.modal-actions,
+.chat-modal-actions,
+.section-header-actions,
+.resume-row,
+.settings-row,
+.time-wheel-row,
+.tutor-row,
+.allocation-candidates-footer,
+.auto-alloc-stats,
+.notif-filter-tabs,
+.notif-type-tabs,
+.avail-unit-tabs,
+.avail-pill-row,
+.legend {
+  flex-wrap: wrap;
+}
+
+.tutors-table,
+.avail-grid-section,
+.month-calendar {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ----- Large laptops - narrower sidebar ----- */
+@media (max-width: 1280px) and (min-width: 951px) {
+  .coord-sidebar,
+  .staff-sidebar,
+  .calendar-sidebar,
+  .sidebar {
+    width: 240px;
+    padding: 20px 16px;
+  }
+
+  .coord-logo img,
+  .staff-logo img {
+    width: 48px;
+    height: 48px;
+  }
+
+  .coord-logo h2,
+  .staff-logo h2 {
+    font-size: 17px;
+    letter-spacing: 1.2px;
+  }
+
+  .coord-menu a,
+  .staff-menu a,
+  .coord-logout-btn,
+  .staff-logout-btn {
+    padding: 12px 14px;
+    font-size: 13px;
+  }
+
+  .main-content,
+  .staff-main-content,
+  .chat-main {
+    margin-left: 240px;
+    padding: 26px;
+  }
+
+  .calendar-main {
+    margin-left: 240px;
+    width: calc(100% - 240px);
+    padding: 24px;
+  }
+}
+
+/* ----- Small laptops / tablets ----- */
+@media (max-width: 1024px) {
+  .stats-grid,
+  .staff-stats-grid,
+  .calendar-summary,
+  .preference-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .stat-card h2 {
+    font-size: 34px;
+  }
+
+  .summary-card h2 {
+    font-size: 30px;
+  }
+
+  .page-title h1,
+  .staff-page-title h1,
+  .page-heading h1,
+  .my-units-header h1 {
+    font-size: 28px;
+  }
+
+  .myunits-list-panel {
+    width: 260px;
+  }
+
+  .chat-list-panel {
+    width: 270px;
+  }
+
+  .sessions-grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  }
+
+  .month-calendar {
+    overflow-x: auto;
+  }
+
+  .weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    min-width: 720px;
+  }
+
+  .calendar-grid {
+    grid-template-columns: repeat(7, 1fr);
+    min-width: 720px;
+    gap: 8px;
+  }
+
+  .day-box {
+    min-height: 110px;
+  }
+}
+
+/* ----- Tablets - sidebar becomes a top bar ----- */
+@media (max-width: 950px) {
+  .dashboard-page,
+  .staff-dashboard-page,
+  .calendar-page,
+  .chat-page {
+    flex-direction: column;
+  }
+
+  .coord-sidebar,
+  .staff-sidebar,
+  .calendar-sidebar,
+  .sidebar {
+    position: relative;
+    left: auto;
+    top: auto;
+    width: 100%;
+    height: auto;
+    min-height: 0;
+    max-height: none;
+    overflow: visible;
+    padding: 16px 20px;
+  }
+
+  .coord-logo,
+  .staff-logo,
+  .calendar-logo,
+  .sidebar-logo {
+    margin-bottom: 16px;
+  }
+
+  .coord-logo img,
+  .staff-logo img,
+  .sidebar-logo img {
+    width: 44px;
+    height: 44px;
+  }
+
+  .coord-profile,
+  .staff-profile,
+  .profile {
+    margin-bottom: 16px;
+    padding: 12px 14px;
+  }
+
+  .coord-avatar,
+  .staff-avatar,
+  .profile-avatar {
+    width: 40px;
+    height: 40px;
+  }
+
+  .coord-menu,
+  .staff-menu,
+  .calendar-menu,
+  .menu {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .coord-menu a,
+  .staff-menu a,
+  .calendar-menu a,
+  .menu p,
+  .menu a {
+    padding: 10px 14px;
+    font-size: 13px;
+    border-radius: 10px;
+  }
+
+  .coord-menu-divider,
+  .staff-menu-divider {
+    margin: 14px 0;
+  }
+
+  .coord-logout-btn,
+  .staff-logout-btn {
+    width: auto;
+    padding: 10px 16px;
+    font-size: 13px;
+  }
+
+  .sidebar-notif-badge {
+    margin-left: 6px;
+  }
+
+  .main-content,
+  .staff-main-content,
+  .calendar-main,
+  .chat-main {
+    margin-left: 0;
+    width: 100%;
+    max-width: 100%;
+    padding: 20px;
+  }
+
+  .topbar,
+  .staff-topbar,
+  .calendar-topbar,
+  .my-units-header,
+  .section-header,
+  .panel-heading,
+  .staff-panel-heading,
+  .detail-title,
+  .avail-header,
+  .avail-grid-heading,
+  .settings-row,
+  .session-draft-header,
+  .pending-breakdown-header,
+  .calendar-box-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .section-header-actions,
+  .calendar-select-group {
+    width: 100%;
+  }
+
+  .calendar-select-group select,
+  .calendar-nav-btn {
+    flex: 1;
+    min-width: 140px;
+  }
+
+  .calendar-filter-row {
+    justify-content: stretch;
+  }
+
+  .unit-filter-box {
+    width: 100%;
+  }
+
+  .unit-filter-box select {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .unit-card,
+  .unit-row,
+  .staff-class-card,
+  .allocation-search-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .unit-row-left {
+    width: 100%;
+  }
+
+  .chat-shell {
+    flex-direction: column;
+    height: auto;
+    min-height: 0;
+  }
+
+  .chat-list-panel {
+    width: 100%;
+    max-height: 300px;
+    border-right: none;
+    border-bottom: 1.5px solid #d7eaf1;
+  }
+
+  body.dark-theme .chat-list-panel {
+    border-bottom-color: #2a3b52;
+  }
+
+  .chat-list-item.active {
+    border-right: none;
+    border-left: 3px solid #0097b2;
+  }
+
+  .chat-window {
+    min-height: 60vh;
+  }
+
+  .chat-bubble {
+    max-width: 78%;
+  }
+
+  .group-info-panel {
+    width: 86%;
+    max-width: 360px;
+  }
+
+  .myunits-workspace {
+    flex-direction: column;
+  }
+
+  .myunits-list-panel {
+    width: 100%;
+    max-height: none;
+  }
+
+  .allocations-page {
+    max-width: 100%;
+  }
+
+  .page-title h1,
+  .staff-page-title h1,
+  .page-heading h1 {
+    font-size: 26px;
+  }
+}
+
+/* ----- Phones & small tablets ----- */
+@media (max-width: 768px) {
+  .main-content,
+  .staff-main-content,
+  .calendar-main,
+  .chat-main {
+    padding: 16px;
+  }
+
+  .stats-grid,
+  .staff-stats-grid,
+  .calendar-summary,
+  .preference-grid,
+  .sessions-grid,
+  .form-row,
+  .form-row-2,
+  .form-row-3,
+  .unit-form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .stat-card,
+  .staff-stat-card {
+    min-height: 0;
+    padding: 20px;
+  }
+
+  .stat-card h2,
+  .staff-stat-card h2,
+  .summary-card h2 {
+    font-size: 30px;
+    margin-top: 10px;
+  }
+
+  .units-panel,
+  .staff-panel,
+  .detail-section,
+  .avail-units-panel,
+  .avail-grid-section,
+  .avail-prefs-section,
+  .avail-submit-section,
+  .session-draft-block,
+  .add-session-footer,
+  .calendar-filter-tabs,
+  .calendar-topbar,
+  .month-calendar {
+    padding: 18px;
+    border-radius: 16px;
+  }
+
+  .unit-card,
+  .unit-row,
+  .staff-class-card,
+  .session-card-main,
+  .notif-item {
+    padding: 16px;
+  }
+
+  .modal-overlay,
+  .chat-modal-overlay {
+    padding: 16px;
+    align-items: flex-start;
+    overflow-y: auto;
+  }
+
+  .modal,
+  .chat-modal,
+  .avail-modal,
+  .edit-series-modal,
+  .auto-alloc-modal {
+    padding: 22px;
+    width: 100%;
+    max-width: 100% !important;
+    max-height: none;
+    margin: 16px 0;
+    border-radius: 16px;
+  }
+
+  .modal h2,
+  .chat-modal h2 {
+    font-size: 19px;
+    margin-bottom: 16px;
+  }
+
+  .tutors-table {
+    overflow-x: auto;
+  }
+
+  .tutors-table-header,
+  .tutors-table-row {
+    min-width: 460px;
+  }
+
+  .tutors-table-header--4col,
+  .tutors-table-row--4col {
+    min-width: 560px;
+  }
+
+  .tutors-table-header--5col,
+  .tutors-table-row--5col {
+    min-width: 720px;
+  }
+
+  .avail-grid-section {
+    overflow-x: auto;
+  }
+
+  .avail-grid {
+    min-width: 460px;
+  }
+
+  .avail-slider,
+  .avail-slider-labels {
+    max-width: 100%;
+  }
+
+  .tutor-search-input {
+    width: 100%;
+  }
+
+  .group-info-panel {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .chat-main {
+    padding: 12px;
+  }
+
+  .chat-messages {
+    padding: 16px;
+  }
+
+  .chat-input-row {
+    padding: 12px 16px;
+    flex-wrap: wrap;
+  }
+
+  .chat-input-row textarea {
+    flex: 1 1 100%;
+    order: -1;
+  }
+
+  .chat-attach-wrapper,
+  .chat-send-btn {
+    flex: 1;
+  }
+
+  .chat-bubble {
+    max-width: 88%;
+  }
+
+  .chat-window-header {
+    padding: 14px 16px;
+  }
+
+  .login-brand,
+  .signup-brand {
+    padding: 28px 22px;
+  }
+
+  .brand-logo {
+    width: 84px;
+    height: 84px;
+    margin-bottom: 14px;
+  }
+
+  .brand-tagline {
+    margin-bottom: 24px;
+  }
+
+  .login-form-panel,
+  .signup-form-panel {
+    padding: 28px 16px;
+  }
+
+  .segmented-row {
+    flex-direction: column;
+  }
+
+  .segmented-btn {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .myunits-add-days-row .segmented-btn {
+    width: auto;
+  }
+
+  .specific-dates-row {
+    flex-direction: column;
+  }
+
+  .notif-item {
+    gap: 12px;
+  }
+
+  .notif-header-row {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .notif-unit-select {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .auto-alloc-row {
+    flex-wrap: wrap;
+  }
+
+  .auto-alloc-arrow {
+    display: none;
+  }
+
+  .auto-alloc-session {
+    min-width: 0;
+    flex: 1 1 100%;
+  }
+
+  .avail-deadline-badge {
+    width: 100%;
+  }
+
+  .tutor-report-stats {
+    flex-direction: column;
+  }
+}
+
+/* ----- Phones ----- */
+@media (max-width: 480px) {
+  .main-content,
+  .staff-main-content,
+  .calendar-main,
+  .chat-main {
+    padding: 12px;
+  }
+
+  .coord-sidebar,
+  .staff-sidebar,
+  .calendar-sidebar,
+  .sidebar {
+    padding: 14px;
+  }
+
+  .page-title,
+  .staff-page-title,
+  .page-heading,
+  .detail-title {
+    gap: 10px;
+  }
+
+  .page-title img,
+  .staff-page-title img,
+  .page-heading img {
+    width: 44px;
+    height: 44px;
+    padding: 6px;
+    border-radius: 12px;
+  }
+
+  .page-title h1,
+  .staff-page-title h1,
+  .page-heading h1,
+  .my-units-header h1,
+  .avail-header h1 {
+    font-size: 21px;
+  }
+
+  .page-title p,
+  .staff-page-title p,
+  .page-heading p {
+    font-size: 14px;
+  }
+
+  .panel-heading h2,
+  .staff-panel-heading h2,
+  .section-header h2 {
+    font-size: 19px;
+  }
+
+  .stat-card h2,
+  .staff-stat-card h2,
+  .summary-card h2 {
+    font-size: 26px;
+  }
+
+  .new-unit-btn,
+  .create-btn,
+  .add-btn,
+  .publish-btn,
+  .auto-allocate-btn,
+  .calendar-btn,
+  .theme-toggle-btn,
+  .password-submit-btn,
+  .avail-submit-btn,
+  .avail-back-action-btn,
+  .login-btn,
+  .signup-btn,
+  .manage-btn,
+  .group-exit-btn {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .unit-actions,
+  .unit-row-actions,
+  .request-actions {
+    width: 100%;
+  }
+
+  .unit-actions button,
+  .unit-row-actions button,
+  .request-actions button {
+    flex: 1 1 140px;
+  }
+
+  .modal-actions,
+  .chat-modal-actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .modal-actions button,
+  .chat-modal-actions button {
+    width: 100%;
+  }
+
+  .modal,
+  .chat-modal,
+  .avail-modal {
+    padding: 18px;
+  }
+
+  .month-calendar {
+    overflow-x: visible;
+    padding: 14px;
+  }
+
+  .weekdays {
+    display: none;
+  }
+
+  .calendar-grid {
+    grid-template-columns: 1fr;
+    min-width: 0;
+    gap: 8px;
+  }
+
+  .day-box {
+    min-height: 0;
+    padding: 12px;
+  }
+
+  .day-box.empty {
+    display: none;
+  }
+
+  .legend {
+    justify-content: flex-start;
+    gap: 12px;
+    font-size: 13px;
+  }
+
+  .avail-grid {
+    min-width: 380px;
+    grid-template-columns: 44px repeat(5, 1fr);
+  }
+
+  .avail-cell,
+  .avail-time-label {
+    height: 34px;
+  }
+
+  .profile-card-section {
+    padding: 22px 16px;
+  }
+
+  .profile-photo-circle {
+    width: 92px;
+    height: 92px;
+  }
+
+  .profile-name {
+    font-size: 20px;
+  }
+
+  .brand-title {
+    font-size: 26px;
+  }
+
+  .brand-logo {
+    width: 68px;
+    height: 68px;
+  }
+
+  .login-card,
+  .signup-card {
+    padding: 24px 18px;
+    border-radius: 16px;
+  }
+
+  .role-selector {
+    flex-wrap: wrap;
+  }
+
+  .role-btn {
+    flex: 1 1 40%;
+    font-size: 12px;
+  }
+
+  .chat-list-panel {
+    max-height: 240px;
+  }
+
+  .chat-bubble {
+    max-width: 92%;
+    font-size: 13px;
+  }
+
+  .chat-window {
+    min-height: 56vh;
+  }
+
+  .notif-filter-tabs,
+  .notif-type-tabs {
+    gap: 6px;
+  }
+
+  .notif-tab,
+  .notif-type-tab {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+
+  .notif-icon {
+    width: 34px;
+    height: 34px;
+    font-size: 15px;
+  }
+
+  .session-occurrence-row,
+  .myunits-class-row {
+    padding: 12px 14px;
+  }
+
+  .time-wheel-row {
+    gap: 12px;
+  }
+
+  .duration-display {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .coming-soon-card {
+    padding: 36px 20px;
+  }
+
+  .tutors-table-header,
+  .tutors-table-row {
+    padding: 12px;
+  }
+}
+
+/* ----- Short screens ----- */
+@media (max-height: 640px) {
+  .chat-shell {
+    height: auto;
+    min-height: 420px;
+  }
+
+  .modal-overlay,
+  .chat-modal-overlay {
+    align-items: flex-start;
+    overflow-y: auto;
+    padding: 16px;
+  }
+
+  .modal,
+  .chat-modal,
+  .avail-modal,
+  .edit-series-modal {
+    max-height: none;
+    margin: 16px 0;
+  }
+
+  .login-brand,
+  .signup-brand {
+    padding: 28px 32px;
+  }
+}
+
+/* ----- Touch devices ----- */
+@media (hover: none) {
+  .stat-card:hover,
+  .unit-card:hover,
+  .unit-row:hover,
+  .new-unit-btn:hover,
+  .create-btn:hover,
+  .avail-submit-btn:hover:not(:disabled),
+  .auto-allocate-btn:hover,
+  .class-event:hover,
+  .menu p:hover {
+    transform: none;
+  }
+
+  .coord-menu a,
+  .staff-menu a,
+  .calendar-menu a,
+  .notif-tab,
+  .notif-type-tab,
+  .role-btn,
+  .avail-pill,
+  .segmented-btn {
+    min-height: 40px;
+  }
+}
+
+/* ----- Printing ----- */
+@media print {
+  .coord-sidebar,
+  .staff-sidebar,
+  .calendar-sidebar,
+  .sidebar,
+  .modal-overlay,
+  .chat-modal-overlay {
+    display: none !important;
+  }
+
+  .main-content,
+  .staff-main-content,
+  .calendar-main,
+  .chat-main {
+    margin-left: 0;
+    width: 100%;
+    padding: 0;
+  }
+}
+
+/* ==================================================================
+   34. DASHBOARD - PENDING RESPONSES & MISC LAYOUT
+   ================================================================== */
+
+.pending-breakdown {
+  display: block;
+  background: white;
+  border: 1.5px solid #d7eaf1;
+  border-radius: 20px;
+  padding: 24px 26px;
+  margin-bottom: 26px;
+  box-shadow: 0 14px 35px rgba(31, 53, 80, 0.08);
+}
+
+.pending-breakdown-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1.5px solid #eef5f8;
+}
+
+.pending-breakdown-header h3 {
+  margin: 0;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 19px;
+  color: var(--app-heading);
+}
+
+.pending-breakdown-deadline {
+  flex-shrink: 0;
+  background: #fff8dc;
+  color: #745a00;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.pending-breakdown-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 16px;
+  background: #f8fcfd;
+  border: 1.5px solid #d7eaf1;
+  border-radius: 14px;
+  margin-bottom: 10px;
+}
+
+.pending-breakdown-row:last-child {
+  margin-bottom: 0;
+}
+
+.pending-breakdown-unit {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+  flex: 1;
+}
+
+.pending-breakdown-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--app-heading);
+  min-width: 0;
+}
+
+.pending-breakdown-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.pending-breakdown-count {
+  background: #e7f6fa;
+  color: #0097b2;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 5px 14px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.pending-breakdown-days {
+  font-size: 13px;
+  color: var(--app-text);
+  white-space: nowrap;
+}
+
+.pending-breakdown-empty {
+  margin: 0;
+  color: var(--app-muted);
+  font-size: 14px;
+  font-style: italic;
+}
+
+/* Per-unit deadline state pill, used in the Submission Deadline breakdown
+   on the coordinator dashboard. Colors mirror .countdown-badge so a unit's
+   deadline reads the same way here as it does on its Manage screen. */
+.deadline-state-pill {
+  font-size: 13px;
+  font-weight: 700;
+  padding: 5px 14px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.deadline-state-pill.normal  { background: #eef6ee; color: #2e7d32; }
+.deadline-state-pill.urgent  { background: #fff8dc; color: #745a00; }
+.deadline-state-pill.expired { background: #fee2e2; color: #dc2626; }
+
+body.dark-theme .pending-breakdown,
+body.dark-theme .pending-breakdown-row {
+  background: #182437;
+  border-color: #2a3b52;
+}
+
+body.dark-theme .pending-breakdown-header {
+  border-bottom-color: #2a3b52;
+}
+
+body.dark-theme .pending-breakdown-name {
+  color: #f1f5f9;
+}
+
+/* ----- Clickable stat card ----- */
+.stat-card--clickable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.stat-card--clickable.active {
+  border-color: #0097b2;
+  box-shadow: 0 14px 35px rgba(0, 151, 178, 0.18);
+}
+
+/* ----- Conflict request count ----- */
+.conflict-count-badge {
+  flex-shrink: 0;
+  background: #fff8dc;
+  color: #745a00;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 6px 16px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+/* ----- Invitation progress bar ----- */
+.invite-progress-bar-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.invite-progress-bar {
+  flex: 1;
+  min-width: 80px;
+  height: 8px;
+  background: #e7eff3;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.invite-progress-fill {
+  height: 100%;
+  background: #0097b2;
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+.invite-progress-pct {
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--app-text);
+  min-width: 34px;
+  text-align: right;
+}
+
+body.dark-theme .invite-progress-bar {
+  background: #2a3b52;
+}
+
+.avail-grid-corner {
+  min-height: 1px;
+}
+
+.myunits-class-status-spacer {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.no-page-logo img {
+  display: none;
+}
+
+/* ----- Mark tutor unavailable for one session ----- */
+.session-occurrence-flag-select {
+  flex-shrink: 0;
+  max-width: 190px;
+  padding: 5px 10px;
+  border: 1.5px solid #d7eaf1;
+  border-radius: 8px;
+  background: white;
+  color: var(--app-heading);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.session-occurrence-unavailable-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  flex: 1 1 100%;
+}
+
+.session-occurrence-unflag-btn {
+  background: none;
+  border: none;
+  color: #c62828;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0 2px;
+  line-height: 1;
+}
+
+.session-occurrence-unflag-btn:hover {
+  opacity: 0.7;
+}
+
+body.dark-theme .session-occurrence-flag-select {
+  background: #131f30;
+  border-color: #2a3b52;
+  color: #e2e8f0;
+}
+
+.unit-row {
+  gap: 20px;
+}
+
+.unit-row-left {
+  align-items: center;
+  gap: 18px;
+}
+
+.unit-row-left .unit-code-badge,
+.pending-breakdown-unit .unit-code-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 96px;
+  flex-shrink: 0;
+  text-align: center;
+}
+
+.unit-row-info {
+  min-width: 0;
+}
+
+.unit-row-info h3 {
+  line-height: 1.3;
+}
+
+.unit-row-actions {
+  flex-shrink: 0;
+}
+
+.unit-row-actions .manage-btn {
+  min-width: 150px;
+  text-align: center;
+}
+
+/* ----- Pending responses & unit rows - mobile ----- */
+@media (max-width: 768px) {
+  .pending-breakdown {
+    padding: 18px;
+    border-radius: 16px;
+  }
+
+  .pending-breakdown-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .pending-breakdown-meta {
+    flex-wrap: wrap;
+  }
+
+  .unit-row-left {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .unit-row-left .unit-code-badge,
+  .pending-breakdown-unit .unit-code-badge {
+    min-width: 0;
+  }
+
+  .unit-row-actions,
+  .unit-row-actions .manage-btn {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .session-occurrence-flag-select {
+    max-width: 100%;
+    width: 100%;
+  }
+}
+
+/* ==================================================================
+   35. ALLOCATION CARD SIZING
+   ================================================================== */
+
+.allocations-page .sessions-grid {
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 20px;
+}
+
+.allocations-page .session-card-main {
+  padding: 22px 24px;
+}
+
+.allocations-page .session-day {
+  font-size: 18px;
+}
+
+.allocations-page .session-time {
+  font-size: 14px;
+}
+
+.allocations-page .mode-badge,
+.allocations-page .status-badge {
+  font-size: 12px;
+  padding: 5px 10px;
+}
+
+.allocations-page .allocation-assigned-name {
+  font-size: 15px;
+}
+
+.allocations-page .allocation-candidates-label {
+  font-size: 13px;
+}
+
+.allocations-page .allocation-candidate-btn,
+.allocations-page .allocation-self-assign-btn,
+.allocations-page .allocation-search-btn {
+  padding: 10px 14px;
+  font-size: 14px;
+}
+
+.allocations-page .my-units-header h1 {
+  font-size: 30px;
+}
+
+.allocations-page .my-units-header p {
+  font-size: 15px;
+  max-width: 760px;
+}
+
+/* ----- Allocation cards - mobile ----- */
+@media (max-width: 768px) {
+  .allocations-page .sessions-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .allocations-page .session-card-main {
+    padding: 18px 20px;
+  }
+}
+/* ───────────────────────── Emergency Class Swap ───────────────────────── */
+
+.form-error-banner,
+.form-success-banner {
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 18px;
+}
+
+.form-error-banner {
+  background: #fdecea;
+  color: #b91c1c;
+  border: 1px solid #f3c8c8;
+}
+
+.form-success-banner {
+  background: #eef6ee;
+  color: #1e7e34;
+  border: 1px solid #c8e6c9;
+}
+
+.status-badge.accepted { background: #eef6ee; color: #2e7d32; }
+.status-badge.declined { background: #fdecea; color: #c62828; }
+
+.swap-subheading {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--app-text);
+  opacity: 0.6;
+  margin: 18px 0 10px;
+}
+
+.swap-request-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 16px;
+  border: 1px solid #d7eaf1;
+  border-radius: 16px;
+  margin-bottom: 12px;
+}
+
+.swap-request-card.responded {
+  opacity: 0.85;
+}
+
+.swap-request-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.swap-request-info h3 {
+  margin: 0 0 2px;
+  font-size: 16px;
+  color: var(--app-heading);
+}
+
+.swap-request-info p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--app-text);
+}
+
+.swap-reason {
+  font-style: italic;
+  opacity: 0.8;
+  margin-top: 4px !important;
+}
+
+.swap-request-actions {
+  display: flex;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.btn-swap-accept,
+.btn-swap-decline {
+  border: none;
+  border-radius: 10px;
+  padding: 10px 18px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.btn-swap-accept {
+  background: #16a34a;
+  color: white;
+}
+
+.btn-swap-accept:hover {
+  background: #15803d;
+}
+
+.btn-swap-accept:disabled {
+  background: #9cc9ac;
+  cursor: not-allowed;
+}
+
+.btn-swap-decline {
+  background: #fdecea;
+  color: #b91c1c;
+}
+
+.btn-swap-decline:hover {
+  background: #f9d3d0;
+}
+
+.swap-session-group {
+  border: 1px solid #d7eaf1;
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 14px;
+}
+
+.swap-session-group-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.swap-session-group-info {
+  flex: 1;
+  min-width: 160px;
+}
+
+.swap-session-group-info h3 {
+  margin: 0 0 2px;
+  font-size: 16px;
+  color: var(--app-heading);
+}
+
+.swap-session-group-info p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--app-text);
+}
+
+.swap-session-dates {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #eef4f6;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.swap-session-date-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 14px;
+  color: var(--app-text);
+}
+
+.swap-form-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 30, 45, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.swap-form-panel {
+  background: white;
+  border-radius: 20px;
+  padding: 28px;
+  width: 100%;
+  max-width: 440px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+}
+
+.swap-form-panel h3 {
+  margin: 0 0 4px;
+  color: var(--app-heading);
+}
+
+.swap-form-sub {
+  margin: 0 0 18px;
+  font-size: 13px;
+  color: var(--app-text);
+  opacity: 0.75;
+}
+
+.swap-form-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--app-heading);
+  margin-bottom: 14px;
+}
+
+.swap-form-label select,
+.swap-form-label textarea {
+  display: block;
+  width: 100%;
+  margin-top: 6px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #d7eaf1;
+  font-size: 14px;
+  font-family: inherit;
+  font-weight: 400;
+  color: var(--app-text);
+  resize: vertical;
+}
+
+.swap-form-hint {
+  font-size: 12px;
+  color: #b91c1c;
+  margin: -8px 0 14px;
+}
+
+.swap-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 8px;
 }

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 //import { api } from "../../services/api";
-import { coordinatorMockApi as api } from "../../services/coordinatorMockApi";
+import { api } from "../../services/api";
 import AddSessionForm from './AddSessionForm'
 import TimeWheelPicker, {
   type WheelTime,
@@ -13,6 +13,10 @@ interface Session {
   id: number;
   title: string;
   startTime: string;
+  // Real duration, now actually persisted end-to-end — optional so older
+  // sessions created before this existed still type-check and fall back
+  // to the 1-hour assumption below.
+  endTime?: string;
   location: string;
   status: string;
   // Client-side only — the backend Session entity has no "mode" field,
@@ -24,6 +28,9 @@ interface Session {
   // holiday (see toggleHoliday below), so unmarking it can restore
   // whatever status it had before.
   previousStatus?: string;
+  // Staff ids flagged as unable to teach this date (see
+  // handleToggleStaffUnavailable below).
+  unavailableStaffIds?: number[];
 }
 
 interface Unit {
@@ -69,12 +76,12 @@ function statusMeta(status: string): { label: string; icon: string; className: s
 }
 
 // ── Recurring session grouping ────────────────────────────────────────
-// The backend only stores each occurrence as its own row (id, title,
-// startTime, location, status) — there's no "recurring series" concept
-// server-side. So sessions that share the same day of week, time,
-// location (which already encodes campus + room, see AddSessionForm's
-// buildLocationString) and class type (title) are grouped together here,
-// purely on the client, for display only.
+// The backend stores each occurrence as its own row (id, title,
+// startTime, endTime, location, status) — there's no "recurring series"
+// concept server-side. So sessions that share the same day of week,
+// time, location (which already encodes campus + room, see
+// AddSessionForm's buildLocationString) and class type (title) are
+// grouped together here, purely on the client, for display only.
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
 interface SessionGroup {
@@ -85,6 +92,10 @@ interface SessionGroup {
   dayOfWeek: number
   minutesOfDay: number
   timeLabel: string
+  // Only set when every session actually has an endTime (real sessions
+  // created after the duration fix do; older ones may not) — shown as
+  // "9:00 AM – 11:00 AM" instead of just the start time when available.
+  endTimeLabel?: string
   sessions: Session[]
 }
 
@@ -104,6 +115,9 @@ function groupSessions(sessions: Session[]): SessionGroup[] {
         dayOfWeek: d.getDay(),
         minutesOfDay,
         timeLabel: d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }),
+        endTimeLabel: s.endTime
+          ? new Date(s.endTime).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+          : undefined,
         sessions: [],
       }
       map.set(key, group)
@@ -220,7 +234,7 @@ function buildLocationStringFrom(locationType: LocationType, campus: Campus, blo
 // stored per-unit in localStorage and only affects what's shown on this
 // screen. A real deadline would need a backend field on the invitation
 // (or unit) so tutors' own submission screens could enforce/show it too.
-function deadlineStorageKey(unitId: number) {
+/***function deadlineStorageKey(unitId: number) {
   return `sessioneer:availDeadline:unit:${unitId}`
 }
 
@@ -230,7 +244,7 @@ function loadDeadline(unitId: number): string {
   } catch {
     return ''
   }
-}
+}***/
 
 function formatCountdown(deadlineIso: string, now: number): { label: string; state: 'normal' | 'urgent' | 'expired' } {
   const target = new Date(deadlineIso).getTime()
@@ -304,7 +318,10 @@ export default function UnitDetailView({ unit, onBack }: Props) {
     loadSessions().catch(console.error)
     api.getAllStaff().then(setStaffList).catch(console.error)
     api.getUnitInvitations(unit.id).then(setInvitations).catch(console.error)
-    setDeadline(loadDeadline(unit.id))
+    api.getUnits().then((units: any[]) => {
+      const u = units.find(u => u.id === unit.id)
+      if (u?.availabilityDeadline) setDeadline(u.availabilityDeadline)
+    }).catch(console.error)
     setExpandedGroups(new Set())
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [unit.id])
@@ -376,26 +393,26 @@ export default function UnitDetailView({ unit, onBack }: Props) {
     setShowDeadlineModal(true)
   }
 
-  const handleSaveDeadline = () => {
+  const handleSaveDeadline = async () => {
     if (!deadlineDraft) return
     try {
-      localStorage.setItem(deadlineStorageKey(unit.id), deadlineDraft)
+      await api.setDeadline(unit.id, deadlineDraft)
+      setDeadline(deadlineDraft)
+      setNow(Date.now())
+      setShowDeadlineModal(false)
     } catch (err) {
       console.error(err)
     }
-    setDeadline(deadlineDraft)
-    setNow(Date.now())
-    setShowDeadlineModal(false)
   }
 
-  const handleClearDeadline = () => {
+  const handleClearDeadline = async () => {
     try {
-      localStorage.removeItem(deadlineStorageKey(unit.id))
+      await api.clearDeadline(unit.id)
+      setDeadline('')
+      setShowDeadlineModal(false)
     } catch (err) {
       console.error(err)
     }
-    setDeadline('')
-    setShowDeadlineModal(false)
   }
 
   const countdown = deadline ? formatCountdown(deadline, now) : null
@@ -475,7 +492,12 @@ export default function UnitDetailView({ unit, onBack }: Props) {
     const firstDate = new Date(group.sessions[0].startTime)
     const lastDate = new Date(group.sessions[group.sessions.length - 1].startTime)
     setEditStartTime(dateToWheelTime(firstDate))
-    setEditEndTime(dateToWheelTime(new Date(firstDate.getTime() + 60 * 60 * 1000)))
+    // Use the real end time when this series has one (see the note on
+    // Session.endTime up top) instead of always assuming 1 hour.
+    const firstEndTime = group.sessions[0].endTime
+      ? new Date(group.sessions[0].endTime)
+      : new Date(firstDate.getTime() + 60 * 60 * 1000)
+    setEditEndTime(dateToWheelTime(firstEndTime))
 
     const parsedLocation = parseLocationString(group.location)
     setEditLocationType(parsedLocation.locationType)
@@ -489,51 +511,87 @@ export default function UnitDetailView({ unit, onBack }: Props) {
 
   // Marks (or unmarks) a single dated occurrence as a holiday — e.g. a
   // public holiday or teaching-free day that falls on what would
-  // otherwise be a regular recurring slot. Local only, same as the rest
-  // of session editing: there's no backend status for this, so it just
-  // flips the status shown here and remembers what it was before so
-  // un-marking restores it. Only ever applies to that one date, not the
+  // otherwise be a regular recurring slot. Only ever applies to that one date, not the
   // whole recurring group.
-  const toggleHoliday = (session: Session) => {
-    setSessions(prev => prev.map(s => {
-      if (s.id !== session.id) return s
-      if (s.status === 'HOLIDAY') {
-        return { ...s, status: s.previousStatus ?? 'PENDING', previousStatus: undefined }
-      }
-      return { ...s, previousStatus: s.status, status: 'HOLIDAY' }
-    }))
+  const toggleHoliday = async (session: Session) => {
+    const newStatus = session.status === 'HOLIDAY'
+      ? (session.previousStatus ?? 'PENDING')
+      : 'HOLIDAY'
+    try {
+      await api.updateSessionStatus(session.id, newStatus)
+      setSessions(prev => prev.map(s => {
+        if (s.id !== session.id) return s
+        if (s.status === 'HOLIDAY') {
+          return { ...s, status: s.previousStatus ?? 'PENDING', previousStatus: undefined }
+        }
+        return { ...s, previousStatus: s.status, status: 'HOLIDAY' }
+      }))
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  // Flags (or unflags) a specific invited tutor as unable to teach one
+  // dated session. This is a testing SIMULATION, not a live signal — the
+  // Tutor side's own "Mark I'm Unavailable" runs on a separate mock with
+  // no shared store, so nothing a tutor does there reaches here on its
+  // own. This just gives the coordinator a real place to see and try out
+  // what that information would look like once there's a backend to
+  // actually wire the two together.
+  const handleToggleStaffUnavailable = async (session: Session, staffId: number, unavailable: boolean) => {
+    try {
+      await api.markStaffUnavailableForSession(session.id, staffId, unavailable)
+      setSessions(prev => prev.map(s => {
+        if (s.id !== session.id) return s
+        const current = new Set(s.unavailableStaffIds ?? [])
+        if (unavailable) current.add(staffId)
+        else current.delete(staffId)
+        return { ...s, unavailableStaffIds: Array.from(current) }
+      }))
+    } catch (err) {
+      console.error(err)
+    }
   }
 
   // Deletes a single dated occurrence, or every occurrence in a recurring
-  // group at once. Local only — same as edit/holiday above, there's no
-  // backend endpoint to delete a session yet (only create/read exist), so
-  // this just removes it from what's shown here; it comes back on refresh
-  // since it's never actually removed server-side.
-  const handleDeleteSession = (session: Session) => {
+  // group at once — real backend delete now (see api.ts fix).
+  const handleDeleteSession = async (session: Session) => {
     const ok = window.confirm(
       `Delete the ${session.title} session on ${new Date(session.startTime).toLocaleDateString()}? This can't be undone.`
     )
     if (!ok) return
-    setSessions(prev => prev.filter(s => s.id !== session.id))
+    try {
+      await api.deleteSession(unit.id, session.id)
+      setSessions(prev => prev.filter(s => s.id !== session.id))
+    } catch (err) {
+      console.error(err)
+    }
   }
 
-  const handleDeleteGroup = (group: SessionGroup) => {
+  const handleDeleteGroup = async (group: SessionGroup) => {
     const ok = window.confirm(
-      `Delete all ${group.sessions.length} sessions in this recurring "${group.title}" (${DAY_NAMES[group.dayOfWeek]}s, ${group.timeLabel}) pattern? This can't be undone.`
+      `Delete all ${group.sessions.length} sessions in this recurring "${group.title}" pattern? This can't be undone.`
     )
     if (!ok) return
-    const idsToDelete = new Set(group.sessions.map(s => s.id))
-    setSessions(prev => prev.filter(s => !idsToDelete.has(s.id)))
-    setExpandedGroups(prev => {
-      const next = new Set(prev)
-      next.delete(group.key)
-      return next
-    })
+    try {
+      for (const s of group.sessions) {
+        await api.deleteSession(unit.id, s.id)
+      }
+      const idsToDelete = new Set(group.sessions.map(s => s.id))
+      setSessions(prev => prev.filter(s => !idsToDelete.has(s.id)))
+      setExpandedGroups(prev => {
+        const next = new Set(prev)
+        next.delete(group.key)
+        return next
+      })
+    } catch (err) {
+      console.error(err)
+    }
   }
 
   const editingGroup = sessionGroups.find(g => g.key === editingGroupKey) ?? null
 
-  const handleSaveGroupEdit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSaveGroupEdit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!editingGroup) return
     setEditSeriesError('')
@@ -551,32 +609,52 @@ export default function UnitDetailView({ unit, onBack }: Props) {
       return
     }
 
-    // NOTE: there is no backend endpoint to update sessions (only
-    // create/read exist), so this only changes what you see here right
-    // now — it will reset if you refresh the page or come back later.
     const newLocation = buildLocationStringFrom(editLocationType, editCampus, editBlock, editRoom)
-    const newMode: Session['mode'] = editLocationType === 'online' ? 'online' : 'on-campus'
     const oldIds = new Set(editingGroup.sessions.map(s => s.id))
-    // Dates that still fall in the new range/day keep their existing id,
-    // status and holiday history — so re-shaping a series doesn't wipe
-    // out an ALLOCATED or HOLIDAY mark on a date that's still in it.
-    const oldByDateKey = new Map(editingGroup.sessions.map(s => [new Date(s.startTime).toDateString(), s]))
+    const oldByDateKey = new Map<string, Session>(
+      editingGroup.sessions.map(s => [new Date(s.startTime).toDateString(), s])
+    )
 
-    const newSessions: Session[] = occurrenceDates.map((date, i) => {
-      const existing = oldByDateKey.get(date.toDateString())
-      return {
-        id: existing ? existing.id : -(Date.now() + i),
-        title: editClassType,
-        startTime: formatEditDateTime(date, editStartTime),
-        location: newLocation,
-        status: existing ? existing.status : 'PENDING',
-        mode: newMode,
-        previousStatus: existing?.previousStatus,
+    try {
+      const newSessions: Session[] = []
+      for (let i = 0; i < occurrenceDates.length; i++) {
+        const date = occurrenceDates[i]
+        const existing = oldByDateKey.get(date.toDateString())
+        const startTime = formatEditDateTime(date, editStartTime)
+        const endTime = formatEditDateTime(date, editEndTime)
+
+        if (existing && existing.id > 0) {
+          const updated = await api.updateSession(unit.id, existing.id, {
+            title: editClassType,
+            startTime,
+            endTime,
+            location: newLocation,
+          })
+          newSessions.push({ ...updated, mode: editLocationType === 'online' ? 'online' : 'on-campus' })
+        } else {
+          const created = await api.createSession(unit.id, {
+            title: editClassType,
+            startTime,
+            endTime,
+            location: newLocation,
+          })
+          newSessions.push({ ...created, mode: editLocationType === 'online' ? 'online' : 'on-campus' })
+        }
       }
-    })
 
-    setSessions(prev => [...prev.filter(s => !oldIds.has(s.id)), ...newSessions])
-    setEditingGroupKey(null)
+      // Delete sessions that fell out of range
+      for (const s of editingGroup.sessions) {
+        if (s.id > 0 && !occurrenceDates.some(d => d.toDateString() === new Date(s.startTime).toDateString())) {
+          await api.deleteSession(unit.id, s.id)
+        }
+      }
+
+      setSessions(prev => [...prev.filter(s => !oldIds.has(s.id)), ...newSessions])
+      setEditingGroupKey(null)
+    } catch (err) {
+      console.error(err)
+      setEditSeriesError('Failed to save changes. Please try again.')
+    }
   }
 
 
@@ -696,6 +774,7 @@ export default function UnitDetailView({ unit, onBack }: Props) {
                   <div className="session-day">{group.title}</div>
                   <div className="session-time">
                     {DAY_NAMES[group.dayOfWeek]}s, {group.timeLabel}
+                    {group.endTimeLabel && ` – ${group.endTimeLabel}`}
                   </div>
                   {group.location && <div className="session-location">{group.location}</div>}
                   {isMulti ? (
@@ -742,6 +821,9 @@ export default function UnitDetailView({ unit, onBack }: Props) {
                     </div>
                     {group.sessions.map(s => {
                       const meta = statusMeta(s.status)
+                      const flaggedStaff = (s.unavailableStaffIds ?? [])
+                        .map(id => invitations.find(inv => inv.staff.id === id)?.staff)
+                        .filter((staff): staff is StaffUser => Boolean(staff))
                       return (
                         <div key={s.id} className="session-occurrence-row">
                           <span className={`session-occurrence-date ${s.status === 'HOLIDAY' ? 'holiday' : ''}`}>
@@ -766,6 +848,41 @@ export default function UnitDetailView({ unit, onBack }: Props) {
                           >
                             Delete
                           </button>
+
+                          {flaggedStaff.length > 0 && (
+                            <div className="session-occurrence-unavailable-list">
+                              {flaggedStaff.map(staff => (
+                                <span key={staff.id} className="status-badge unavailable">
+                                  🚫 {staff.fullName} can't teach this date
+                                  <button
+                                    type="button"
+                                    className="session-occurrence-unflag-btn"
+                                    onClick={() => handleToggleStaffUnavailable(s, staff.id, false)}
+                                    aria-label={`Remove unavailable flag for ${staff.fullName}`}
+                                  >
+                                    ✕
+                                  </button>
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                          {invitations.length > flaggedStaff.length && (
+                            <select
+                              className="session-occurrence-flag-select"
+                              value=""
+                              onChange={e => {
+                                const staffId = Number(e.target.value)
+                                if (staffId) handleToggleStaffUnavailable(s, staffId, true)
+                              }}
+                            >
+                              <option value="">🚫 Simulate: flag tutor unavailable…</option>
+                              {invitations
+                                .filter(inv => !(s.unavailableStaffIds ?? []).includes(inv.staff.id))
+                                .map(inv => (
+                                  <option key={inv.staff.id} value={inv.staff.id}>{inv.staff.fullName}</option>
+                                ))}
+                            </select>
+                          )}
                         </div>
                       )
                     })}

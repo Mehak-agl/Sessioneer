@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/allocations")
@@ -31,5 +32,12 @@ public class AllocationController {
     @GetMapping("/staff/{staffId}")
     public ResponseEntity<List<Allocation>> getAllocationsByStaff(@PathVariable Long staffId) {
         return ResponseEntity.ok(allocationService.getAllocationsByStaff(staffId));
+    }
+
+    @PostMapping("/self-assign")
+    public ResponseEntity<Allocation> selfAssign(@RequestBody Map<String, Object> body) {
+        Long sessionId = Long.valueOf(body.get("sessionId").toString());
+        String coordinatorName = body.get("coordinatorName").toString();
+        return ResponseEntity.ok(allocationService.selfAssign(sessionId, coordinatorName));
     }
 }

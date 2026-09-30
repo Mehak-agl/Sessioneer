@@ -1,14 +1,10 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { api } from '../services/api'
+import { api, isMockMode } from '../services/api'
+import PasswordInput from '../components/PasswordInput'
 
 
 type Role = 'coordinator' | 'staff'
-
-const MOCK_USERS = [
-  { email: 'coordinator@qut.edu.au', password: 'admin123', role: 'COORDINATOR', fullName: 'Sarah Chen' },
-  { email: 'staff@qut.edu.au',       password: 'staff123',  role: 'STAFF',       fullName: 'Alex Thompson' },
-]
 
 export default function LoginPage() {
   const navigate = useNavigate()
@@ -25,18 +21,18 @@ export default function LoginPage() {
       localStorage.setItem('sessioneer_token', res.token)
       localStorage.setItem('sessioneer_role', res.role.toLowerCase())
       localStorage.setItem('sessioneer_name', res.fullName)
+      // Store user ID in localStorage for testing purposes (not secure for production)
+      localStorage.setItem('sessioneer_user_id', String(res.userId))
+      // The email the person just signed in with is the email registered
+      // to their account — save it so the Profile pages can display it.
+      localStorage.setItem('sessioneer_email', email)
       navigate(res.role === 'COORDINATOR' ? '/coordinator' : '/staff')
     } catch {
-      // Fall back to mock auth when backend is not running
-      const mock = MOCK_USERS.find(u => u.email === email && u.password === password)
-      if (mock) {
-        localStorage.setItem('sessioneer_token', 'mock-token')
-        localStorage.setItem('sessioneer_role', mock.role.toLowerCase())
-        localStorage.setItem('sessioneer_name', mock.fullName)
-        navigate(mock.role === 'COORDINATOR' ? '/coordinator' : '/staff')
-      } else {
-        setError('Invalid email or password.')
-      }
+      setError(
+        isMockMode()
+          ? 'Invalid email or password.'
+          : 'Invalid email or password, or the backend is not running — try Mock Mode in the bottom-right corner.',
+      )
     }
   }
 
@@ -85,8 +81,14 @@ export default function LoginPage() {
             </div>
             <div className="form-group">
               <label htmlFor="password">Password</label>
-              <input id="password" type="password" placeholder="Enter your password"
-                value={password} onChange={e => setPassword(e.target.value)} required />
+              <PasswordInput
+                id="password"
+                placeholder="Enter your password"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                autoComplete="current-password"
+                required
+              />
             </div>
             {error && <p className="login-error">{error}</p>}
             <button type="submit" className="login-btn">Sign In</button>

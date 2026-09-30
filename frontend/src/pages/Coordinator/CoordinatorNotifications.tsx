@@ -1,14 +1,15 @@
 import { useState } from 'react'
-import CoordinatorSidebar from '../../components/CooordinatorSidebar'
-import { MOCK_NOTIFICATIONS, NOTIF_READ_KEY, NOTIF_EVENT, type NotifType } from '../../data/notifications'
+import CoordinatorSidebar from '../../components/CoordinatorSidebar'
+import { getCoordinatorNotifications, NOTIF_READ_KEY, NOTIF_EVENT, type Notification, type NotifType } from '../../data/notifications'
 
-type TypeFilter = 'all' | 'availability' | 'invitation' | 'allocation'
+type TypeFilter = 'all' | 'availability' | 'invitation' | 'allocation' | 'swap'
 
 const TYPE_TABS: { key: TypeFilter; label: string }[] = [
   { key: 'all',          label: 'All Types'    },
   { key: 'availability', label: 'Availability' },
   { key: 'invitation',   label: 'Invitations'  },
   { key: 'allocation',   label: 'Allocations'  },
+  { key: 'swap',         label: 'Emergency Swaps' },
 ]
 
 function matchesType(type: NotifType, filter: TypeFilter): boolean {
@@ -16,6 +17,7 @@ function matchesType(type: NotifType, filter: TypeFilter): boolean {
   if (filter === 'availability') return type === 'availability'
   if (filter === 'invitation') return type === 'invitation_accepted' || type === 'invitation_declined'
   if (filter === 'allocation') return type === 'allocation_confirmed' || type === 'allocation_rejected'
+  if (filter === 'swap') return type === 'swap_completed'
   return true
 }
 
@@ -25,6 +27,7 @@ const TYPE_LABEL: Record<NotifType, string> = {
   invitation_declined:  'Invitation Declined',
   allocation_confirmed: 'Allocation Confirmed',
   allocation_rejected:  'Allocation Rejected',
+  swap_completed:       'Emergency Swap',
 }
 
 const ICON: Record<NotifType, { symbol: string; bg: string }> = {
@@ -33,6 +36,7 @@ const ICON: Record<NotifType, { symbol: string; bg: string }> = {
   invitation_declined:  { symbol: '✕', bg: '#dc2626' },
   allocation_confirmed: { symbol: '✓', bg: '#059669' },
   allocation_rejected:  { symbol: '✕', bg: '#b91c1c' },
+  swap_completed:       { symbol: '↔', bg: '#7c3aed' },
 }
 
 const GROUP_ORDER = ['Today', 'Yesterday', 'This Week', 'Earlier']
@@ -49,8 +53,8 @@ function getDateGroup(iso: string): string {
   return 'Earlier'
 }
 
-function groupNotifications(notifs: typeof MOCK_NOTIFICATIONS) {
-  const map: Record<string, typeof MOCK_NOTIFICATIONS> = {}
+function groupNotifications(notifs: Notification[]) {
+  const map: Record<string, Notification[]> = {}
   for (const n of notifs) {
     const g = getDateGroup(n.time)
     if (!map[g]) map[g] = []
@@ -90,8 +94,9 @@ export default function CoordinatorNotifications() {
   const [unitFilter, setUnitFilter] = useState<string>('all')
   const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set())
   const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [notifications] = useState<Notification[]>(getCoordinatorNotifications)
 
-  const allUnits = Array.from(new Set(MOCK_NOTIFICATIONS.map(n => n.unit))).sort()
+  const allUnits = Array.from(new Set(notifications.map(n => n.unit))).sort()
 
   const deleteNotif = (id: string) => {
     setDeletedIds(prev => new Set(prev).add(id))
@@ -112,7 +117,7 @@ export default function CoordinatorNotifications() {
     saveReadIds(all)
   }
 
-  const live = MOCK_NOTIFICATIONS.filter(n => !deletedIds.has(n.id))
+  const live = notifications.filter(n => !deletedIds.has(n.id))
   const unreadCount = live.filter(n => !readIds.has(n.id)).length
 
   // base = respects read filter; used for type tab counts

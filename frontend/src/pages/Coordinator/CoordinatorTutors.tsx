@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import CoordinatorSidebar from '../../components/CooordinatorSidebar'
+import CoordinatorSidebar from '../../components/CoordinatorSidebar'
 import { api } from '../../services/api'
 
 interface CreatedTutor {
@@ -69,7 +69,7 @@ export default function CoordinatorTutors() {
     setCreating(true)
     const password = generatePassword()
     try {
-      await api.signup({ fullName: newName, email: newEmail, password, role: 'STAFF' })
+      await api.signup({ fullName: newName, email: newEmail, password, role: 'staff' })
       const newTutor: CreatedTutor = {
         id: Date.now(),
         fullName: newName,
@@ -100,7 +100,7 @@ export default function CoordinatorTutors() {
           <div className="page-title">
             <img src="/logo.png" alt="Page logo" />
             <div>
-              <h1>Tutors</h1>
+              <h1>Create Tutor Accounts</h1>
               <p>Manage tutor accounts for your units</p>
             </div>
           </div>
@@ -177,6 +177,10 @@ export default function CoordinatorTutors() {
                   <div className="create-tutor-cred-row">
                     <span className="create-tutor-cred-label">Email</span>
                     <span className="create-tutor-cred-value">{createdCreds.email}</span>
+                  </div>
+                  <div className="create-tutor-cred-row">
+                    <span className="create-tutor-cred-label">Password</span>
+                    <span className="create-tutor-cred-value create-tutor-cred-password">{createdCreds.password}</span>
                   </div>
                 </div>
                 <p className="create-tutor-note">The tutor can change their password after first login.</p>

@@ -41,4 +41,18 @@ public class UnitService {
         User coordinator = getCurrentUser();
         return unitRepository.findByCoordinatorId(coordinator.getId());
     }
+
+    public Unit setDeadline(Long unitId, java.time.LocalDateTime deadline) {
+        Unit unit = unitRepository.findById(unitId)
+                .orElseThrow(() -> new RuntimeException("Unit not found"));
+        unit.setAvailabilityDeadline(deadline);
+        return unitRepository.save(unit);
+    }
+
+    public Unit clearDeadline(Long unitId) {
+        Unit unit = unitRepository.findById(unitId)
+                .orElseThrow(() -> new RuntimeException("Unit not found"));
+        unit.setAvailabilityDeadline(null);
+        return unitRepository.save(unit);
+    }
 }

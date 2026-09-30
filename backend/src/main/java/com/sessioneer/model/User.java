@@ -31,4 +31,23 @@ public class User {
     public void setPassword(String password) { this.password = password; }
     public Role getRole() { return role; }
     public void setRole(Role role) { this.role = role; }
+
+    @Column(columnDefinition = "TEXT")
+    private String photo;
+
+    private String resumeName;
+
+    @Column(columnDefinition = "TEXT")
+    private String resumeData;
+
+    private String resumeType;
+
+    public String getPhoto() { return photo; }
+    public void setPhoto(String photo) { this.photo = photo; }
+    public String getResumeName() { return resumeName; }
+    public void setResumeName(String resumeName) { this.resumeName = resumeName; }
+    public String getResumeData() { return resumeData; }
+    public void setResumeData(String resumeData) { this.resumeData = resumeData; }
+    public String getResumeType() { return resumeType; }
+    public void setResumeType(String resumeType) { this.resumeType = resumeType; }
 }

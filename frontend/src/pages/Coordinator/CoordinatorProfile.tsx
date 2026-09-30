@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import CoordinatorSidebar from '../../components/CooordinatorSidebar'
+import CoordinatorSidebar from '../../components/CoordinatorSidebar'
+import PasswordInput from '../../components/PasswordInput'
 
 
 
@@ -14,6 +15,7 @@ function applyTheme(theme: Theme) {
 
 export default function CoordinatorProfile() {
   const fullName = localStorage.getItem('sessioneer_name') || 'Coordinator'
+  const email = localStorage.getItem('sessioneer_email') || ''
   const initials = fullName.split(' ').filter(Boolean).map(n => n[0]).join('').toUpperCase()
 
   const [photo, setPhoto] = useState<string | null>(() => localStorage.getItem(PHOTO_STORAGE_KEY))
@@ -122,6 +124,7 @@ export default function CoordinatorProfile() {
           </div>
 
           <h2 className="profile-name">{fullName}</h2>
+          {email && <p className="profile-email">{email}</p>}
           <span className="profile-position-badge">Coordinator</span>
         </section>
 
@@ -150,27 +153,27 @@ export default function CoordinatorProfile() {
             <form className="detail-form password-form" onSubmit={handleChangePassword}>
               <div className="form-field">
                 <label>Current Password</label>
-                <input
-                  type="password"
+                <PasswordInput
                   value={currentPassword}
                   onChange={e => setCurrentPassword(e.target.value)}
+                  autoComplete="current-password"
                 />
               </div>
               <div className="form-row-2">
                 <div className="form-field">
                   <label>New Password</label>
-                  <input
-                    type="password"
+                  <PasswordInput
                     value={newPassword}
                     onChange={e => setNewPassword(e.target.value)}
+                    autoComplete="new-password"
                   />
                 </div>
                 <div className="form-field">
                   <label>Confirm New Password</label>
-                  <input
-                    type="password"
+                  <PasswordInput
                     value={confirmPassword}
                     onChange={e => setConfirmPassword(e.target.value)}
+                    autoComplete="new-password"
                   />
                 </div>
               </div>

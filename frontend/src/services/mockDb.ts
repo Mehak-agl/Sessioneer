@@ -60,6 +60,34 @@ export interface MockAllocation {
   status: 'ALLOCATED'
 }
 
+// ── Emergency Class Swap ────────────────────────────────────────────────
+// A tutor who's already allocated a class/session can hand it off to a
+// colleague without the coordinator needing to approve it — see
+// pages/Tutor/TutorEmergencySwap.tsx. The coordinator is only ever told
+// about it after the fact (see coordinatorNotices below).
+export interface MockSwapRequest {
+  id: number
+  unitId: number
+  scope: 'SESSION' | 'SERIES'
+  sessionIds: number[]
+  requestingStaffId: number
+  targetStaffId: number
+  reason: string
+  status: 'PENDING' | 'ACCEPTED' | 'DECLINED'
+  createdAt: string
+  respondedAt?: string
+}
+
+// Informational-only notices for the coordinator — nothing here ever
+// needs a decision from them, it's purely "FYI, this happened".
+export interface MockCoordinatorNotice {
+  id: string
+  unit: string
+  title: string
+  message: string
+  time: string
+}
+
 export interface MockDb {
   nextId: {
     user: number
@@ -68,6 +96,7 @@ export interface MockDb {
     invitation: number
     availability: number
     allocation: number
+    swapRequest: number
   }
   users: MockUser[]
   units: MockUnit[]
@@ -75,6 +104,8 @@ export interface MockDb {
   invitations: MockInvitation[]
   availability: MockAvailability[]
   allocations: MockAllocation[]
+  swapRequests: MockSwapRequest[]
+  coordinatorNotices: MockCoordinatorNotice[]
   // Extra "self-assign" identities keyed by the coordinator name/email used
   // at the time — lets the Allocations page show a real name for a
   // self-assigned card instead of just "id -1".

@@ -9,16 +9,19 @@ import java.util.List;
 @Service
 public class UnitInvitationService {
 
-    private final UnitInvitationRepository invitationRepository;
+        private final UnitInvitationRepository invitationRepository;
     private final UnitRepository unitRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     public UnitInvitationService(UnitInvitationRepository invitationRepository,
                                   UnitRepository unitRepository,
-                                  UserRepository userRepository) {
+                                  UserRepository userRepository,
+                                  NotificationService notificationService) {
         this.invitationRepository = invitationRepository;
         this.unitRepository = unitRepository;
         this.userRepository = userRepository;
+        this.notificationService = notificationService;
     }
 
     public UnitInvitation inviteStaff(Long unitId, Long staffId) {
@@ -36,7 +39,12 @@ public class UnitInvitationService {
         invitation.setStaff(staff);
         invitation.setStatus(InvitationStatus.PENDING);
 
-        return invitationRepository.save(invitation);
+        UnitInvitation saved = invitationRepository.save(invitation);
+
+        notificationService.notify(staff, unit, "INVITATION", "Unit Invitation",
+                "You've been invited to teach " + unit.getCode() + " — " + unit.getName() + ". Log in to Sessioneer to respond.");
+
+        return saved;
     }
 
     public List<UnitInvitation> getInvitationsForUnit(Long unitId) {

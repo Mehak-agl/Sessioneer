@@ -19,13 +19,16 @@ public class AllocationService {
     private final AllocationRepository allocationRepository;
     private final SessionRepository sessionRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     public AllocationService(AllocationRepository allocationRepository,
                              SessionRepository sessionRepository,
-                             UserRepository userRepository) {
+                             UserRepository userRepository,
+                             NotificationService notificationService) {
         this.allocationRepository = allocationRepository;
         this.sessionRepository = sessionRepository;
         this.userRepository = userRepository;
+        this.notificationService = notificationService;
     }
 
     public Allocation allocate(AllocationRequest request) {
@@ -33,7 +36,7 @@ public class AllocationService {
                 .orElseThrow(() -> new RuntimeException("Session not found"));
 
         User staff = userRepository.findById(request.getStaffId())
-                .orElseThrow(() -> new RuntimeException("Staff not found"));
+                .orElseThrow(() -> new RuntimeException("Staff not found"));;
 
         session.setStatus(SessionStatus.ALLOCATED);
         sessionRepository.save(session);
@@ -48,7 +51,11 @@ public class AllocationService {
         allocation.setStaff(staff);
         allocation.setStatus(AllocationStatus.PROPOSED);
 
-        return allocationRepository.save(allocation);
+        Allocation saved = allocationRepository.save(allocation);
+        notificationService.notify(staff, session.getUnit(), "ALLOCATION", "Session Allocated",
+                "You've been allocated to " + session.getTitle() + " on " +
+                session.getStartTime() + " in " + session.getUnit().getCode() + ".");
+        return saved;
     }
 
     public List<Allocation> getAllocationsByUnit(Long unitId) {

@@ -130,4 +130,10 @@ export const api = {
   setDeadline: (unitId: number, deadline: string) => request('PUT', `/units/${unitId}/deadline`, { deadline }),
   clearDeadline: (unitId: number) => requestNoBody('DELETE', `/units/${unitId}/deadline`),
   acceptInvitation: (unitId: number, staffId: number) => requestEmptyResponse('POST', `/units/${unitId}/invite/${staffId}/respond`, {}),
+  getAllTutors: () => request('GET', '/tutors'),
+  getTutorProfile: (id: number) => request('GET', `/tutors/${id}`),
+  getUnitTutors: (unitId: number) => request('GET', `/units/${unitId}/tutors`),
+  getMySwapRequests: () => request('GET', '/swap-requests/me'),
+  createSwapRequest: (data: object) => request('POST', '/swap-requests', data),
+  respondToSwapRequest: (requestId: number, accept: boolean) => request('POST', `/swap-requests/${requestId}/respond`, { accept }),
 }

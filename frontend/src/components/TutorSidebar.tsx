@@ -36,6 +36,7 @@ function StaffSidebar() {
         <Link to="/staff">Reports</Link>
         <Link to="/staff-chat">Chat</Link>
         <Link to="/staff-profile">Profile</Link>
+        <Link to="/staff-swaps">Emergency Swap</Link>
       </nav>
     </aside>
   );

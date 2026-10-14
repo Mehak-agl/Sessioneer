@@ -1,13 +1,11 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { api } from '../services/api'
+import PasswordInput from '../components/PasswordInput'
 
-
-type Role = 'coordinator' | 'staff'
 
 export default function SignupPage() {
   const navigate = useNavigate()
-  const [role, setRole] = useState<Role>('coordinator')
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -21,13 +19,16 @@ export default function SignupPage() {
     if (password.length < 6) { setError('Password must be at least 6 characters.'); return }
 
     try {
-      const res = await api.signup({ fullName, email, password, role })
+      // Sign-up only ever creates Coordinator accounts now — tutors get
+      // their accounts created by a coordinator (see CoordinatorTutors.tsx),
+      // which emails them their login credentials directly.
+      const res = await api.signup({ fullName, email, password, role: 'coordinator' })
       localStorage.setItem('sessioneer_token', res.token)
       localStorage.setItem('sessioneer_role', res.role.toLowerCase())
       localStorage.setItem('sessioneer_name', res.fullName)
       // Store user ID in localStorage for testing purposes (not secure for production)
       localStorage.setItem('sessioneer_user_id', String(res.userId))
-      navigate(res.role === 'COORDINATOR' ? '/coordinator' : '/staff')
+      navigate('/coordinator')
     } catch {
       setError('Signup failed. Email may already be registered.')
     }
@@ -56,18 +57,7 @@ export default function SignupPage() {
         <div className="signup-card">
           <div className="signup-header">
             <h2>Create an account</h2>
-            <p>Sign up to get started with Sessioneer</p>
-          </div>
-
-          <div className="role-selector">
-            <button className={`role-btn ${role === 'coordinator' ? 'active' : ''}`}
-              onClick={() => { setRole('coordinator'); setError('') }} type="button">
-              Unit Coordinator
-            </button>
-            <button className={`role-btn ${role === 'staff' ? 'active' : ''}`}
-              onClick={() => { setRole('staff'); setError('') }} type="button">
-              Sessional Staff
-            </button>
+            <p>Sign up as a Unit Coordinator. Tutor accounts are created by a coordinator from the Tutors page.</p>
           </div>
 
           <form className="signup-form" onSubmit={handleSignup}>
@@ -84,13 +74,25 @@ export default function SignupPage() {
             <div className="form-row">
               <div className="form-group">
                 <label htmlFor="password">Password</label>
-                <input id="password" type="password" placeholder="Min. 6 characters"
-                  value={password} onChange={e => setPassword(e.target.value)} required />
+                <PasswordInput
+                  id="password"
+                  placeholder="Min. 6 characters"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  autoComplete="new-password"
+                  required
+                />
               </div>
               <div className="form-group">
                 <label htmlFor="confirmPassword">Confirm Password</label>
-                <input id="confirmPassword" type="password" placeholder="Re-enter password"
-                  value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required />
+                <PasswordInput
+                  id="confirmPassword"
+                  placeholder="Re-enter password"
+                  value={confirmPassword}
+                  onChange={e => setConfirmPassword(e.target.value)}
+                  autoComplete="new-password"
+                  required
+                />
               </div>
             </div>
             {error && <p className="signup-error">{error}</p>}

@@ -47,7 +47,21 @@ public class MessageService {
 
     public List<Message> getConversation(Long otherId) {
         User me = getCurrentUser();
-        return messageRepository.findConversation(me.getId(), otherId);
+        List<Message> messages = messageRepository.findConversation(me.getId(), otherId);
+
+        // Opening a conversation marks the other person's messages to you as
+        // read — same as most chat apps. Only flips incoming messages; your
+        // own outgoing messages are untouched here (their read status flips
+        // when the OTHER person opens the conversation and calls this).
+        List<Message> toMarkRead = messages.stream()
+                .filter(m -> !m.isRead() && m.getSender().getId().equals(otherId) && m.getReceiver().getId().equals(me.getId()))
+                .collect(java.util.stream.Collectors.toList());
+        if (!toMarkRead.isEmpty()) {
+            toMarkRead.forEach(m -> m.setRead(true));
+            messageRepository.saveAll(toMarkRead);
+        }
+
+        return messages;
     }
 
     public List<com.sessioneer.model.User> getConversationPartners() {

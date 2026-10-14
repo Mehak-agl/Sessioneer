@@ -28,6 +28,11 @@ public class Message {
     @Column(columnDefinition = "TEXT")
     private String fileData;
 
+    private boolean read = false;
+
+    public boolean isRead() { return read; }
+    public void setRead(boolean read) { this.read = read; }
+
     public String getFileName() { return fileName; }
     public void setFileName(String fileName) { this.fileName = fileName; }
     public String getFileType() { return fileType; }

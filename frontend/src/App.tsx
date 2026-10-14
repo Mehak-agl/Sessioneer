@@ -17,6 +17,10 @@ import TutorMyUnits from './pages/Tutor/TutorMyUnits'
 import TutorCalendar from './pages/Tutor/TutorCalendar'
 import TutorChat from './pages/Tutor/TutorChat'
 import TutorProfile from './pages/Tutor/TutorProfile'
+import TutorEmergencySwap from './pages/Tutor/TutorEmergencySwap'
+import TutorNotifications from './pages/Tutor/TutorNotifications'
+
+import CoordinatorTutorProfile from './pages/Coordinator/CoordinatorTutorProfile'
 
 export default function App() {
   return (
@@ -41,6 +45,10 @@ export default function App() {
         <Route path="/coordinator/tutors" element={<CoordinatorTutors />} />
         <Route path="/coordinator/allocations" element={<CoordinatorAllocations />} />
         <Route path="/coordinator/reports" element={<CoordinatorReports />} />
+        
+        <Route path="/coordinator/reports/:id" element={<CoordinatorTutorProfile />} />
+        <Route path="/staff-swaps" element={<TutorEmergencySwap />} />
+        <Route path="/staff-notifications" element={<TutorNotifications />} />
       </Routes>
     </BrowserRouter>
   )

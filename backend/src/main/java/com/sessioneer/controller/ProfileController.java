@@ -26,6 +26,11 @@ public class ProfileController {
         return ResponseEntity.ok(profileService.updatePhoto(body.get("photo")));
     }
 
+    @PutMapping("/notification-email")
+    public ResponseEntity<User> updateNotificationEmail(@RequestBody Map<String, String> body) {
+        return ResponseEntity.ok(profileService.updateNotificationEmail(body.get("notificationEmail")));
+    }
+
     @PutMapping("/resume")
     public ResponseEntity<User> updateResume(@RequestBody Map<String, String> body) {
         return ResponseEntity.ok(profileService.updateResume(

@@ -34,6 +34,12 @@ public class ProfileService {
         return userRepository.save(user);
     }
 
+    public User updateNotificationEmail(String notificationEmail) {
+        User user = getCurrentUser();
+        user.setNotificationEmail(notificationEmail == null || notificationEmail.isBlank() ? null : notificationEmail.trim());
+        return userRepository.save(user);
+    }
+
     public User updateResume(String resumeName, String resumeData, String resumeType) {
         User user = getCurrentUser();
         user.setResumeName(resumeName);

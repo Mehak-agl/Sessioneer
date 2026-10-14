@@ -9,7 +9,7 @@
 // identically whether it's talking to this mock or the real backend.
 // ─────────────────────────────────────────────────────────────────────────
 
-import { getDb, saveDb, type MockUser } from './mockDb'
+import { getDb, saveDb, type MockUser, type MockSwapRequest } from './mockDb'
 
 export const SELF_ASSIGN_STAFF_ID = -1
 
@@ -46,14 +46,14 @@ function toStaffSummary(user: MockUser) {
   return { id: user.id, fullName: user.fullName, email: user.email }
 }
 
-function hydrateStaffOrSelf(db: ReturnType<typeof getDb>, staffId: number) {
+/***function hydrateStaffOrSelf(db: ReturnType<typeof getDb>, staffId: number) {
   if (staffId === SELF_ASSIGN_STAFF_ID) {
     const identity = db.selfAssignIdentities[String(staffId)] ?? { fullName: 'Coordinator', email: undefined }
     return { id: SELF_ASSIGN_STAFF_ID, fullName: identity.fullName, email: identity.email ?? '' }
   }
   const user = db.users.find(u => u.id === staffId)
   return user ? toStaffSummary(user) : { id: staffId, fullName: 'Unknown Staff', email: '' }
-}
+}***/
 
 function hydrateSession(db: ReturnType<typeof getDb>, sessionId: number) {
   const session = db.sessions.find(s => s.id === sessionId)
@@ -331,4 +331,211 @@ export async function markStaffUnavailableForSession(sessionId: number, staffId:
   // Purely a client-side concept even on the real backend flow (see the
   // notes in CoordinatorUnitDetailView.tsx) — just acknowledge the call.
   return delay({ sessionId, staffId, unavailable })
+}
+
+// ── Tutor Report section (Coordinator view of all tutors) ─────────────────
+
+function readResume(userId: number): { fileName?: string; data?: string } {
+  try {
+    const fileName = localStorage.getItem(`sessioneer_resume_name_${userId}`)
+    const data = localStorage.getItem(`sessioneer_resume_${userId}`)
+    return { fileName: fileName ?? undefined, data: data ?? undefined }
+  } catch {
+    return {}
+  }
+}
+
+function tutorUnitsFor(db: ReturnType<typeof getDb>, staffId: number) {
+  return db.invitations
+    .filter(inv => inv.staffId === staffId)
+    .map(inv => {
+      const unit = db.units.find(u => u.id === inv.unitId)
+      const sessionIdsInUnit = new Set(db.sessions.filter(s => s.unitId === inv.unitId).map(s => s.id))
+      const sessionsAllocated = db.allocations.filter(
+        a => a.staffId === staffId && sessionIdsInUnit.has(a.sessionId),
+      ).length
+      return {
+        unitId: inv.unitId,
+        code: unit?.code ?? 'Unknown',
+        name: unit?.name ?? 'Unknown unit',
+        semester: unit?.semester ?? '',
+        invitationStatus: inv.status,
+        sessionsAllocated,
+      }
+    })
+}
+
+export async function getAllTutors() {
+  const db = getDb()
+  const tutors = db.users
+    .filter(u => u.role === 'STAFF')
+    .map(u => {
+      const units = tutorUnitsFor(db, u.id)
+      const totalSessionsAllocated = units.reduce((sum, unit) => sum + unit.sessionsAllocated, 0)
+      return {
+        id: u.id,
+        fullName: u.fullName,
+        email: u.email,
+        unitCount: units.length,
+        totalSessionsAllocated,
+        hasResume: Boolean(readResume(u.id).data),
+      }
+    })
+  return delay(tutors)
+}
+
+export async function getTutorProfile(tutorId: number) {
+  const db = getDb()
+  const user = db.users.find(u => u.id === tutorId && u.role === 'STAFF')
+  if (!user) return delay(fail('Tutor not found.'))
+
+  const units = tutorUnitsFor(db, user.id)
+  const totalSessionsAllocated = units.reduce((sum, unit) => sum + unit.sessionsAllocated, 0)
+  const pendingInvitations = units.filter(u => u.invitationStatus === 'PENDING').length
+  const resume = readResume(user.id)
+
+  return delay({
+    id: user.id,
+    fullName: user.fullName,
+    email: user.email,
+    units,
+    totalSessionsAllocated,
+    pendingInvitations,
+    hasResume: Boolean(resume.data),
+    resumeFileName: resume.fileName,
+    resumeData: resume.data,
+  })
+}
+
+function hydrateStaffOrSelf(db: ReturnType<typeof getDb>, staffId: number) {
+  if (staffId === SELF_ASSIGN_STAFF_ID) {
+    const identity = db.selfAssignIdentities[String(staffId)] ?? { fullName: 'Coordinator', email: undefined }
+    return { id: SELF_ASSIGN_STAFF_ID, fullName: identity.fullName, email: identity.email ?? '' }
+  }
+  const user = db.users.find(u => u.id === staffId)
+  return user ? toStaffSummary(user) : { id: staffId, fullName: 'Unknown Staff', email: '' }
+}
+
+// ── Emergency Class Swap ────────────────────────────────────────────────
+function hydrateSwapRequest(db: ReturnType<typeof getDb>, id: number) {
+  const r = db.swapRequests.find(x => x.id === id)!
+  const unit = db.units.find(u => u.id === r.unitId)
+  const sessions = r.sessionIds
+    .map(sid => hydrateSession(db, sid))
+    .filter((s): s is NonNullable<typeof s> => s != null)
+  return {
+    id: r.id,
+    unit: unit ? { ...unit } : { id: r.unitId },
+    scope: r.scope,
+    sessions,
+    requestingStaff: hydrateStaffOrSelf(db, r.requestingStaffId),
+    targetStaff: hydrateStaffOrSelf(db, r.targetStaffId),
+    reason: r.reason,
+    status: r.status,
+    createdAt: r.createdAt,
+    respondedAt: r.respondedAt,
+  }
+}
+
+export async function getUnitTutors(unitId: number) {
+  const db = getDb()
+  const user = requireCurrentUser()
+  const rows = db.invitations
+    .filter(inv => inv.unitId === unitId && inv.status === 'RESPONDED' && inv.staffId !== user.id)
+    .map(inv => hydrateStaffOrSelf(db, inv.staffId))
+  return delay(rows)
+}
+
+export async function getMySwapRequests() {
+  const db = getDb()
+  const user = requireCurrentUser()
+  const byRecent = (a: { createdAt: string }, b: { createdAt: string }) =>
+    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  const outgoing = db.swapRequests.filter(r => r.requestingStaffId === user.id).map(r => hydrateSwapRequest(db, r.id))
+  const incoming = db.swapRequests.filter(r => r.targetStaffId === user.id).map(r => hydrateSwapRequest(db, r.id))
+  return delay({ outgoing: outgoing.sort(byRecent), incoming: incoming.sort(byRecent) })
+}
+
+export async function createSwapRequest(data: any) {
+  const db = getDb()
+  const user = requireCurrentUser()
+  const unitId = Number(data?.unitId)
+  const scope: 'SESSION' | 'SERIES' = data?.scope === 'SERIES' ? 'SERIES' : 'SESSION'
+  const sessionIds: number[] = Array.isArray(data?.sessionIds) ? data.sessionIds.map(Number) : []
+  const targetStaffId = Number(data?.targetStaffId)
+  const reason = String(data?.reason ?? '').trim()
+
+  if (sessionIds.length === 0) return delay(fail('No classes selected for this swap.'))
+  if (!db.units.some(u => u.id === unitId)) return delay(fail('Unit not found.'))
+  if (targetStaffId === user.id) return delay(fail('You cannot swap with yourself.'))
+  if (!db.users.some(u => u.id === targetStaffId && u.role === 'STAFF')) {
+    return delay(fail('Selected tutor not found.'))
+  }
+
+  const notMine = sessionIds.some(
+    sid => !db.allocations.some(a => a.sessionId === sid && a.staffId === user.id),
+  )
+  if (notMine) return delay(fail('One or more of these classes are not currently allocated to you.'))
+
+  const alreadyPending = db.swapRequests.some(
+    r => r.status === 'PENDING' && r.requestingStaffId === user.id && r.sessionIds.some(sid => sessionIds.includes(sid)),
+  )
+  if (alreadyPending) {
+    return delay(fail('You already have a pending swap request covering one of these classes.'))
+  }
+
+  const swapRequest: MockSwapRequest = {
+    id: db.nextId.swapRequest++,
+    unitId,
+    scope,
+    sessionIds,
+    requestingStaffId: user.id,
+    targetStaffId,
+    reason,
+    status: 'PENDING',
+    createdAt: new Date().toISOString(),
+  }
+  db.swapRequests.push(swapRequest)
+  saveDb()
+  return delay(hydrateSwapRequest(db, swapRequest.id))
+}
+
+export async function respondToSwapRequest(requestId: number, accept: boolean) {
+  const db = getDb()
+  const user = requireCurrentUser()
+  const req = db.swapRequests.find(r => r.id === requestId)
+  if (!req) return delay(fail('Swap request not found.'))
+  if (req.targetStaffId !== user.id) return delay(fail('Only the tutor asked to cover this can respond.'))
+  if (req.status !== 'PENDING') return delay(fail('This request has already been responded to.'))
+
+  req.status = accept ? 'ACCEPTED' : 'DECLINED'
+  req.respondedAt = new Date().toISOString()
+
+  if (accept) {
+    for (const sessionId of req.sessionIds) {
+      const allocation = db.allocations.find(a => a.sessionId === sessionId && a.staffId === req.requestingStaffId)
+      if (allocation) allocation.staffId = req.targetStaffId
+    }
+
+    const unit = db.units.find(u => u.id === req.unitId)
+    const requester = db.users.find(u => u.id === req.requestingStaffId)
+    const target = db.users.find(u => u.id === req.targetStaffId)
+    const scopeLabel =
+      req.scope === 'SERIES'
+        ? 'the whole session (all remaining classes)'
+        : req.sessionIds.length === 1
+          ? 'a class'
+          : `${req.sessionIds.length} classes`
+
+    db.coordinatorNotices.unshift({
+      id: `swap-${req.id}`,
+      unit: unit?.code ?? 'Unit',
+      title: 'Emergency Swap Completed',
+      message: `${requester?.fullName ?? 'A tutor'} handed off ${scopeLabel} in ${unit?.code ?? 'a unit'} to ${target?.fullName ?? 'another tutor'}${req.reason ? ` (reason: ${req.reason})` : ''}. This is for your information only — no action is needed.`,
+      time: new Date().toISOString(),
+    })
+  }
+
+  saveDb()
+  return delay(hydrateSwapRequest(db, req.id))
 }

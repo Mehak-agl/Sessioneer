@@ -1,30 +1,25 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { MOCK_NOTIFICATIONS, NOTIF_READ_KEY, NOTIF_EVENT } from '../data/notifications'
-
-function getUnreadCount(): number {
-  try {
-    const raw = localStorage.getItem(NOTIF_READ_KEY)
-    const readIds: string[] = raw ? JSON.parse(raw) : []
-    return MOCK_NOTIFICATIONS.filter(n => !readIds.includes(n.id)).length
-  } catch {
-    return MOCK_NOTIFICATIONS.length
-  }
-}
+import { api } from '../services/api'
 
 function CoordinatorSidebar() {
   const fullName = localStorage.getItem('sessioneer_name') || 'Coordinator'
   const initials = fullName.split(' ').map((n: string) => n[0]).join('')
   const photo = localStorage.getItem('coordinator_photo')
-  const [unreadCount, setUnreadCount] = useState(getUnreadCount)
+  const [unreadCount, setUnreadCount] = useState(0)
   const location = useLocation()
   const navigate = useNavigate()
   const path = location.pathname
 
   useEffect(() => {
-    const handler = () => setUnreadCount(getUnreadCount())
-    window.addEventListener(NOTIF_EVENT, handler)
-    return () => window.removeEventListener(NOTIF_EVENT, handler)
+    const loadUnread = () => {
+      api.getMyNotifications()
+        .then((data: { read: boolean }[]) => setUnreadCount(data.filter(n => !n.read).length))
+        .catch(() => {})
+    }
+    loadUnread()
+    const interval = setInterval(loadUnread, 30000)
+    return () => clearInterval(interval)
   }, [])
 
   const goToProfile = () => navigate('/coordinator-profile')

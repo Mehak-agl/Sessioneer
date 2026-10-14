@@ -85,17 +85,18 @@ export default function CoordinatorReports() {
             <p className="tutors-empty">No tutors match your search.</p>
           ) : (
             <div className="tutors-table">
-              <div className="tutors-table-header tutors-table-header--5col">
+              <div className="tutors-table-header tutors-table-header--6col">
                 <span>Name</span>
                 <span>Email</span>
                 <span>Units</span>
                 <span>Sessions Allocated</span>
                 <span>Resume</span>
+                <span></span>
               </div>
               {filtered.map(t => (
                 <div
                   key={t.id}
-                  className="tutors-table-row tutors-table-row--5col tutors-table-row-clickable"
+                  className="tutors-table-row tutors-table-row--6col tutors-table-row-clickable"
                   role="button"
                   tabIndex={0}
                   onClick={() => openTutor(t.id)}
@@ -116,6 +117,12 @@ export default function CoordinatorReports() {
                   <span className={`status-badge ${t.hasResume ? 'responded' : 'pending'}`}>
                     {t.hasResume ? 'Uploaded' : 'None'}
                   </span>
+                  <button
+                    className="resume-view-btn"
+                    onClick={e => { e.stopPropagation(); openTutor(t.id) }}
+                  >
+                    View
+                  </button>
                 </div>
               ))}
             </div>

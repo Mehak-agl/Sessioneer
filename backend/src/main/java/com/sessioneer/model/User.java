@@ -21,6 +21,27 @@ public class User {
     @Enumerated(EnumType.STRING)
     private Role role;
 
+    // Set true only for accounts created via the Coordinator "Create Account"
+    // flow (CoordinatorTutors.tsx) — lets us list just those, separately from
+    // tutors who signed themselves up the old way.
+    private boolean coordinatorCreated = false;
+
+    // Whether the welcome email with login credentials actually sent
+    // successfully (EmailService.send() reports this back honestly).
+    private boolean credentialsEmailSent = false;
+
+    private java.time.LocalDateTime createdAt;
+
+    public boolean isCoordinatorCreated() { return coordinatorCreated; }
+    public void setCoordinatorCreated(boolean coordinatorCreated) { this.coordinatorCreated = coordinatorCreated; }
+    public boolean isCredentialsEmailSent() { return credentialsEmailSent; }
+    public void setCredentialsEmailSent(boolean credentialsEmailSent) { this.credentialsEmailSent = credentialsEmailSent; }
+    public java.time.LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(java.time.LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    
+    private String notificationEmail;
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public String getFullName() { return fullName; }
@@ -31,6 +52,8 @@ public class User {
     public void setPassword(String password) { this.password = password; }
     public Role getRole() { return role; }
     public void setRole(Role role) { this.role = role; }
+    public String getNotificationEmail() { return notificationEmail; }
+    public void setNotificationEmail(String notificationEmail) { this.notificationEmail = notificationEmail; }
 
     @Column(columnDefinition = "TEXT")
     private String photo;

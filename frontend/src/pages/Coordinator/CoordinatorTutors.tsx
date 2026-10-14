@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import CoordinatorSidebar from '../../components/CoordinatorSidebar'
 import { api } from '../../services/api'
 
@@ -7,27 +7,15 @@ interface CreatedTutor {
   fullName: string
   email: string
   createdAt: string
+  credentialsEmailSent: boolean
 }
 
 interface CreatedCreds {
   name: string
   email: string
   password: string
-}
-
-const STORAGE_KEY = 'sessioneer_created_tutors'
-
-function loadTutors(): CreatedTutor[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    return raw ? JSON.parse(raw) : []
-  } catch {
-    return []
-  }
-}
-
-function saveTutors(tutors: CreatedTutor[]) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(tutors))
+  sentTo: string
+  emailSent: boolean
 }
 
 function generatePassword(): string {
@@ -40,19 +28,39 @@ function formatDate(iso: string): string {
 }
 
 export default function CoordinatorTutors() {
-  const [tutors, setTutors] = useState<CreatedTutor[]>(loadTutors)
+  const [tutors, setTutors] = useState<CreatedTutor[]>([])
   const [search, setSearch] = useState('')
 
   const [showModal, setShowModal] = useState(false)
   const [newName, setNewName] = useState('')
   const [newEmail, setNewEmail] = useState('')
+  const [tempPassword, setTempPassword] = useState('')
+  const [sendEmailTo, setSendEmailTo] = useState('')
   const [creating, setCreating] = useState(false)
   const [modalError, setModalError] = useState('')
   const [createdCreds, setCreatedCreds] = useState<CreatedCreds | null>(null)
 
+  const loadTutors = () => {
+    api.getCreatedTutors().then((list: any[]) => {
+      setTutors(list.map(t => ({
+        id: t.id,
+        fullName: t.fullName,
+        email: t.email,
+        createdAt: t.createdAt,
+        credentialsEmailSent: t.credentialsEmailSent,
+      })))
+    }).catch(console.error)
+  }
+
+  useEffect(() => {
+    loadTutors()
+  }, [])
+
   const openModal = () => {
     setNewName('')
     setNewEmail('')
+    setTempPassword('')
+    setSendEmailTo('')
     setModalError('')
     setCreatedCreds(null)
     setShowModal(true)
@@ -67,19 +75,21 @@ export default function CoordinatorTutors() {
     e.preventDefault()
     setModalError('')
     setCreating(true)
-    const password = generatePassword()
     try {
-      await api.signup({ fullName: newName, email: newEmail, password, role: 'staff' })
-      const newTutor: CreatedTutor = {
-        id: Date.now(),
+      const created = await api.createTutorAccount({
         fullName: newName,
         email: newEmail,
-        createdAt: new Date().toISOString(),
-      }
-      const updated = [...tutors, newTutor]
-      setTutors(updated)
-      saveTutors(updated)
-      setCreatedCreds({ name: newName, email: newEmail, password })
+        temporaryPassword: tempPassword,
+        sendEmailTo: sendEmailTo.trim() || undefined,
+      })
+      setCreatedCreds({
+        name: newName,
+        email: newEmail,
+        password: tempPassword,
+        sentTo: sendEmailTo.trim() || newEmail,
+        emailSent: created.credentialsEmailSent,
+      })
+      loadTutors()
     } catch {
       setModalError('Failed to create account. Email may already be registered.')
     } finally {
@@ -137,13 +147,15 @@ export default function CoordinatorTutors() {
             <p className="tutors-empty">No tutors match your search.</p>
           ) : (
             <div className="tutors-table">
-              <div className="tutors-table-header tutors-table-header--4col">
+              <div className="tutors-table-header tutors-table-header--5col">
                 <span>Name</span>
                 <span>Email</span>
-                <span>Account Created</span>
+                <span>Created</span>
+                <span>Welcome email</span>
+                <span></span>
               </div>
               {filtered.map(t => (
-                <div key={t.id} className="tutors-table-row tutors-table-row--4col">
+                <div key={t.id} className="tutors-table-row tutors-table-row--5col">
                   <div className="tutors-avatar-name">
                     <div className="tutors-avatar">
                       {t.fullName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
@@ -152,6 +164,10 @@ export default function CoordinatorTutors() {
                   </div>
                   <span className="tutors-email">{t.email}</span>
                   <span className="tutors-date">{formatDate(t.createdAt)}</span>
+                  <span className={`status-badge ${t.credentialsEmailSent ? 'accepted' : 'declined'}`}>
+                    {t.credentialsEmailSent ? 'Sent' : 'Not sent'}
+                  </span>
+                  <span></span>
                 </div>
               ))}
             </div>
@@ -164,10 +180,12 @@ export default function CoordinatorTutors() {
           <div className="modal" onClick={e => e.stopPropagation()}>
             {createdCreds ? (
               <>
-                <div className="create-tutor-success-icon">✓</div>
+                <div className="create-tutor-success-icon">{createdCreds.emailSent ? '✓' : '!'}</div>
                 <h2>Account Created</h2>
                 <p className="create-tutor-success-msg">
-                  Login credentials have been sent to <strong>{createdCreds.email}</strong> via Sessioneer.
+                  {createdCreds.emailSent
+                    ? <>Login credentials have been sent to <strong>{createdCreds.sentTo}</strong>.</>
+                    : <>Account created, but the email to <strong>{createdCreds.sentTo}</strong> failed to send — share these credentials with the tutor directly.</>}
                 </p>
                 <div className="create-tutor-creds">
                   <div className="create-tutor-cred-row">
@@ -192,7 +210,7 @@ export default function CoordinatorTutors() {
             ) : (
               <>
                 <h2>Create Tutor Account</h2>
-                <p className="modal-sub">Enter the tutor's details. A password will be auto-generated and emailed to them.</p>
+                <p className="modal-sub">Enter the tutor's details and a temporary password. Login credentials will be emailed to them.</p>
                 <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                   <div className="form-field">
                     <label>Full Name</label>
@@ -205,13 +223,38 @@ export default function CoordinatorTutors() {
                     />
                   </div>
                   <div className="form-field">
-                    <label>University Email</label>
+                    <label>University Email (login)</label>
                     <input
                       type="email"
                       placeholder="e.g. a.thompson@qut.edu.au"
                       value={newEmail}
                       onChange={e => setNewEmail(e.target.value)}
                       required
+                    />
+                  </div>
+                  <div className="form-field">
+                    <label>Temporary Password</label>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <input
+                        type="text"
+                        placeholder="Enter a temporary password"
+                        value={tempPassword}
+                        onChange={e => setTempPassword(e.target.value)}
+                        required
+                        style={{ flex: 1 }}
+                      />
+                      <button type="button" className="cancel-btn" onClick={() => setTempPassword(generatePassword())}>
+                        Generate
+                      </button>
+                    </div>
+                  </div>
+                  <div className="form-field">
+                    <label>Send welcome email to (optional)</label>
+                    <input
+                      type="email"
+                      placeholder="Defaults to the university email above"
+                      value={sendEmailTo}
+                      onChange={e => setSendEmailTo(e.target.value)}
                     />
                   </div>
                   {modalError && <p className="signup-error">{modalError}</p>}

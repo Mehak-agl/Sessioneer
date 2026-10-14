@@ -1,13 +1,23 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import CoordinatorSidebar from '../../components/CoordinatorSidebar'
-import { MOCK_NOTIFICATIONS, NOTIF_READ_KEY, NOTIF_EVENT, type NotifType } from '../../data/notifications'
+import { api } from '../../services/api'
 
-const ICON: Record<NotifType, { symbol: string; bg: string }> = {
-  availability:         { symbol: '◷', bg: '#0097B2' },
-  invitation_accepted:  { symbol: '✓', bg: '#16a34a' },
-  invitation_declined:  { symbol: '✕', bg: '#dc2626' },
-  allocation_confirmed: { symbol: '✓', bg: '#059669' },
-  allocation_rejected:  { symbol: '✕', bg: '#b91c1c' },
+interface AppNotification {
+  id: number
+  type: string
+  title: string
+  message: string
+  unitCode: string | null
+  read: boolean
+  createdAt: string
+}
+
+const ICON: Record<string, { symbol: string; bg: string }> = {
+  INVITATION:    { symbol: '✉', bg: '#0097B2' },
+  ALLOCATION:    { symbol: '✓', bg: '#16a34a' },
+  SWAP_REQUEST:  { symbol: '↔', bg: '#d97706' },
+  SWAP_RESPONSE: { symbol: '↔', bg: '#059669' },
+  SWAP_FYI:      { symbol: 'ℹ', bg: '#6366f1' },
 }
 
 function timeAgo(iso: string): string {
@@ -20,43 +30,38 @@ function timeAgo(iso: string): string {
   return d === 1 ? 'Yesterday' : `${d}d ago`
 }
 
-function loadReadIds(): Set<string> {
-  try {
-    const raw = localStorage.getItem(NOTIF_READ_KEY)
-    return new Set(raw ? JSON.parse(raw) : [])
-  } catch {
-    return new Set()
-  }
-}
-
-function saveReadIds(ids: Set<string>) {
-  localStorage.setItem(NOTIF_READ_KEY, JSON.stringify([...ids]))
-  window.dispatchEvent(new Event(NOTIF_EVENT))
-}
-
 export default function CoordinatorNotifications() {
-  const [readIds, setReadIds] = useState<Set<string>>(loadReadIds)
+  const [notifications, setNotifications] = useState<AppNotification[]>([])
+  const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'unread'>('all')
 
-  const markRead = (id: string) => {
-    setReadIds(prev => {
-      const next = new Set(prev)
-      next.add(id)
-      saveReadIds(next)
-      return next
-    })
+  useEffect(() => {
+    api.getMyNotifications()
+      .then((data: AppNotification[]) => setNotifications(data))
+      .catch(console.error)
+      .finally(() => setLoading(false))
+  }, [])
+
+  const markRead = async (id: number) => {
+    setNotifications(prev => prev.map(n => (n.id === id ? { ...n, read: true } : n)))
+    try {
+      await api.markNotificationRead(id)
+    } catch (err) {
+      console.error(err)
+    }
   }
 
-  const markAllRead = () => {
-    const all = new Set(MOCK_NOTIFICATIONS.map(n => n.id))
-    setReadIds(all)
-    saveReadIds(all)
+  const markAllRead = async () => {
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })))
+    try {
+      await api.markAllNotificationsRead()
+    } catch (err) {
+      console.error(err)
+    }
   }
 
-  const unreadCount = MOCK_NOTIFICATIONS.filter(n => !readIds.has(n.id)).length
-  const filtered = MOCK_NOTIFICATIONS.filter(n =>
-    filter === 'unread' ? !readIds.has(n.id) : true
-  )
+  const unreadCount = notifications.filter(n => !n.read).length
+  const filtered = notifications.filter(n => (filter === 'unread' ? !n.read : true))
 
   return (
     <div className="dashboard-page">
@@ -82,7 +87,7 @@ export default function CoordinatorNotifications() {
             className={`notif-tab${filter === 'all' ? ' active' : ''}`}
             onClick={() => setFilter('all')}
           >
-            All <span className="notif-tab-count">{MOCK_NOTIFICATIONS.length}</span>
+            All <span className="notif-tab-count">{notifications.length}</span>
           </button>
           <button
             className={`notif-tab${filter === 'unread' ? ' active' : ''}`}
@@ -93,19 +98,21 @@ export default function CoordinatorNotifications() {
         </div>
 
         <div className="notif-list">
-          {filtered.length === 0 ? (
+          {loading ? (
+            <p className="tutors-loading">Loading notifications…</p>
+          ) : filtered.length === 0 ? (
             <div className="notif-empty">
               <p>No {filter === 'unread' ? 'unread ' : ''}notifications</p>
             </div>
           ) : (
             filtered.map(n => {
-              const icon = ICON[n.type]
-              const isUnread = !readIds.has(n.id)
+              const icon = ICON[n.type] || { symbol: '🔔', bg: '#64748b' }
+              const isUnread = !n.read
               return (
                 <div
                   key={n.id}
                   className={`notif-item${isUnread ? ' unread' : ''}`}
-                  onClick={() => markRead(n.id)}
+                  onClick={() => isUnread && markRead(n.id)}
                 >
                   <div className="notif-icon" style={{ background: icon.bg }}>
                     {icon.symbol}
@@ -113,11 +120,11 @@ export default function CoordinatorNotifications() {
                   <div className="notif-body">
                     <div className="notif-header-row">
                       <span className="notif-title">{n.title}</span>
-                      <span className="notif-time">{timeAgo(n.time)}</span>
+                      <span className="notif-time">{timeAgo(n.createdAt)}</span>
                     </div>
                     <p className="notif-message">{n.message}</p>
                     <div className="notif-footer">
-                      <span className="unit-code-badge">{n.unit}</span>
+                      {n.unitCode && <span className="unit-code-badge">{n.unitCode}</span>}
                       {isUnread && <span className="notif-unread-dot" />}
                     </div>
                   </div>

@@ -15,9 +15,30 @@ interface Unit {
   name: string;
   code: string;
   semester: string;
+  availabilityDeadline?: string;
 }
 
 type View = 'dashboard' | 'units' | 'unit-detail'
+
+type DeadlineState = 'normal' | 'urgent' | 'expired'
+
+// Pure formatter for a unit's real availabilityDeadline (set on the unit's
+// "Manage" screen via api.setDeadline — see CoordinatorUnitDetailView.tsx).
+function formatDeadlineCountdown(deadlineIso: string, now: number): { label: string; state: DeadlineState } {
+  const target = new Date(deadlineIso).getTime()
+  if (Number.isNaN(target)) return { label: '', state: 'normal' }
+  const diffMs = target - now
+  if (diffMs <= 0) return { label: 'Deadline passed', state: 'expired' }
+
+  const totalSeconds = Math.floor(diffMs / 1000)
+  const days = Math.floor(totalSeconds / 86400)
+  const hours = Math.floor((totalSeconds % 86400) / 3600)
+
+  if (days > 0) return { label: `${days}d ${hours}h left`, state: days <= 1 ? 'urgent' : 'normal' }
+
+  const minutes = Math.floor((totalSeconds % 3600) / 60)
+  return { label: `${hours}h ${minutes}m left`, state: 'urgent' }
+}
 
 function CoordinatorDashboard() {
   const navigate = useNavigate()
@@ -26,6 +47,12 @@ function CoordinatorDashboard() {
   const [view, setView] = useState<View>(initialView)
   const [selectedUnit, setSelectedUnit] = useState<Unit | null>(null)
   const [pendingCount, setPendingCount] = useState(0)
+  const [pendingByUnit, setPendingByUnit] = useState<{ unit: Unit; count: number }[]>([])
+  const [showPendingBreakdown, setShowPendingBreakdown] = useState(false)
+  const [showDeadlineBreakdown, setShowDeadlineBreakdown] = useState(false)
+  const [now, setNow] = useState(() => Date.now())
+  const [uninvitedCount, setUninvitedCount] = useState(0)
+  const [invitesByUnit, setInvitesByUnit] = useState<{ unit: Unit; total: number; responded: number }[]>([])
   const [showImportModal, setShowImportModal] = useState(false)
   const [importRows, setImportRows] = useState<{ name: string; email: string }[]>([])
   const [importStatus, setImportStatus] = useState<{ email: string; result: string }[]>([])
@@ -241,18 +268,52 @@ function CoordinatorDashboard() {
   const loadUnits = async () => {
     const fetchedUnits = await api.getUnits().catch(() => [])
     setUnits(fetchedUnits)
+
+    const invitesByUnitRaw = await Promise.all(
+      fetchedUnits.map((u: Unit) => api.getUnitInvitations(u.id).catch(() => []))
+    )
+
     let pending = 0
-    for (const unit of fetchedUnits) {
-      const invitations = await api.getUnitInvitations(unit.id).catch(() => [])
-      pending += invitations.filter((inv: any) => inv.status === 'PENDING').length
-    }
+    const byUnit: { unit: Unit; count: number }[] = []
+    fetchedUnits.forEach((unit: Unit, i: number) => {
+      const count = invitesByUnitRaw[i].filter((inv: any) => inv.status === 'PENDING').length
+      pending += count
+      if (count > 0) byUnit.push({ unit, count })
+    })
     setPendingCount(pending)
+    setPendingByUnit(byUnit)
+
+    setUninvitedCount(invitesByUnitRaw.filter(invites => invites.length === 0).length)
+    setInvitesByUnit(fetchedUnits.map((unit: Unit, i: number) => ({
+      unit,
+      total: invitesByUnitRaw[i].length,
+      responded: invitesByUnitRaw[i].filter((inv: any) => inv.status === 'RESPONDED').length,
+    })))
   }
 
 
   useEffect(() => {
     loadUnits()
   }, [])
+
+  // Keeps the deadline countdowns (stat card + breakdown) ticking while the
+  // dashboard is open, so "Xd Yh left" stays accurate without a refresh.
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 30000)
+    return () => clearInterval(id)
+  }, [])
+
+  // Per-unit deadlines, soonest first. availabilityDeadline comes straight
+  // from the real backend (set via api.setDeadline on a unit's Manage
+  // screen), not from localStorage.
+  const unitDeadlines = units
+    .map(unit => ({ unit, deadline: unit.availabilityDeadline || '' }))
+    .filter(d => d.deadline)
+    .map(d => ({ ...d, countdown: formatDeadlineCountdown(d.deadline, now) }))
+    .sort((a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime())
+
+  const nearestUpcomingDeadline = unitDeadlines.find(d => d.countdown.state !== 'expired')
+  const allDeadlinesExpired = unitDeadlines.length > 0 && !nearestUpcomingDeadline
 
   const handleLogout = () => {
     localStorage.removeItem("sessioneer_token");
@@ -267,6 +328,14 @@ function CoordinatorDashboard() {
       setSelectedUnit(unit)
       setView('unit-detail')
     }
+  }
+
+  // There's no backend DELETE endpoint for units yet — this only removes
+  // the unit from local state (what's currently shown). It's still in the
+  // real database and will reappear next time loadUnits() runs, until a
+  // real delete endpoint exists.
+  const handleUnitDeleted = (unitId: number) => {
+    setUnits(prev => prev.filter(u => u.id !== unitId))
   }
 
   return (
@@ -297,10 +366,13 @@ function CoordinatorDashboard() {
                 <h2>{units.length}</h2>
                 <p>Currently running</p>
               </div>
-              <div className="stat-card">
+              <div
+                className={`stat-card stat-card--clickable${showPendingBreakdown ? ' active' : ''}`}
+                onClick={() => setShowPendingBreakdown(p => !p)}
+              >
                 <span>Pending Responses</span>
                 <h2>{pendingCount}</h2>
-                <p>Awaiting tutor replies</p>
+                <p>Awaiting tutor replies {pendingCount > 0 ? '— click to view' : ''}</p>
               </div>
               <div className="stat-card warning">
                 <span>Conflicts</span>
@@ -311,6 +383,130 @@ function CoordinatorDashboard() {
                 <span>Finalised</span>
                 <h2>0</h2>
                 <p>Completed allocation</p>
+              </div>
+              <div
+                className={`stat-card stat-card--clickable${(nearestUpcomingDeadline?.countdown.state === 'urgent' || allDeadlinesExpired) ? ' warning' : ''}${showDeadlineBreakdown ? ' active' : ''}`}
+                onClick={() => setShowDeadlineBreakdown(p => !p)}
+              >
+                <span>Submission Deadline</span>
+                <h2>
+                  {nearestUpcomingDeadline
+                    ? nearestUpcomingDeadline.countdown.label
+                    : allDeadlinesExpired
+                    ? 'Closed'
+                    : 'None set'}
+                </h2>
+                <p>
+                  {nearestUpcomingDeadline
+                    ? `Nearest — ${nearestUpcomingDeadline.unit.code} — click to view by unit`
+                    : allDeadlinesExpired
+                    ? 'All unit deadlines have passed — click to view'
+                    : 'No unit deadlines set yet — click to view'}
+                </p>
+              </div>
+              <div className={`stat-card${uninvitedCount > 0 ? ' warning' : ' success'}`}>
+                <span>Pending Invitations</span>
+                <h2>{uninvitedCount}</h2>
+                <p>{uninvitedCount > 0 ? 'Units with no tutors invited' : 'All units have invites sent'}</p>
+              </div>
+            </section>
+
+            {showPendingBreakdown && (
+              <section className="pending-breakdown">
+                <div className="pending-breakdown-header">
+                  <h3>Pending Responses by Unit</h3>
+                  <span className="pending-breakdown-deadline">
+                    {pendingByUnit.length} unit{pendingByUnit.length !== 1 ? 's' : ''} awaiting responses
+                  </span>
+                </div>
+                {pendingByUnit.length === 0 ? (
+                  <p className="pending-breakdown-empty">No pending responses.</p>
+                ) : (
+                  pendingByUnit.map(({ unit, count }) => {
+                    const unitDeadline = unit.availabilityDeadline || ''
+                    const unitCountdown = unitDeadline ? formatDeadlineCountdown(unitDeadline, now) : null
+                    return (
+                      <div key={unit.id} className="pending-breakdown-row">
+                        <div className="pending-breakdown-unit">
+                          <span className="unit-code-badge">{unit.code}</span>
+                          <span className="pending-breakdown-name">{unit.name}</span>
+                        </div>
+                        <div className="pending-breakdown-meta">
+                          <span className="pending-breakdown-count">{count} pending</span>
+                          <span className="pending-breakdown-days">
+                            {unitCountdown ? unitCountdown.label : 'No deadline set'}
+                          </span>
+                        </div>
+                      </div>
+                    )
+                  })
+                )}
+              </section>
+            )}
+
+            {showDeadlineBreakdown && (
+              <section className="pending-breakdown">
+                <div className="pending-breakdown-header">
+                  <h3>Submission Deadlines by Unit</h3>
+                  <span className="pending-breakdown-deadline">
+                    {unitDeadlines.length} unit{unitDeadlines.length !== 1 ? 's' : ''} with a deadline set
+                  </span>
+                </div>
+                {unitDeadlines.length === 0 ? (
+                  <p className="pending-breakdown-empty">
+                    No units have an availability deadline set yet. Open a unit's "Manage" screen to set one.
+                  </p>
+                ) : (
+                  unitDeadlines.map(({ unit, deadline, countdown }) => (
+                    <div key={unit.id} className="pending-breakdown-row">
+                      <div className="pending-breakdown-unit">
+                        <span className="unit-code-badge">{unit.code}</span>
+                        <span className="pending-breakdown-name">{unit.name}</span>
+                      </div>
+                      <div className="pending-breakdown-meta">
+                        <span className="pending-breakdown-count">
+                          Due {new Date(deadline).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}
+                        </span>
+                        <span className={`deadline-state-pill ${countdown.state}`}>{countdown.label}</span>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </section>
+            )}
+
+            <section className="detail-section">
+              <div className="section-header">
+                <div>
+                  <h2>Tutor Invitations by Unit</h2>
+                  <p>Breakdown of invited and responded tutors per unit</p>
+                </div>
+              </div>
+              <div className="tutors-table">
+                <div className="tutors-table-header" style={{ gridTemplateColumns: '1fr 1fr 1fr 2fr' }}>
+                  <span>Unit</span>
+                  <span>Invited</span>
+                  <span>Responded</span>
+                  <span>Progress</span>
+                </div>
+                {invitesByUnit.map(({ unit, total, responded }) => {
+                  const pct = total === 0 ? 0 : Math.round((responded / total) * 100)
+                  return (
+                    <div key={unit.id} className="tutors-table-row" style={{ gridTemplateColumns: '1fr 1fr 1fr 2fr' }}>
+                      <div>
+                        <span className="unit-code-badge">{unit.code}</span>
+                      </div>
+                      <span className="tutors-name">{total} tutors</span>
+                      <span className="tutors-name">{responded} responded</span>
+                      <div className="invite-progress-bar-wrap">
+                        <div className="invite-progress-bar">
+                          <div className="invite-progress-fill" style={{ width: `${pct}%` }} />
+                        </div>
+                        <span className="invite-progress-pct">{pct}%</span>
+                      </div>
+                    </div>
+                  )
+                })}
               </div>
             </section>
 
@@ -414,6 +610,7 @@ function CoordinatorDashboard() {
             units={units}
             onUnitCreated={loadUnits}
             onSelectUnit={handleSelectUnit}
+            onUnitDeleted={handleUnitDeleted}
           />
         )}
 

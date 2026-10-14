@@ -1,33 +1,32 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import StaffSidebar from '../../components/TutorSidebar'
-import { MOCK_TUTOR_NOTIFICATIONS, TUTOR_NOTIF_READ_KEY, TUTOR_NOTIF_EVENT, type TutorNotifType } from '../../data/notifications'
+import { api } from '../../services/api'
 
-const ICON: Record<TutorNotifType, { symbol: string; bg: string }> = {
-  invitation:    { symbol: '✉', bg: '#0097B2' },
-  allocation:    { symbol: '✓', bg: '#16a34a' },
-  deadline:      { symbol: '⏰', bg: '#d97706' },
-  swap_approved: { symbol: '↔', bg: '#059669' },
-  swap_declined: { symbol: '✕', bg: '#dc2626' },
+interface AppNotification {
+  id: number
+  type: string
+  title: string
+  message: string
+  unitCode: string | null
+  read: boolean
+  createdAt: string
 }
 
-const TYPE_LABEL: Record<TutorNotifType, string> = {
-  invitation:    'Invitation',
-  allocation:    'Allocation',
-  deadline:      'Deadline',
-  swap_approved: 'Swap Approved',
-  swap_declined: 'Swap Declined',
+const ICON: Record<string, { symbol: string; bg: string }> = {
+  INVITATION:    { symbol: '✉', bg: '#0097B2' },
+  ALLOCATION:    { symbol: '✓', bg: '#16a34a' },
+  SWAP_REQUEST:  { symbol: '↔', bg: '#d97706' },
+  SWAP_RESPONSE: { symbol: '↔', bg: '#059669' },
+  SWAP_FYI:      { symbol: 'ℹ', bg: '#6366f1' },
 }
 
-type TypeFilter = 'all' | TutorNotifType
-
-const TYPE_TABS: { key: TypeFilter; label: string }[] = [
-  { key: 'all',          label: 'All' },
-  { key: 'invitation',   label: 'Invitations' },
-  { key: 'allocation',   label: 'Allocations' },
-  { key: 'deadline',     label: 'Deadlines' },
-  { key: 'swap_approved',label: 'Swap Approved' },
-  { key: 'swap_declined',label: 'Swap Declined' },
-]
+const TYPE_LABEL: Record<string, string> = {
+  INVITATION:    'Invitation',
+  ALLOCATION:    'Allocation',
+  SWAP_REQUEST:  'Swap Request',
+  SWAP_RESPONSE: 'Swap Response',
+  SWAP_FYI:      'Swap FYI',
+}
 
 function timeAgo(iso: string): string {
   const mins = Math.floor((Date.now() - new Date(iso).getTime()) / 60000)
@@ -39,56 +38,43 @@ function timeAgo(iso: string): string {
   return d === 1 ? 'Yesterday' : `${d}d ago`
 }
 
-function loadReadIds(): Set<string> {
-  try {
-    const raw = localStorage.getItem(TUTOR_NOTIF_READ_KEY)
-    return new Set(raw ? JSON.parse(raw) : [])
-  } catch {
-    return new Set()
-  }
-}
-
-function saveReadIds(ids: Set<string>) {
-  localStorage.setItem(TUTOR_NOTIF_READ_KEY, JSON.stringify([...ids]))
-  window.dispatchEvent(new Event(TUTOR_NOTIF_EVENT))
-}
-
-const ALL_UNITS = [...new Set(MOCK_TUTOR_NOTIFICATIONS.map(n => n.unit))].sort()
-
 export default function TutorNotifications() {
-  const [readIds, setReadIds]     = useState<Set<string>>(loadReadIds)
-  const [filter, setFilter]       = useState<'all' | 'unread'>('all')
-  const [typeFilter, setTypeFilter] = useState<TypeFilter>('all')
-  const [unitFilter, setUnitFilter] = useState<string>('all')
-  const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set())
+  const [notifications, setNotifications] = useState<AppNotification[]>([])
+  const [loading, setLoading] = useState(true)
+  const [filter, setFilter] = useState<'all' | 'unread'>('all')
+  const [typeFilter, setTypeFilter] = useState<string>('all')
 
-  const markRead = (id: string) => {
-    setReadIds(prev => {
-      const next = new Set(prev)
-      next.add(id)
-      saveReadIds(next)
-      return next
-    })
+  useEffect(() => {
+    api.getMyNotifications()
+      .then((data: AppNotification[]) => setNotifications(data))
+      .catch(console.error)
+      .finally(() => setLoading(false))
+  }, [])
+
+  const markRead = async (id: number) => {
+    setNotifications(prev => prev.map(n => (n.id === id ? { ...n, read: true } : n)))
+    try {
+      await api.markNotificationRead(id)
+    } catch (err) {
+      console.error(err)
+    }
   }
 
-  const markAllRead = () => {
-    const all = new Set(MOCK_TUTOR_NOTIFICATIONS.map(n => n.id))
-    setReadIds(all)
-    saveReadIds(all)
+  const markAllRead = async () => {
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })))
+    try {
+      await api.markAllNotificationsRead()
+    } catch (err) {
+      console.error(err)
+    }
   }
 
-  const deleteNotif = (e: React.MouseEvent, id: string) => {
-    e.stopPropagation()
-    setDeletedIds(prev => new Set(prev).add(id))
-  }
+  const unreadCount = notifications.filter(n => !n.read).length
+  const types = [...new Set(notifications.map(n => n.type))]
 
-  const live = MOCK_TUTOR_NOTIFICATIONS.filter(n => !deletedIds.has(n.id))
-  const unreadCount = live.filter(n => !readIds.has(n.id)).length
-
-  const filtered = live.filter(n => {
-    if (filter === 'unread' && readIds.has(n.id)) return false
+  const filtered = notifications.filter(n => {
+    if (filter === 'unread' && n.read) return false
     if (typeFilter !== 'all' && n.type !== typeFilter) return false
-    if (unitFilter !== 'all' && n.unit !== unitFilter) return false
     return true
   })
 
@@ -111,13 +97,12 @@ export default function TutorNotifications() {
           )}
         </header>
 
-        {/* All / Unread tabs */}
         <div className="notif-filter-tabs">
           <button
             className={`notif-tab${filter === 'all' ? ' active' : ''}`}
             onClick={() => setFilter('all')}
           >
-            All <span className="notif-tab-count">{live.length}</span>
+            All <span className="notif-tab-count">{notifications.length}</span>
           </button>
           <button
             className={`notif-tab${filter === 'unread' ? ' active' : ''}`}
@@ -127,49 +112,42 @@ export default function TutorNotifications() {
           </button>
         </div>
 
-        {/* Type filter tabs */}
-        <div className="notif-type-tabs">
-          {TYPE_TABS.map(tab => {
-            const count = live.filter(n => tab.key === 'all' || n.type === tab.key).length
-            return (
+        {types.length > 0 && (
+          <div className="notif-type-tabs">
+            <button
+              className={`notif-type-tab${typeFilter === 'all' ? ' active' : ''}`}
+              onClick={() => setTypeFilter('all')}
+            >
+              All Types
+            </button>
+            {types.map(t => (
               <button
-                key={tab.key}
-                className={`notif-type-tab${typeFilter === tab.key ? ' active' : ''}`}
-                onClick={() => setTypeFilter(tab.key)}
+                key={t}
+                className={`notif-type-tab${typeFilter === t ? ' active' : ''}`}
+                onClick={() => setTypeFilter(t)}
               >
-                {tab.label}
-                {tab.key !== 'all' && <span className="notif-tab-count">{count}</span>}
+                {TYPE_LABEL[t] || t}
               </button>
-            )
-          })}
-
-          {/* Unit filter */}
-          <select
-            className="notif-unit-select"
-            value={unitFilter}
-            onChange={e => setUnitFilter(e.target.value)}
-          >
-            <option value="all">All Units</option>
-            {ALL_UNITS.map(u => (
-              <option key={u} value={u}>{u}</option>
             ))}
-          </select>
-        </div>
+          </div>
+        )}
 
         <div className="notif-list">
-          {filtered.length === 0 ? (
+          {loading ? (
+            <p className="tutors-loading">Loading notifications…</p>
+          ) : filtered.length === 0 ? (
             <div className="notif-empty">
               <p>No {filter === 'unread' ? 'unread ' : ''}notifications</p>
             </div>
           ) : (
             filtered.map(n => {
-              const icon = ICON[n.type]
-              const isUnread = !readIds.has(n.id)
+              const icon = ICON[n.type] || { symbol: '🔔', bg: '#64748b' }
+              const isUnread = !n.read
               return (
                 <div
                   key={n.id}
                   className={`notif-item${isUnread ? ' unread' : ''}`}
-                  onClick={() => markRead(n.id)}
+                  onClick={() => isUnread && markRead(n.id)}
                 >
                   <div className="notif-icon" style={{ background: icon.bg }}>
                     {icon.symbol}
@@ -177,19 +155,12 @@ export default function TutorNotifications() {
                   <div className="notif-body">
                     <div className="notif-header-row">
                       <span className="notif-title">{n.title}</span>
-                      <div className="notif-header-actions">
-                        <span className="notif-time">{timeAgo(n.time)}</span>
-                        <button
-                          className="notif-delete-btn"
-                          onClick={e => deleteNotif(e, n.id)}
-                          title="Dismiss"
-                        >✕</button>
-                      </div>
+                      <span className="notif-time">{timeAgo(n.createdAt)}</span>
                     </div>
                     <p className="notif-message">{n.message}</p>
                     <div className="notif-footer">
-                      <span className="unit-code-badge">{n.unit}</span>
-                      <span className="notif-type-badge">{TYPE_LABEL[n.type]}</span>
+                      {n.unitCode && <span className="unit-code-badge">{n.unitCode}</span>}
+                      <span className="notif-type-badge">{TYPE_LABEL[n.type] || n.type}</span>
                       {isUnread && <span className="notif-unread-dot" />}
                     </div>
                   </div>

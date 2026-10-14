@@ -28,6 +28,11 @@ export default function TutorProfile() {
   const [showPhotoModal, setShowPhotoModal] = useState(false)
   const [resumeData, setResumeData] = useState<string | null>(null)
 
+  const [notificationEmail, setNotificationEmail] = useState('')
+  const [notifEmailMessage, setNotifEmailMessage] = useState('')
+  const [notifEmailMessageType, setNotifEmailMessageType] = useState<'success' | 'error'>('success')
+  const [email, setEmail] = useState('')
+
   const photoInputRef = useRef<HTMLInputElement>(null)
   const resumeInputRef = useRef<HTMLInputElement>(null)
 
@@ -40,6 +45,8 @@ export default function TutorProfile() {
       }
       if (profile.resumeName) setResumeName(profile.resumeName)
       if (profile.resumeData) setResumeData(profile.resumeData)
+      setNotificationEmail(profile.notificationEmail || '')
+      setEmail(profile.email || '')
     }).catch(console.error)
   }, [])
 
@@ -123,6 +130,26 @@ export default function TutorProfile() {
     }
   }
 
+  const handleSaveNotificationEmail = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setNotifEmailMessage('')
+
+    if (notificationEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(notificationEmail)) {
+      setNotifEmailMessage('Enter a valid email address.')
+      setNotifEmailMessageType('error')
+      return
+    }
+
+    try {
+      await api.updateNotificationEmail(notificationEmail)
+      setNotifEmailMessage('Notification email saved.')
+      setNotifEmailMessageType('success')
+    } catch (err: any) {
+      setNotifEmailMessage(err.message || 'Failed to save notification email.')
+      setNotifEmailMessageType('error')
+    }
+  }
+
   return (
     <div className="staff-dashboard-page">
       <StaffSidebar />
@@ -182,6 +209,7 @@ export default function TutorProfile() {
 
           <h2 className="profile-name">{fullName}</h2>
           <span className="profile-position-badge">Tutor</span>
+          {email && <p className="tutor-report-email">{email}</p>}
         </section>
 
         <section className="detail-section">
@@ -211,7 +239,7 @@ export default function TutorProfile() {
             <input
               ref={resumeInputRef}
               type="file"
-              accept=".pdf,.doc,.docx"
+              accept=".pdf"
               style={{ display: 'none' }}
               onChange={handleResumeChange}
             />
@@ -224,6 +252,32 @@ export default function TutorProfile() {
               <h2>Settings</h2>
             </div>
           </div>
+
+          <div>
+            <h3 className="settings-row-title">Notification Email</h3>
+            <p className="settings-row-sub">Where we send your notifications. Leave blank to use your login email.</p>
+            <form className="detail-form" onSubmit={handleSaveNotificationEmail}>
+              <div className="form-field">
+                <label>Notification Email</label>
+                <input
+                  type="email"
+                  placeholder="you@example.com"
+                  value={notificationEmail}
+                  onChange={e => setNotificationEmail(e.target.value)}
+                />
+              </div>
+
+              {notifEmailMessage && (
+                <p className={notifEmailMessageType === 'success' ? 'avail-saved-message' : 'avail-error-message'}>
+                  {notifEmailMessage}
+                </p>
+              )}
+
+              <button type="submit" className="confirm-btn">Save Notification Email</button>
+            </form>
+          </div>
+
+          <div className="settings-divider" />
 
           <div className="settings-row">
             <div>

@@ -18,6 +18,7 @@ type ChatMessage = {
   text: string
   timestamp: string
   attachment?: { type: AttachmentType; name: string; fileData?: string; fileType?: string }
+  read?: boolean
 }
 
 type DMConversation = {
@@ -123,6 +124,19 @@ function getInitials(name: string) {
   return name.split(' ').filter(Boolean).map(n => n[0]).join('').toUpperCase()
 }
 
+// WhatsApp-style double tick: gray/translucent for sent, teal for read.
+// Only ever rendered next to a DM message the current user sent. The
+// backend flips `read` when the recipient opens the conversation (see
+// MessageService.getConversation) — this is a real read receipt, not a
+// timed simulation.
+function MessageTicks({ read }: { read?: boolean }) {
+  return (
+    <span className={`chat-ticks ${read ? 'chat-ticks-read' : ''}`} title={read ? 'Seen' : 'Sent'}>
+      ✓✓
+    </span>
+  )
+}
+
 function formatTime(ts: string) {
   return new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 }
@@ -180,7 +194,7 @@ export default function TutorChat() {
               id: String(m.id),
               senderId: String(m.sender.id),
               senderName: m.sender.fullName,
-             text: m.content,
+              text: m.content,
               timestamp: m.sentAt,
             })),
           }
@@ -205,6 +219,7 @@ export default function TutorChat() {
             senderName: m.sender.fullName,
             text: m.content,
             timestamp: m.sentAt,
+            read: m.read,
             attachment: m.fileName ? {
               type: m.fileType?.startsWith('image/') ? 'photo' as AttachmentType : 'file' as AttachmentType,
               name: m.fileName,
@@ -308,6 +323,7 @@ export default function TutorChat() {
         senderName: m.sender.fullName,
         text: m.content,
         timestamp: m.sentAt,
+        read: m.read,
         attachment: m.fileName ? {
           type: m.fileType?.startsWith('image/') ? 'photo' as AttachmentType : 'file' as AttachmentType,
           name: m.fileName,
@@ -720,7 +736,12 @@ export default function TutorChat() {
                         ) : (
                           <span>{msg.text}</span>
                         )}
-                        <span className="chat-bubble-time">{formatTime(msg.timestamp)}</span>
+                        <span className="chat-bubble-time">
+                          {formatTime(msg.timestamp)}
+                          {activeConversation.type === 'dm' && msg.senderId === CURRENT_USER_ID && (
+                            <MessageTicks read={msg.read} />
+                          )}
+                        </span>
                       </div>
                     </div>
                   ))}

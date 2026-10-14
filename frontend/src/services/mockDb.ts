@@ -251,6 +251,7 @@ function buildSeed(): MockDb {
       invitation: invitations.length + 1,
       availability: availId,
       allocation: allocId,
+      swapRequest: 1,
     },
     users,
     units,
@@ -258,6 +259,8 @@ function buildSeed(): MockDb {
     invitations,
     availability,
     allocations,
+    swapRequests: [],
+    coordinatorNotices: [],
     selfAssignIdentities: {},
   }
 }

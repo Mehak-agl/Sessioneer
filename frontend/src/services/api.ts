@@ -1,4 +1,5 @@
-const BASE_URL = 'http://localhost:8080/api'
+// Set VITE_API_URL on the host (e.g. Vercel) to the deployed backend; falls back to local dev
+const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8080/api'
 export const SELF_ASSIGN_STAFF_ID = 0
 
 function getToken() {

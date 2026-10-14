@@ -7,9 +7,11 @@ set "MAVEN_PROJECTBASEDIR=%MAVEN_PROJECTBASEDIR:~0,-1%"
 set "MAVEN_WRAPPER_JAR=%MAVEN_PROJECTBASEDIR%\.mvn\wrapper\maven-wrapper.jar"
 set "MAVEN_WRAPPER_PROPERTIES=%MAVEN_PROJECTBASEDIR%\.mvn\wrapper\maven-wrapper.properties"
 
+rem Read the wrapper URL outside the if-block so %WRAPPER_URL% is already set when the block is parsed
+for /F "tokens=2 delims==" %%i in ('findstr /i "wrapperUrl" "%MAVEN_WRAPPER_PROPERTIES%"') do set "WRAPPER_URL=%%i"
 if not exist "%MAVEN_WRAPPER_JAR%" (
-    for /F "tokens=2 delims==" %%i in ('findstr /i "wrapperUrl" "%MAVEN_WRAPPER_PROPERTIES%"') do set "WRAPPER_URL=%%i"
-    powershell -Command "Invoke-WebRequest -Uri '!WRAPPER_URL!' -OutFile '%MAVEN_WRAPPER_JAR%'"
+    echo Downloading Maven wrapper...
+    powershell -NoProfile -Command "Invoke-WebRequest -Uri '%WRAPPER_URL%' -OutFile '%MAVEN_WRAPPER_JAR%'"
 )
 
 if "%JAVA_HOME%"=="" (

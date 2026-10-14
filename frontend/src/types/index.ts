@@ -58,6 +58,7 @@ export type TutorReportProfile = {
   id: number
   fullName: string
   email: string
+  photo?: string
   units: TutorUnitAssignment[]
   totalSessionsAllocated: number
   pendingInvitations: number

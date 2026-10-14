@@ -87,6 +87,7 @@ public class TutorReportService {
                 tutor.getId(),
                 tutor.getFullName(),
                 tutor.getEmail(),
+                tutor.getPhoto(),
                 units,
                 totalSessionsAllocated,
                 pendingInvitations,

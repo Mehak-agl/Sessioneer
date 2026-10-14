@@ -15,6 +15,7 @@ export default function CoordinatorTutorProfile() {
   const [tutor, setTutor] = useState<TutorReportProfile | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [showResumeModal, setShowResumeModal] = useState(false)
 
   useEffect(() => {
     if (!id) return
@@ -36,12 +37,7 @@ export default function CoordinatorTutorProfile() {
 
   const handleViewResume = () => {
     if (!tutor?.resumeData) return
-    const win = window.open()
-    if (win) {
-      win.document.write(
-        `<iframe src="${tutor.resumeData}" style="border:0;position:fixed;inset:0;width:100%;height:100%;" title="${tutor.resumeFileName ?? 'Resume'}"></iframe>`
-      )
-    }
+    setShowResumeModal(true)
   }
 
   return (
@@ -68,7 +64,15 @@ export default function CoordinatorTutorProfile() {
           <>
             <section className="profile-card-section">
               <div className="profile-photo-wrapper">
-                <div className="profile-photo-circle profile-photo-placeholder">{initialsOf(tutor.fullName)}</div>
+                {tutor.photo ? (
+                  <img
+                    src={`data:image/jpeg;base64,${tutor.photo}`}
+                    alt={tutor.fullName}
+                    className="profile-photo-circle"
+                  />
+                ) : (
+                  <div className="profile-photo-circle profile-photo-placeholder">{initialsOf(tutor.fullName)}</div>
+                )}
               </div>
               <h2 className="profile-name">{tutor.fullName}</h2>
               <span className="profile-position-badge">Tutor</span>
@@ -146,6 +150,35 @@ export default function CoordinatorTutorProfile() {
                 )}
               </div>
             </section>
+
+            {showResumeModal && tutor.resumeData && (
+              <div
+                onClick={() => setShowResumeModal(false)}
+                style={{
+                  position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  zIndex: 1000, padding: '24px',
+                }}
+              >
+                <div
+                  onClick={e => e.stopPropagation()}
+                  style={{
+                    background: '#fff', borderRadius: '12px', width: '100%', maxWidth: '900px',
+                    height: '90vh', display: 'flex', flexDirection: 'column', overflow: 'hidden',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', borderBottom: '1px solid #e2e8f0' }}>
+                    <span style={{ fontWeight: 600 }}>{tutor.resumeFileName ?? 'Resume'}</span>
+                    <button className="group-info-close" onClick={() => setShowResumeModal(false)}>×</button>
+                  </div>
+                  <iframe
+                    src={tutor.resumeData}
+                    title={tutor.resumeFileName ?? 'Resume'}
+                    style={{ border: 0, flex: 1, width: '100%' }}
+                  />
+                </div>
+              </div>
+            )}
           </>
         )}
       </main>

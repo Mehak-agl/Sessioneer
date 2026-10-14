@@ -18,6 +18,7 @@ type ChatMessage = {
   text: string
   timestamp: string
   attachment?: { type: AttachmentType; name: string; fileData?: string; fileType?: string }
+  read?: boolean
 }
 
 type DMConversation = {
@@ -82,12 +83,6 @@ type Conversation = DMConversation | GroupConversation
 // Currently using API to get all staff members
 //const ALL_PEOPLE: ChatContact[] = []
 
-const ALL_UNITS = [
-  { code: 'CAB302', name: 'Software Development' },
-  { code: 'IFN660', name: 'Advanced Topics in IT' },
-  { code: 'CAB301', name: 'Algorithms and Complexity' },
-]
-
 /***const CURRENT_USER_ID = localStorage.getItem('sessioneer_user_id') || 'me'
 const CURRENT_USER_NAME = 'You'
 const CURRENT_USER_CONTACT: ChatContact = {
@@ -128,6 +123,19 @@ function getInitials(name: string) {
   return name.split(' ').filter(Boolean).map(n => n[0]).join('').toUpperCase()
 }
 
+// WhatsApp-style double tick: gray/translucent for sent, teal for read.
+// Only ever rendered next to a DM message the current user sent. The
+// backend flips `read` when the recipient opens the conversation (see
+// MessageService.getConversation) — this is a real read receipt, not a
+// timed simulation.
+function MessageTicks({ read }: { read?: boolean }) {
+  return (
+    <span className={`chat-ticks ${read ? 'chat-ticks-read' : ''}`} title={read ? 'Seen' : 'Sent'}>
+      ✓✓
+    </span>
+  )
+}
+
 function formatTime(ts: string) {
   return new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 }
@@ -145,6 +153,7 @@ export default function CoordinatorChat() {
 
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [allPeople, setAllPeople] = useState<ChatContact[]>([])
+  const [units, setUnits] = useState<{ code: string; name: string }[]>([])
 
   useEffect(() => {
     api.getAllStaff().then((staff: any[]) => {
@@ -154,6 +163,14 @@ export default function CoordinatorChat() {
         email: s.email,
         role: 'STAFF' as const,
       })))
+    }).catch(console.error)
+  }, [])
+
+  useEffect(() => {
+    api.getUnits().then((data: any[]) => {
+      const mapped = data.map(u => ({ code: u.code, name: u.name }))
+      setUnits(mapped)
+      setGroupUnitCode(prev => prev || mapped[0]?.code || '')
     }).catch(console.error)
   }, [])
 
@@ -169,6 +186,7 @@ export default function CoordinatorChat() {
             senderName: m.sender.fullName,
             text: m.content,
             timestamp: m.sentAt,
+            read: m.read,
             attachment: m.fileName ? {
               type: m.fileType?.startsWith('image/') ? 'photo' as AttachmentType : 'file' as AttachmentType,
               name: m.fileName,
@@ -267,7 +285,7 @@ export default function CoordinatorChat() {
 
   // ── Create-group form state ──────────────────────────────
   const [groupName, setGroupName] = useState('')
-  const [groupUnitCode, setGroupUnitCode] = useState(ALL_UNITS[0].code)
+  const [groupUnitCode, setGroupUnitCode] = useState('')
   const [selectedMemberIds, setSelectedMemberIds] = useState<Set<string>>(new Set())
 
   const dmConversations = conversations.filter((c): c is DMConversation => c.type === 'dm')
@@ -330,6 +348,7 @@ export default function CoordinatorChat() {
         senderName: m.sender.fullName,
         text: m.content,
         timestamp: m.sentAt,
+        read: m.read,
         attachment: m.fileName ? {
           type: m.fileType?.startsWith('image/') ? 'photo' as AttachmentType : 'file' as AttachmentType,
           name: m.fileName,
@@ -504,7 +523,7 @@ export default function CoordinatorChat() {
 
   const resetGroupForm = () => {
     setGroupName('')
-    setGroupUnitCode(ALL_UNITS[0].code)
+    setGroupUnitCode(units[0]?.code ?? '')
     setSelectedMemberIds(new Set())
   }
 
@@ -871,7 +890,12 @@ export default function CoordinatorChat() {
                         ) : (
                           <span>{msg.text}</span>
                         )}
-                        <span className="chat-bubble-time">{formatTime(msg.timestamp)}</span>
+                        <span className="chat-bubble-time">
+                          {formatTime(msg.timestamp)}
+                          {activeConversation.type === 'dm' && msg.senderId === CURRENT_USER_ID && (
+                            <MessageTicks read={msg.read} />
+                          )}
+                        </span>
                       </div>
                     </div>
                   ))}
@@ -1173,11 +1197,15 @@ export default function CoordinatorChat() {
 
               <div className="chat-form-field">
                 <label>Unit / Department</label>
-                <select value={groupUnitCode} onChange={e => setGroupUnitCode(e.target.value)}>
-                  {ALL_UNITS.map(u => (
-                    <option key={u.code} value={u.code}>{u.code} — {u.name}</option>
-                  ))}
-                </select>
+                {units.length === 0 ? (
+                  <p className="chat-empty-hint">No units yet — create a unit first.</p>
+                ) : (
+                  <select value={groupUnitCode} onChange={e => setGroupUnitCode(e.target.value)}>
+                    {units.map(u => (
+                      <option key={u.code} value={u.code}>{u.code} — {u.name}</option>
+                    ))}
+                  </select>
+                )}
               </div>
 
               <div className="chat-form-field">

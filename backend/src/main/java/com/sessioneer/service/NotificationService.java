@@ -37,8 +37,12 @@ public class NotificationService {
         n.setCreatedAt(LocalDateTime.now());
         notificationRepository.save(n);
 
-        if (recipient.getEmail() != null && !recipient.getEmail().isBlank()) {
-            emailService.send(recipient.getEmail(), title, message);
+        String targetEmail = (recipient.getNotificationEmail() != null && !recipient.getNotificationEmail().isBlank())
+                ? recipient.getNotificationEmail()
+                : recipient.getEmail();
+
+        if (targetEmail != null && !targetEmail.isBlank()) {
+            emailService.send(targetEmail, title, message);
         }
     }
 

@@ -23,8 +23,10 @@ public class EmailService {
 
     // Failures here are logged, never thrown — a bad/missing mail config
     // should never break the actual action (invite, allocate, swap...)
-    // that triggered the notification.
-    public void send(String to, String subject, String body) {
+    // that triggered the notification. Returns whether it actually sent,
+    // so callers that need to know (e.g. "has the tutor's welcome email
+    // been sent yet?") can record it truthfully.
+    public boolean send(String to, String subject, String body) {
         try {
             SimpleMailMessage message = new SimpleMailMessage();
             message.setFrom(fromAddress);
@@ -32,8 +34,10 @@ public class EmailService {
             message.setSubject(subject);
             message.setText(body);
             mailSender.send(message);
+            return true;
         } catch (Exception e) {
             log.error("Failed to send email to {}: {}", to, e.getMessage());
+            return false;
         }
     }
 }

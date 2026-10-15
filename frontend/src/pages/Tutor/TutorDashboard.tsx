@@ -1,9 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-//import { api } from "../../services/api";
 import { api } from "../../services/api";
 import StaffSidebar from "../../components/TutorSidebar"
-//import { getDaysLeftInAvailabilityWindow } from "../../constants/availability"
 
 
 interface Availability {
@@ -183,12 +181,12 @@ function StaffDashboard() {
           )}
 
           {allocations.map((a, index) => (
-            <div className={`staff-class-card ${a.status === 'CONFIRMED' ? 'allocated' : 'pending'}`} key={index}>
+            <div className={`staff-class-card ${a.status === 'REJECTED' ? 'pending' : 'allocated'}`} key={index}>
               <div>
                 <h3>{a.session.title}</h3>
                 <p>{new Date(a.session.startTime).toLocaleString()} · {a.session.location}</p>
               </div>
-              <span>{a.status}</span>
+              <span>{a.status === 'PROPOSED' || a.status === 'CONFIRMED' ? 'ALLOCATED' : a.status}</span>
             </div>
           ))}
         </section>

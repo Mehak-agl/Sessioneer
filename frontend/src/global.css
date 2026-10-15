@@ -7263,3 +7263,17 @@ body.dark-theme .password-toggle-btn:focus-visible {
 .summary-card.theme-summary-card {
   border-left: 7px solid #1f3550;
 }
+
+/* Unified card accent — every dashboard card uses the same navy left border
+   as the coordinator calendar's Allocated / Pending summary cards. */
+.stat-card,
+.stat-card.warning,
+.stat-card.success,
+.staff-stat-card,
+.staff-stat-card.success,
+.deadline-card,
+.staff-class-card,
+.staff-class-card.allocated,
+.staff-class-card.pending {
+  border-left: 7px solid #1f3550;
+}

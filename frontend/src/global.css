@@ -165,7 +165,7 @@ p {
 }
 
 .brand-features li::before {
-  content: 'Ã¢Å“â€œ';
+  content: '\2713';
   font-size: 13px;
   color: #378ADD;
   font-weight: 700;
@@ -7221,4 +7221,45 @@ body.dark-theme .password-toggle-btn {
 body.dark-theme .password-toggle-btn:hover,
 body.dark-theme .password-toggle-btn:focus-visible {
   color: #7fd7e8;
+}
+
+/* Coordinator calendar events — compact, same look/colours as the tutor
+   calendar's cards. Allocated and Pending share one colour; the status is
+   shown as a small tag instead. */
+.class-event.coord-event {
+  background: #dbeafe;
+  color: #1e40af;
+  border-left: 5px solid #3b82f6;
+  padding: 5px 7px;
+  margin-top: 5px;
+  font-size: 11px;
+  border-radius: 8px;
+  gap: 1px;
+  cursor: default;
+}
+
+.class-event.coord-event:hover {
+  transform: none;
+}
+
+.class-event.coord-event strong {
+  margin-bottom: 1px;
+}
+
+.class-event.coord-event small {
+  margin-top: 1px;
+  font-size: 10px;
+  color: inherit;
+  opacity: 0.8;
+}
+
+/* Coordinator calendar summary cards — two cards, one shared theme colour
+   (matches the blue used on the calendar event cards). */
+.calendar-summary.calendar-summary--two {
+  grid-template-columns: repeat(2, 1fr);
+  margin-bottom: 24px;
+}
+
+.summary-card.theme-summary-card {
+  border-left: 7px solid #1f3550;
 }

@@ -354,7 +354,6 @@ function CoordinatorDashboard() {
                 </div>
               </div>
               <div style={{display:'flex', gap:'12px'}}>
-                <button className="new-unit-btn" onClick={() => setShowImportModal(true)}>↑ Import Tutors</button>
                 <button className="new-unit-btn" onClick={() => setView('units')}>+ New Unit</button>
                 <button className="logout-btn" onClick={handleLogout}>Logout</button>
               </div>
@@ -373,16 +372,6 @@ function CoordinatorDashboard() {
                 <span>Pending Responses</span>
                 <h2>{pendingCount}</h2>
                 <p>Awaiting tutor replies {pendingCount > 0 ? '— click to view' : ''}</p>
-              </div>
-              <div className="stat-card warning">
-                <span>Conflicts</span>
-                <h2>0</h2>
-                <p>Need attention</p>
-              </div>
-              <div className="stat-card success">
-                <span>Finalised</span>
-                <h2>0</h2>
-                <p>Completed allocation</p>
               </div>
               <div
                 className={`stat-card stat-card--clickable${(nearestUpcomingDeadline?.countdown.state === 'urgent' || allDeadlinesExpired) ? ' warning' : ''}${showDeadlineBreakdown ? ' active' : ''}`}

@@ -1253,7 +1253,7 @@ p {
 
 .staff-stats-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 22px;
   margin-bottom: 26px;
 }
@@ -7265,15 +7265,25 @@ body.dark-theme .password-toggle-btn:focus-visible {
 }
 
 /* Unified card accent — every dashboard card uses the same navy left border
-   as the coordinator calendar's Allocated / Pending summary cards. */
+   as the coordinator calendar's Allocated / Pending summary cards.
+   !important so no earlier or more specific card rule can override it. */
 .stat-card,
 .stat-card.warning,
 .stat-card.success,
+.stat-card--clickable,
+.stat-card--clickable.active,
 .staff-stat-card,
 .staff-stat-card.success,
 .deadline-card,
 .staff-class-card,
 .staff-class-card.allocated,
-.staff-class-card.pending {
-  border-left: 7px solid #1f3550;
+.staff-class-card.pending,
+.summary-card,
+.summary-card.theme-summary-card {
+  border-left: 7px solid #1f3550 !important;
+}
+
+/* Calendar event cards on the coordinator calendar share the same accent */
+.class-event.coord-event {
+  border-left-color: #1f3550;
 }

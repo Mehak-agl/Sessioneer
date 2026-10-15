@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+//import { api } from "../../services/api";
 import { api } from "../../services/api";
 import StaffSidebar from "../../components/TutorSidebar"
+//import { getDaysLeftInAvailabilityWindow } from "../../constants/availability"
 
 
 interface Availability {
@@ -124,11 +126,6 @@ function StaffDashboard() {
             <span>Units Submitted</span>
             <h2>{submittedCount}/{invitedUnits.length}</h2>
             <p>Availability submitted per unit</p>
-          </div>
-          <div className="staff-stat-card success">
-            <span>Allocated Classes</span>
-            <h2>{allocations.filter(a => a.status === 'CONFIRMED').length}</h2>
-            <p>Confirmed by coordinator</p>
           </div>
         </section>
 
